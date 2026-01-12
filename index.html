@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GoTravel | Premium Experience</title>
-    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
             --accent: #3b82f6;
-            --glass: rgba(255, 255, 255, 0.08);
+            --glass: rgba(0, 0, 0, 0.55);
             --border: rgba(255, 255, 255, 0.15);
         }
 
@@ -24,7 +24,7 @@
             height: 100vh;
         }
 
-        /* --- 1. MINIMALIST ZOOM INTRO --- */
+        /* --- 1. CINEMATIC INTRO --- */
         #intro-screen {
             position: fixed;
             inset: 0;
@@ -41,24 +41,22 @@
             font-size: clamp(2rem, 8vw, 5rem);
             letter-spacing: 20px;
             text-transform: uppercase;
-            opacity: 0;
-            transform: scale(1.2);
-            filter: blur(20px);
             animation: cinematicReveal 2.5s ease-out forwards;
         }
 
         @keyframes cinematicReveal {
-            to { opacity: 1; transform: scale(1); filter: blur(0); letter-spacing: 12px; }
+            0% { opacity: 0; transform: scale(1.2); filter: blur(20px); }
+            100% { opacity: 1; transform: scale(1); filter: blur(0); letter-spacing: 12px; }
         }
 
         .slide-left { transform: translateX(-100%); }
 
-        /* --- 2. THE BACKGROUND FIX (DUAL LAYER) --- */
+        /* --- 2. BACKGROUND SLIDER --- */
         .bg-container {
             position: fixed;
             inset: 0;
             z-index: -2;
-            background: #111;
+            background: #000;
         }
 
         .bg-layer {
@@ -66,6 +64,7 @@
             inset: 0;
             background-size: cover;
             background-position: center;
+            background-repeat: no-repeat;
             transition: opacity 2s ease-in-out;
             opacity: 0;
         }
@@ -75,92 +74,118 @@
         .overlay {
             position: fixed;
             inset: 0;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.85));
+            background: radial-gradient(circle at center, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%),
+                        linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.6));
             z-index: -1;
         }
 
-        /* --- 3. UI LAYOUT --- */
+        /* --- 3. UI HEADER (UPDATED LAYOUT) --- */
         header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             padding: 40px 60px;
             position: relative;
             z-index: 10;
         }
 
-        .glass-widget {
+        .info-panel {
             background: var(--glass);
             backdrop-filter: blur(25px);
             padding: 20px 30px;
             border-radius: 20px;
             border: 1px solid var(--border);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Space between Clock and Weather */
         }
 
+        .clock-section { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
         .time-text { font-size: 1.8rem; font-weight: 700; color: var(--accent); display: block; }
-        .date-text { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; opacity: 0.6; }
+        .date-text { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; opacity: 0.6; }
 
-        .weather-info { text-align: right; }
-        .weather-info i { color: #fbbf24; margin-right: 8px; }
+        .weather-section { display: flex; align-items: center; gap: 15px; }
+        .weather-section i { font-size: 1.5rem; color: #fbbf24; }
+        .weather-text { font-weight: 600; font-size: 1.1rem; }
+        .weather-msg { font-size: 0.7rem; opacity: 0.7; margin-top: 2px; }
 
         .auth-btn {
             background: #fff;
             color: #000;
-            padding: 12px 30px;
+            padding: 14px 35px;
             border-radius: 50px;
             text-decoration: none;
             font-weight: 700;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             text-transform: uppercase;
+            letter-spacing: 1px;
             transition: 0.4s;
-            border: 2px solid transparent;
         }
 
         .auth-btn:hover {
-            background: transparent;
+            background: var(--accent);
             color: #fff;
-            border-color: #fff;
-            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.5);
         }
 
-        /* --- 4. NAVIGATION --- */
+        /* --- 4. HERO SECTION --- */
+        .hero-section {
+            position: absolute;
+            top: 38%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 80%;
+            z-index: 5;
+            opacity: 0;
+            transition: all 1.5s ease 0.8s;
+        }
+
+        .main-logo { width: 75px; margin-bottom: 15px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); }
+        .hero-title {
+            font-family: 'Syncopate', sans-serif;
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            letter-spacing: 10px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            background: linear-gradient(to bottom, #fff, #ccc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-description {
+            font-size: 1rem;
+            font-weight: 300;
+            letter-spacing: 1.5px;
+            opacity: 0.8;
+            max-width: 550px; margin: 0 auto; line-height: 1.6;
+        }
+
+        /* --- 5. NAVIGATION --- */
         .main-nav {
             position: absolute;
             bottom: 60px;
             left: 50%;
             transform: translateX(-50%);
-            display: flex;
-            gap: 20px;
-            z-index: 10;
+            display: flex; gap: 20px; z-index: 10;
         }
 
         .nav-card {
-            text-decoration: none;
-            color: #fff;
-            width: 130px;
-            height: 150px;
+            text-decoration: none; color: #fff;
+            width: 125px; height: 145px;
             background: var(--glass);
             backdrop-filter: blur(15px);
             border: 1px solid var(--border);
-            border-radius: 24px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            border-radius: 22px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
             transition: 0.5s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
-        .nav-card i { font-size: 2rem; margin-bottom: 15px; transition: 0.3s; }
-        .nav-card span { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .nav-card i { font-size: 1.8rem; margin-bottom: 12px; color: var(--accent); }
+        .nav-card span { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
 
-        .nav-card:hover {
-            background: var(--accent);
-            transform: translateY(-20px) scale(1.05);
-            border-color: rgba(255,255,255,0.4);
-        }
+        .nav-card:hover { background: var(--accent); transform: translateY(-20px) scale(1.05); border-color: #fff; }
+        .nav-card:hover i { color: #fff; }
 
-        .nav-card:hover i { transform: scale(1.2); color: #fff; }
     </style>
 </head>
 <body>
@@ -177,40 +202,49 @@
         <div class="overlay"></div>
 
         <header>
-            <div class="glass-widget">
-                <span class="time-text" id="time">00:00</span>
-                <span class="date-text" id="date">MONDAY, JAN 12</span>
-            </div>
-
-            <div class="glass-widget weather-info">
-                <div style="font-size: 1.2rem; font-weight: 700;">
-                    <i class="fas fa-sun" id="w-icon"></i> <span id="temp">28°C</span>
+            <div class="info-panel">
+                <div class="clock-section">
+                    <span id="time" class="time-text">00:00</span>
+                    <span id="date" class="date-text">DATE</span>
                 </div>
-                <div id="w-msg" style="font-size: 0.7rem; opacity: 0.7; margin-top: 5px;">Skies are looking clear.</div>
+                <div class="weather-section">
+                    <i class="fas fa-sun" id="w-icon"></i>
+                    <div>
+                        <div class="weather-text"><span id="temp">28°C</span></div>
+                        <div id="w-msg" class="weather-msg">Enjoy your journey.</div>
+                    </div>
+                </div>
             </div>
 
-            <a href="#" class="auth-btn">Login/Sign UP</a>
+            <a href="auth.html" class="auth-btn">Login / Sign Up</a>
         </header>
+
+        <div class="hero-section" id="hero">
+            <img src="https://cdn-icons-png.flaticon.com/512/826/826070.png" alt="Logo" class="main-logo">
+            <h1 class="hero-title">GoTravel</h1>
+            <p class="hero-description">
+                Uncover hidden destinations and craft unforgettable journeys. Your global adventure starts here.
+            </p>
+        </div>
 
         <nav class="main-nav">
             <a href="places.html" class="nav-card"><i class="fas fa-mountain-sun"></i><span>Places</span></a>
             <a href="buses.html" class="nav-card"><i class="fas fa-bus-simple"></i><span>Buses</span></a>
             <a href="hotels.html" class="nav-card"><i class="fas fa-hotel"></i><span>Hotels</span></a>
             <a href="guides.html" class="nav-card"><i class="fas fa-user-check"></i><span>Guides</span></a>
-            <a href="restaurants.html" class="nav-card"><i class="fas fa-plate-wheat"></i><span>Dining</span></a>
+            <a href="restaurants.html" class="nav-card"><i class="fas fa-utensils"></i><span>Dining</span></a>
         </nav>
     </div>
 
     <script>
-        // 1. Intro Logic
         window.addEventListener('load', () => {
             setTimeout(() => {
                 document.getElementById('intro-screen').classList.add('slide-left');
                 document.getElementById('home-screen').style.opacity = '1';
+                document.getElementById('hero').style.opacity = '1';
             }, 3000);
         });
 
-        // 2. FIXED Background Logic (Dual-Layer)
         const myImages = [
             'https://images.pexels.com/photos/24698/pexels-photo-24698.jpg',
             'https://images.pexels.com/photos/322437/pexels-photo-322437.jpeg',
@@ -219,48 +253,40 @@
         
         let currentIdx = 0;
         const layers = [document.getElementById('bg1'), document.getElementById('bg2')];
-        let activeLayer = 0;
+        let activeLayerIdx = 0;
 
-        function changeBackground() {
+        function updateSlider() {
             const nextIdx = (currentIdx + 1) % myImages.length;
-            const inactiveLayer = (activeLayer + 1) % 2;
-
-            // Load next image into the hidden layer
-            layers[inactiveLayer].style.backgroundImage = `url('${myImages[nextIdx]}')`;
-            
-            // Wait a moment for browser to "see" the image, then swap
+            const nextLayerIdx = (activeLayerIdx + 1) % 2;
+            layers[nextLayerIdx].style.backgroundImage = `url('${myImages[nextIdx]}')`;
             setTimeout(() => {
-                layers[activeLayer].classList.remove('active');
-                layers[inactiveLayer].classList.add('active');
-                activeLayer = inactiveLayer;
+                layers[activeLayerIdx].classList.remove('active');
+                layers[nextLayerIdx].classList.add('active');
+                activeLayerIdx = nextLayerIdx;
                 currentIdx = nextIdx;
-            }, 100); 
+            }, 200); 
         }
 
-        // Initial set
         layers[0].style.backgroundImage = `url('${myImages[0]}')`;
-        setInterval(changeBackground, 6000);
+        setInterval(updateSlider, 6000);
 
-        // 3. Time/Date Logic
-        function updateClock() {
+        function startClock() {
             const now = new Date();
             document.getElementById('time').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            document.getElementById('date').innerText = now.toLocaleDateString([], {weekday: 'long', month: 'short', day: 'numeric'}).toUpperCase();
+            document.getElementById('date').innerText = now.toLocaleDateString([], {weekday: 'long', month: 'short', day: 'numeric'});
         }
-        setInterval(updateClock, 1000);
-        updateClock();
+        setInterval(startClock, 1000);
+        startClock();
 
-        // 4. Randomized Weather Messages
-        const weatherOptions = [
-            {t: "31°C", i: "fa-sun", m: "Perfect for outdoor exploration."},
-            {t: "24°C", i: "fa-cloud-sun", m: "A pleasant day for travel."},
-            {t: "19°C", i: "fa-cloud-rain", m: "Cool breeze and light showers."}
+        const weatherData = [
+            {t: "31°C", i: "fa-sun", m: "Clear skies ahead."},
+            {t: "24°C", i: "fa-cloud-sun", m: "A pleasant travel day."},
+            {t: "20°C", i: "fa-cloud-rain", m: "Cool breeze, light rain."}
         ];
-        const choice = weatherOptions[Math.floor(Math.random() * weatherOptions.length)];
-        document.getElementById('temp').innerText = choice.t;
-        document.getElementById('w-icon').className = `fas ${choice.i}`;
-        document.getElementById('w-msg').innerText = choice.m;
-
+        const pick = weatherData[Math.floor(Math.random() * weatherData.length)];
+        document.getElementById('temp').innerText = pick.t;
+        document.getElementById('w-icon').className = `fas ${pick.i}`;
+        document.getElementById('w-msg').innerText = pick.m;
     </script>
 </body>
 </html>
