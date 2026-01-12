@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoTravel | Your Journey Begins</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --glass: rgba(255, 255, 255, 0.15);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', sans-serif;
+            overflow-x: hidden;
+            background: #000;
+            color: white;
+        }
+
+        /* --- 1. INTRO ANIMATION --- */
+        #intro-screen {
+            position: fixed;
+            width: 100%;
+            height: 100vh;
+            background: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: transform 1s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        .logo-text {
+            font-size: 5rem;
+            font-weight: 800;
+            letter-spacing: 10px;
+            background: linear-gradient(90deg, #fff, #2563eb, #fff);
+            background-size: 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 3s infinite linear;
+        }
+
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
+
+        .slide-out { transform: translateX(-100%); }
+
+        /* --- 2. HOME SCREEN --- */
+        #home-screen {
+            height: 100vh;
+            width: 100%;
+            position: relative;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+
+        /* Background Slider */
+        .bg-slider {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 1.5s ease-in-out;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            z-index: 0;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 50px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .auth-buttons button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: 10px;
+            transition: 0.3s;
+        }
+
+        /* Widgets (Date/Weather) */
+        .info-widgets {
+            text-align: right;
+            background: var(--glass);
+            padding: 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Nav Menu */
+        .nav-menu {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 50px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav-card {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            width: 150px;
+            text-align: center;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: 0.4s;
+            text-decoration: none;
+            color: white;
+        }
+
+        .nav-card:hover {
+            transform: translateY(-10px);
+            background: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="intro-screen">
+        <div class="logo-text">GoTravel</div>
+    </div>
+
+    <div id="home-screen">
+        <div class="bg-slider" id="bgSlider"></div>
+        <div class="overlay"></div>
+
+        <header>
+            <div class="info-widgets">
+                <div id="date-time">Loading...</div>
+                <div id="weather">Weather: 28°C - Sunny</div>
+                <small id="weather-msg">Perfect day to explore!</small>
+            </div>
+            <div class="auth-buttons">
+                <button>Login</button>
+                <button>Sign Up</button>
+            </div>
+        </header>
+
+        <div class="nav-menu">
+            <a href="places.html" class="nav-card"><h3>Travelling Places</h3></a>
+            <a href="buses.html" class="nav-card"><h3>Buses</h3></a>
+            <a href="hotels.html" class="nav-card"><h3>Hotels</h3></a>
+            <a href="guides.html" class="nav-card"><h3>Guides</h3></a>
+            <a href="restaurants.html" class="nav-card"><h3>Restaurants</h3></a>
+        </div>
+    </div>
+
+    <script>
+        // 1. Handle Intro Animation
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('intro-screen').classList.add('slide-out');
+                document.getElementById('home-screen').style.opacity = '1';
+            }, 3000); // 3 seconds intro
+        });
+
+        // 2. Background Slider
+        const images = [
+            'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600',
+            'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1600',
+            'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600'
+        ];
+        let currentImg = 0;
+        function changeBg() {
+            document.getElementById('bgSlider').style.backgroundImage = `url(${images[currentImg]})`;
+            currentImg = (currentImg + 1) % images.length;
+        }
+        setInterval(changeBg, 5000);
+        changeBg();
+
+        // 3. Date and Time
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('date-time').innerText = now.toLocaleString();
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // 4. Weather Logic (Mockup)
+        const weatherConditions = ["Sunny", "Rainy", "Cloudy"];
+        const randomWeather = weatherConditions[Math.floor(Math.random() * weatherConditions.length)];
+        const temp = Math.floor(Math.random() * 15) + 20;
+        
+        document.getElementById('weather').innerText = `Weather: ${temp}°C - ${randomWeather}`;
+        
+        const msg = document.getElementById('weather-msg');
+        if(randomWeather === "Sunny") msg.innerText = "Grab your sunglasses!";
+        else if(randomWeather === "Rainy") msg.innerText = "Don't forget an umbrella!";
+        else msg.innerText = "Great weather for a walk.";
+    </script>
+</body>
+</html>
