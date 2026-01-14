@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GoTravel | Responsive Experience</title>
+    <title>GoTravel | Premium Live Experience</title>
     <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
             --accent: #3b82f6;
-            --glass: rgba(0, 0, 0, 0.55);
-            --border: rgba(255, 255, 255, 0.15);
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+            --tooltip-bg: rgba(0, 0, 0, 0.85);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -20,152 +21,148 @@
             background: #000;
             color: #fff;
             font-family: 'Inter', sans-serif;
-            overflow-x: hidden; /* Prevent horizontal scroll */
+            overflow: hidden; 
             height: 100vh;
         }
 
-        /* --- 1. INTRO --- */
+        /* --- INTRO --- */
         #intro-screen {
-            position: fixed;
-            inset: 0;
+            position: fixed; inset: 0;
             background: #050505;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: flex; justify-content: center; align-items: center;
             z-index: 1000;
             transition: transform 1.2s cubic-bezier(0.8, 0, 0.2, 1);
         }
-
-        .reveal-text {
-            font-family: 'Syncopate', sans-serif;
-            font-size: clamp(1.5rem, 5vw, 5rem); /* Responsive text size */
-            letter-spacing: 10px;
-            text-transform: uppercase;
-            text-align: center;
-            animation: cinematicReveal 2.5s ease-out forwards;
-        }
-
+        .reveal-text { font-family: 'Syncopate', sans-serif; font-size: clamp(1.5rem, 5vw, 5rem); letter-spacing: 10px; text-transform: uppercase; animation: cinematicReveal 2.5s forwards; }
         @keyframes cinematicReveal {
             0% { opacity: 0; transform: scale(1.2); filter: blur(20px); }
-            100% { opacity: 1; transform: scale(1); filter: blur(0); letter-spacing: clamp(5px, 2vw, 12px); }
+            100% { opacity: 1; transform: scale(1); filter: blur(0); letter-spacing: 10px; }
         }
-
         .slide-left { transform: translateX(-100%); }
 
-        /* --- 2. BACKGROUND SLIDER --- */
+        /* --- BACKGROUND --- */
         .bg-container { position: fixed; inset: 0; z-index: -2; background: #000; }
         .bg-layer { position: absolute; inset: 0; background-size: cover; background-position: center; transition: opacity 2s; opacity: 0; }
         .bg-layer.active { opacity: 1; }
-        .overlay { position: fixed; inset: 0; background: radial-gradient(circle, transparent, rgba(0,0,0,0.85)); z-index: -1; }
+        .overlay { position: fixed; inset: 0; background: radial-gradient(circle, transparent, rgba(0,0,0,0.8)); z-index: -1; }
 
-        /* --- 3. HEADER (RESPONSIVE) --- */
+        /* --- HEADER & XL TIME BOX --- */
         header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding: 20px;
-            position: relative;
-            z-index: 10;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 40px; position: relative; z-index: 20;
         }
 
         .info-panel {
             background: var(--glass);
-            backdrop-filter: blur(20px);
-            padding: 15px 20px;
-            border-radius: 15px;
+            backdrop-filter: blur(30px) saturate(200%);
+            -webkit-backdrop-filter: blur(30px) saturate(200%);
             border: 1px solid var(--border);
+            padding: 12px 25px;
+            border-radius: 24px;
+            display: flex; gap: 20px; align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
+        .time-section { border-right: 1px solid rgba(255, 255, 255, 0.2); padding-right: 20px; }
+        .time-text { font-size: 2.2rem; font-weight: 300; letter-spacing: -1px; line-height: 1; }
+        .date-text { font-size: 0.65rem; text-transform: uppercase; font-weight: 600; opacity: 0.7; letter-spacing: 1px; }
+        .weather-main i { font-size: 1.5rem; color: #fbbf24; filter: drop-shadow(0 0 8px #fbbf24); }
+        #temp { font-weight: 600; font-size: 1rem; }
+        #location-name { font-size: 0.6rem; opacity: 0.6; text-transform: uppercase; font-weight: 700; margin-top: 2px; display: block;}
 
-        .time-text { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
-        .date-text { font-size: 0.7rem; letter-spacing: 1px; opacity: 0.6; display: block; }
+        .logo-container img { height: 45px; filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.4)); }
 
         .auth-btn {
-            background: #fff;
-            color: #000;
-            padding: 10px 20px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 0.7rem;
-            text-transform: uppercase;
+            background: #fff; color: #000; padding: 10px 20px; border-radius: 50px;
+            text-decoration: none; font-weight: 700; font-size: 0.7rem; text-transform: uppercase;
         }
 
-        /* --- 4. HERO SECTION --- */
+        /* --- HERO (Centered Layout) --- */
         .hero-section {
-            position: absolute;
-            top: 35%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            width: 90%;
-            z-index: 5;
-            opacity: 0;
-            transition: opacity 1.5s ease 0.8s;
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center; width: 90%; z-index: 5; opacity: 0;
         }
+        .hero-title { font-family: 'Syncopate', sans-serif; font-size: clamp(2rem, 6vw, 4rem); margin-bottom: 10px; }
+        .hero-description { font-size: 1rem; opacity: 0.8; font-weight: 300; letter-spacing: 1px; }
 
-        .hero-title {
-            font-family: 'Syncopate', sans-serif;
-            font-size: clamp(2rem, 8vw, 4.5rem);
-            margin-bottom: 10px;
-        }
-
-        .hero-description {
-            font-size: clamp(0.85rem, 2vw, 1rem);
-            max-width: 500px;
-            margin: 0 auto;
-            line-height: 1.5;
-            opacity: 0.8;
-        }
-
-        /* --- 5. NAVIGATION (RESPONSIVE) --- */
+        /* --- NAVIGATION --- */
         .main-nav {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
-            width: 95%;
-            justify-content: center;
-            flex-wrap: wrap; /* Allows icons to wrap on small screens */
-            z-index: 10;
+            position: absolute; bottom: 140px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 15px; z-index: 10;
         }
 
         .nav-card {
-            text-decoration: none;
-            color: #fff;
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            transition: 0.3s;
-            /* Default for PC */
-            width: 110px;
-            height: 120px;
+            text-decoration: none; color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            width: 110px; height: 120px; cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative; overflow: hidden;
         }
 
-        .nav-card i { font-size: 1.5rem; margin-bottom: 8px; color: var(--accent); }
-        .nav-card span { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; }
-
-        .nav-card:hover { background: var(--accent); transform: translateY(-5px); }
-
-        /* --- MOBILE & TABLET MEDIA QUERIES --- */
-        @media (max-width: 768px) {
-            header { padding: 15px; }
-            .hero-section { top: 40%; }
-            .main-nav { bottom: 20px; gap: 8px; }
-            .nav-card { width: 85px; height: 100px; }
-            .nav-card i { font-size: 1.2rem; }
+        /* Pop-up Tooltip */
+        .nav-card::before {
+            content: attr(data-tooltip);
+            position: absolute; top: -45px;
+            background: var(--tooltip-bg);
+            padding: 6px 12px; border-radius: 10px;
+            font-size: 0.65rem; font-weight: 600; white-space: nowrap;
+            opacity: 0; transform: translateY(10px); transition: 0.3s;
+            border: 1px solid var(--border);
         }
 
-        @media (max-width: 480px) {
-            .nav-card { width: 70px; height: 85px; }
-            .nav-card span { font-size: 0.55rem; }
-            .info-panel { padding: 10px 15px; }
-            .time-text { font-size: 1.2rem; }
+        .nav-card i { font-size: 1.6rem; margin-bottom: 10px; color: var(--accent); transition: 0.3s; }
+        .nav-card span { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+
+        .nav-card:hover { 
+            background: var(--accent); transform: translateY(-10px); 
+            box-shadow: 0 15px 30px rgba(59, 130, 246, 0.3);
+        }
+        .nav-card:hover::before { opacity: 1; transform: translateY(0); }
+        .nav-card:hover i { color: #fff; }
+
+        /* Transport Sub-menu (Fixed Logic) */
+        .transport-options {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            background: #0a0a0a; border-radius: 22px;
+            transform: translateY(100%); transition: 0.4s ease;
+            z-index: 5;
+        }
+        .transport-options.active { transform: translateY(0); }
+        .sub-btn {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            gap: 8px; text-decoration: none; color: #fff; font-size: 0.65rem;
+            font-weight: 700; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .sub-btn:hover { background: var(--accent); }
+
+        /* --- FOOTER --- */
+        footer {
+            position: absolute; bottom: 0; width: 100%;
+            padding: 20px 40px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: end; z-index: 10;
+        }
+        .footer-left { font-size: 0.75rem; opacity: 0.7; line-height: 1.8; }
+        .footer-left i { color: var(--accent); margin-right: 8px; }
+        .footer-center { text-align: center; }
+        .social-links { display: flex; justify-content: center; gap: 15px; margin-bottom: 10px; }
+        .social-links a { color: #fff; font-size: 1.1rem; opacity: 0.5; transition: 0.3s; }
+        .social-links a:hover { opacity: 1; color: var(--accent); }
+        .footer-right { text-align: right; font-size: 0.7rem; }
+        .shadow-coders { color: var(--accent); font-weight: 700; letter-spacing: 1px; }
+
+        @media (max-width: 850px) {
+            header { flex-direction: column; gap: 15px; }
+            .logo-container { position: static; transform: none; order: -1; }
+            .hero-section { top: 35%; }
+            .main-nav { bottom: 180px; gap: 8px; flex-wrap: wrap; justify-content: center; }
+            .nav-card { width: 95px; height: 105px; }
+            footer { grid-template-columns: 1fr; text-align: center; gap: 15px; padding: 15px; }
+            .footer-right { text-align: center; }
         }
     </style>
 </head>
@@ -175,7 +172,7 @@
         <div class="reveal-text">GoTravel</div>
     </div>
 
-    <div id="home-screen" style="opacity: 0;">
+    <div id="home-screen" style="opacity: 0; transition: opacity 1.5s;">
         <div class="bg-container">
             <div id="bg1" class="bg-layer active"></div>
             <div id="bg2" class="bg-layer"></div>
@@ -184,44 +181,128 @@
 
         <header>
             <div class="info-panel">
-                <span id="time" class="time-text">00:00</span>
-                <span id="date" class="date-text">DATE</span>
-                <div style="font-size: 0.8rem; margin-top: 5px;">
-                    <i class="fas fa-sun" style="color: #fbbf24;"></i> <span id="temp">28°C</span>
+                <div class="time-section">
+                    <span id="time" class="time-text">00:00</span>
+                    <span id="date" class="date-text">JAN 01</span>
+                </div>
+                <div class="weather-section">
+                    <div class="weather-main">
+                        <i id="w-icon" class="fas fa-cloud-sun"></i>
+                        <span id="temp">--°C</span>
+                    </div>
+                    <span id="location-name">Detecting...</span>
                 </div>
             </div>
+
+            <div class="logo-container">
+                <img src="GoTravels.png" alt="GoTravel Logo">
+            </div>
+
             <a href="auth.html" class="auth-btn">Account</a>
         </header>
 
         <div class="hero-section" id="hero">
             <h1 class="hero-title">GoTravel</h1>
-            <p class="hero-description">Experience your ultimate adventure with a single click.</p>
+            <p class="hero-description">Your gateway to extraordinary adventures.</p>
         </div>
 
         <nav class="main-nav">
-            <a href="places.html" class="nav-card"><i class="fas fa-mountain-sun"></i><span>Places</span></a>
-            <a href="buses.html" class="nav-card"><i class="fas fa-bus"></i><span>Buses</span></a>
-            <a href="hotels.html" class="nav-card"><i class="fas fa-hotel"></i><span>Hotels</span></a>
-            <a href="guides.html" class="nav-card"><i class="fas fa-user-check"></i><span>Guides</span></a>
-            <a href="restaurants.html" class="nav-card"><i class="fas fa-utensils"></i><span>Dining</span></a>
+            <a href="places.html" class="nav-card" data-tooltip="View Destinations">
+                <i class="fas fa-mountain-sun"></i><span>Places</span>
+            </a>
+            
+            <div class="nav-card" onclick="toggleTransport(this)" data-tooltip="Choose Travel Mode">
+                <i class="fas fa-route"></i><span>Transport</span>
+                <div class="transport-options" id="transportMenu">
+                    <a href="cabs.html" class="sub-btn"><i class="fas fa-taxi"></i> Cabs</a>
+                    <a href="buses.html" class="sub-btn"><i class="fas fa-bus"></i> Buses</a>
+                </div>
+            </div>
+
+            <a href="hotels.html" class="nav-card" data-tooltip="Luxury Bookings">
+                <i class="fas fa-hotel"></i><span>Hotels</span>
+            </a>
+            <a href="guides.html" class="nav-card" data-tooltip="Find a Guide">
+                <i class="fas fa-user-check"></i><span>Guides</span>
+            </a>
+            <a href="restaurants.html" class="nav-card" data-tooltip="Local Cuisines">
+                <i class="fas fa-utensils"></i><span>Dining</span>
+            </a>
         </nav>
+
+        <footer>
+            <div class="footer-left">
+                <div><i class="fas fa-envelope"></i> gotravel.eng.pdn@gmail.com</div>
+                <div><i class="fas fa-phone-alt"></i>+94 71 357 4985</div>
+            </div>
+            <div class="footer-center">
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                </div>
+                <p style="font-size: 0.6rem; opacity: 0.5; letter-spacing: 2px;">DISCOVER THE WORLD</p>
+            </div>
+            <div class="footer-right">
+                <p>&copy; 2024 GoTravel Experience</p>
+                <p>Powered by <span class="shadow-coders">Shadow Coders</span></p>
+            </div>
+        </footer>
     </div>
 
     <script>
+        // Reveal UI
         window.addEventListener('load', () => {
             setTimeout(() => {
                 document.getElementById('intro-screen').classList.add('slide-left');
                 document.getElementById('home-screen').style.opacity = '1';
-                document.getElementById('hero').style.opacity = '1';
+                setTimeout(() => { document.getElementById('hero').style.opacity = '1'; }, 500);
+                initWeather();
             }, 3000);
         });
 
-        const myImages = [
-            'https://images.pexels.com/photos/35606862/pexels-photo-35606862.jpeg',
-            'https://images.pexels.com/photos/322437/pexels-photo-322437.jpeg',
-            'https://images.pexels.com/photos/1998434/pexels-photo-1998434.jpeg'
-        ];
-        
+        // Transport Toggle Fix
+        function toggleTransport(card) {
+            const menu = document.getElementById('transportMenu');
+            menu.classList.toggle('active');
+            
+            // Close menu if clicking outside the card
+            const closeHandler = (e) => {
+                if (!card.contains(e.target)) {
+                    menu.classList.remove('active');
+                    document.removeEventListener('mousedown', closeHandler);
+                }
+            };
+            document.addEventListener('mousedown', closeHandler);
+        }
+
+        // Live Clock
+        function startClock() {
+            const now = new Date();
+            document.getElementById('time').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
+            document.getElementById('date').innerText = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+        setInterval(startClock, 1000);
+        startClock();
+
+        // Weather
+        async function initWeather() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(async (pos) => {
+                    try {
+                        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`);
+                        const data = await res.json();
+                        const geo = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+                        const geoData = await geo.json();
+                        document.getElementById('temp').innerText = `${Math.round(data.current_weather.temperature)}°C`;
+                        document.getElementById('location-name').innerText = geoData.address.city || geoData.address.town || "Nearby";
+                    } catch (e) { document.getElementById('location-name').innerText = "Weather Offline"; }
+                });
+            }
+        }
+
+        // Background Slider
+        const myImages = ['https://images.pexels.com/photos/35606862/pexels-photo-35606862.jpeg','https://images.pexels.com/photos/322437/pexels-photo-322437.jpeg','https://images.pexels.com/photos/1998434/pexels-photo-1998434.jpeg'];
         let currentIdx = 0;
         const layers = [document.getElementById('bg1'), document.getElementById('bg2')];
         let activeLayerIdx = 0;
@@ -235,19 +316,10 @@
                 layers[nextLayerIdx].classList.add('active');
                 activeLayerIdx = nextLayerIdx;
                 currentIdx = nextIdx;
-            }, 200); 
+            }, 50); 
         }
-
         layers[0].style.backgroundImage = `url('${myImages[0]}')`;
         setInterval(updateSlider, 6000);
-
-        function startClock() {
-            const now = new Date();
-            document.getElementById('time').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            document.getElementById('date').innerText = now.toLocaleDateString([], {weekday: 'short', month: 'short', day: 'numeric'});
-        }
-        setInterval(startClock, 1000);
-        startClock();
     </script>
 </body>
 </html>
