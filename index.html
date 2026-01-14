@@ -17,7 +17,8 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #000; color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
+        /* CHANGED: Use dvh (dynamic viewport height) to fix mobile browser bar issues */
+        body { background: #000; color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; height: 100dvh; }
 
         /* --- INTRO SCREEN --- */
         #intro-screen {
@@ -39,12 +40,17 @@
         header { 
             display: flex; justify-content: space-between; align-items: center; 
             padding: 20px 5%; position: relative; z-index: 20; width: 100%;
+            /* CHANGED: Added gap and wrap to prevent collision on small screens */
+            gap: 15px;
+            flex-wrap: wrap; 
         }
         
         .info-panel {
             background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(30px) saturate(180%);
             border: 1px solid var(--border); padding: 12px 25px; border-radius: 24px;
             display: flex; gap: 20px; align-items: center; position: relative; overflow: hidden;
+            /* CHANGED: Allow panel to shrink slightly on mobile if needed */
+            flex-shrink: 0;
         }
         #weather-canvas { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
 
@@ -57,9 +63,9 @@
         #temp { font-weight: 600; font-size: 1rem; }
         #location-name { font-size: 0.55rem; opacity: 0.7; font-weight: 700; text-transform: uppercase; display: block; }
 
-        .logo-container img { height: clamp(60px, 12vw, 90px); filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5)); }
+        .logo-container img { height: clamp(80px, 30vw, 120px); filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5)); }
 
-        .auth-btn { background: #fff; color: #000; padding: 10px 22px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 0.7rem; text-transform: uppercase; }
+        .auth-btn { background: #fff; color: #000; padding: 10px 22px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 0.7rem; text-transform: uppercase; white-space: nowrap; }
 
         /* --- HERO SECTION --- */
         .hero-section {
@@ -118,12 +124,39 @@
         .footer-right { text-align: right; }
         .shadow-coders { color: var(--accent); font-weight: 700; letter-spacing: 1px; text-shadow: 0 0 10px var(--accent); }
 
+        /* --- MOBILE ADJUSTMENTS --- */
         @media (max-width: 600px) {
-            header { flex-direction: column; gap: 20px; padding-top: 40px; }
+            /* CHANGED: Header stack order to stop overlapping */
+            header { 
+                padding-top: 15px; 
+                justify-content: center; /* Center items when stacked */
+            }
+            .info-panel { 
+                order: 2; /* Move weather below logo on small screens */
+                width: 100%; 
+                justify-content: center;
+                margin-top: 5px;
+            }
+            .logo-container { order: 1; margin-right: auto; }
+            .auth-btn { order: 1; }
+
             .hero-section { margin-top: 15px; }
-            .main-nav { margin-bottom: 120px; gap: 10px; }
-            .nav-card { width: clamp(90px, 45vw, 120px); height: 110px; }
-            footer { flex-direction: column; align-items: center; gap: 15px; text-align: center; }
+            .main-nav { 
+                margin-bottom: 120px; 
+                gap: 10px; 
+            }
+            /* CHANGED: Slight width adjustment for small phones */
+            .nav-card { width: 45%; height: 110px; }
+            
+            footer { 
+                flex-direction: column; 
+                align-items: center; 
+                gap: 15px; 
+                text-align: center; 
+                padding-bottom: 15px;
+                position: relative; /* Prevent footer from floating weirdly on mobile */
+            }
+            .footer-right { text-align: center; }
         }
     </style>
 </head>
@@ -155,8 +188,9 @@
                     <span id="location-name">Detecting...</span>
                 </div>
             </div>
+
             <div class="logo-container">
-                <img src="GoTravels.png" alt="GoTravel Logo">
+                <img src="GoTravels.png" alt="GoTravel Logo" onerror="this.style.display='none'">
             </div>
             <a href="auth.html" class="auth-btn">Account</a>
         </header>
@@ -276,19 +310,32 @@
             requestAnimationFrame(() => drawWeather(type));
         }
 
+        // --- UPDATED WEATHER FUNCTION TO FIX LOCATION AND SIZE ---
         async function initWeather() {
+            // Need to resize canvas on load
             initCanvas();
+            
             if ("geolocation" in navigator) {
                 navigator.geolocation.getCurrentPosition(async (pos) => {
                     try {
-                        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`);
+                        const { latitude, longitude } = pos.coords;
+                        
+                        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
                         const data = await res.json();
-                        const geo = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+                        
+                        const geo = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
                         const geoData = await geo.json();
+                        
+                        // FIX: Added Fallback chain for location name
+                        const addr = geoData.address;
+                        const finalLocation = addr.city || addr.town || addr.village || addr.suburb || "Nearby";
+                        
                         document.getElementById('temp').innerText = `${Math.round(data.current_weather.temperature)}°C`;
-                        document.getElementById('location-name').innerText = geoData.address.city || "Nearby";
+                        document.getElementById('location-name').innerText = finalLocation;
+                        
                         const type = data.current_weather.weathercode > 50 ? 'rain' : 'sun';
                         document.getElementById('w-icon').className = type === 'rain' ? "fas fa-cloud-showers-heavy" : "fas fa-sun";
+                        
                         createWeatherParticles(type);
                         drawWeather(type);
                     } catch (e) { console.log("Weather error"); }
