@@ -17,8 +17,15 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        /* CHANGED: Use dvh (dynamic viewport height) to fix mobile browser bar issues */
-        body { background: #000; color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; height: 100dvh; }
+        
+        body { 
+            background: #000; 
+            color: #fff; 
+            font-family: 'Inter', sans-serif; 
+            /* Default: No scroll on desktop */
+            overflow: hidden; 
+            height: 100dvh; 
+        }
 
         /* --- INTRO SCREEN --- */
         #intro-screen {
@@ -40,7 +47,6 @@
         header { 
             display: flex; justify-content: space-between; align-items: center; 
             padding: 20px 5%; position: relative; z-index: 20; width: 100%;
-            /* CHANGED: Added gap and wrap to prevent collision on small screens */
             gap: 15px;
             flex-wrap: wrap; 
         }
@@ -49,7 +55,6 @@
             background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(30px) saturate(180%);
             border: 1px solid var(--border); padding: 12px 25px; border-radius: 24px;
             display: flex; gap: 20px; align-items: center; position: relative; overflow: hidden;
-            /* CHANGED: Allow panel to shrink slightly on mobile if needed */
             flex-shrink: 0;
         }
         #weather-canvas { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
@@ -112,6 +117,7 @@
 
         /* --- FOOTER --- */
         footer {
+            /* Positioned absolute for desktop to stay at bottom */
             position: absolute; bottom: 0; width: 100%; padding: 25px 5%;
             background: linear-gradient(to top, rgba(0,0,0,1) 40%, transparent);
             display: flex; justify-content: space-between; align-items: flex-end; z-index: 10;
@@ -124,15 +130,21 @@
         .footer-right { text-align: right; }
         .shadow-coders { color: var(--accent); font-weight: 700; letter-spacing: 1px; text-shadow: 0 0 10px var(--accent); }
 
-        /* --- MOBILE ADJUSTMENTS --- */
+        /* --- MOBILE ADJUSTMENTS (THE FIX) --- */
         @media (max-width: 600px) {
-            /* CHANGED: Header stack order to stop overlapping */
+            /* 1. Allow scrolling on mobile so content fits */
+            body {
+                overflow-y: auto; 
+                height: auto;
+                min-height: 100dvh;
+            }
+
             header { 
                 padding-top: 15px; 
-                justify-content: center; /* Center items when stacked */
+                justify-content: center; 
             }
             .info-panel { 
-                order: 2; /* Move weather below logo on small screens */
+                order: 2; 
                 width: 100%; 
                 justify-content: center;
                 margin-top: 5px;
@@ -142,19 +154,21 @@
 
             .hero-section { margin-top: 15px; }
             .main-nav { 
-                margin-bottom: 120px; 
+                margin-bottom: 40px; /* Reduced from 120px */
                 gap: 10px; 
             }
-            /* CHANGED: Slight width adjustment for small phones */
             .nav-card { width: 45%; height: 110px; }
             
+            /* 2. Un-pin the footer so it sits naturally below the nav */
             footer { 
+                position: relative; /* Changing from absolute to relative */
+                bottom: auto;
                 flex-direction: column; 
                 align-items: center; 
                 gap: 15px; 
                 text-align: center; 
-                padding-bottom: 15px;
-                position: relative; /* Prevent footer from floating weirdly on mobile */
+                padding-bottom: 30px;
+                margin-top: 20px;
             }
             .footer-right { text-align: center; }
         }
@@ -166,7 +180,7 @@
         <div class="reveal-text">GoTravel</div>
     </div>
 
-    <div id="home-screen" style="opacity: 0; transition: opacity 1.5s; height: 100%; display: flex; flex-direction: column;">
+    <div id="home-screen" style="opacity: 0; transition: opacity 1.5s; min-height: 100%; display: flex; flex-direction: column;">
         <div class="bg-container">
             <div id="bg1" class="bg-layer active"></div>
             <div id="bg2" class="bg-layer"></div>
@@ -206,14 +220,8 @@
             <div class="nav-card" onclick="toggleTransport(this)">
                 <i class="fas fa-route"></i><span>Transport</span>
                 <div class="transport-options" id="transportMenu">
-                    <a href="cabs.html" class="sub-btn">
-                        <i class="fas fa-taxi"></i>
-                        <span>Cabs</span>
-                    </a>
-                    <a href="buses.html" class="sub-btn">
-                        <i class="fas fa-bus"></i>
-                        <span>Buses</span>
-                    </a>
+                    <a href="cabs.html" class="sub-btn"><i class="fas fa-taxi"></i><span>Cabs</span></a>
+                    <a href="buses.html" class="sub-btn"><i class="fas fa-bus"></i><span>Buses</span></a>
                 </div>
             </div>
 
@@ -310,23 +318,18 @@
             requestAnimationFrame(() => drawWeather(type));
         }
 
-        // --- UPDATED WEATHER FUNCTION TO FIX LOCATION AND SIZE ---
         async function initWeather() {
-            // Need to resize canvas on load
             initCanvas();
-            
             if ("geolocation" in navigator) {
                 navigator.geolocation.getCurrentPosition(async (pos) => {
                     try {
                         const { latitude, longitude } = pos.coords;
-                        
                         const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
                         const data = await res.json();
-                        
                         const geo = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
                         const geoData = await geo.json();
                         
-                        // FIX: Added Fallback chain for location name
+                        // Location Logic
                         const addr = geoData.address;
                         const finalLocation = addr.city || addr.town || addr.village || addr.suburb || "Nearby";
                         
@@ -335,7 +338,6 @@
                         
                         const type = data.current_weather.weathercode > 50 ? 'rain' : 'sun';
                         document.getElementById('w-icon').className = type === 'rain' ? "fas fa-cloud-showers-heavy" : "fas fa-sun";
-                        
                         createWeatherParticles(type);
                         drawWeather(type);
                     } catch (e) { console.log("Weather error"); }
