@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GoTravel | Premium Live Experience</title>
+    <title>GoTravel | Premium Experience</title>
     <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -12,172 +12,118 @@
             --accent: #3b82f6;
             --glass: rgba(255, 255, 255, 0.1);
             --border: rgba(255, 255, 255, 0.2);
-            --tooltip-bg: rgba(0, 0, 0, 0.85);
+            --ios-blue: #007AFF;
+            --ios-yellow: #FFD60A;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #000; color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
 
-        body {
-            background: #000;
-            color: #fff;
-            font-family: 'Inter', sans-serif;
-            overflow: hidden; 
-            height: 100vh;
-        }
-
-        /* --- INTRO --- */
+        /* --- INTRO SCREEN --- */
         #intro-screen {
-            position: fixed; inset: 0;
-            background: #050505;
-            display: flex; justify-content: center; align-items: center;
-            z-index: 1000;
+            position: fixed; inset: 0; background: #050505;
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
             transition: transform 1.2s cubic-bezier(0.8, 0, 0.2, 1);
         }
-        .reveal-text { font-family: 'Syncopate', sans-serif; font-size: clamp(1.5rem, 5vw, 5rem); letter-spacing: 10px; text-transform: uppercase; animation: cinematicReveal 2.5s forwards; }
-        @keyframes cinematicReveal {
-            0% { opacity: 0; transform: scale(1.2); filter: blur(20px); }
-            100% { opacity: 1; transform: scale(1); filter: blur(0); letter-spacing: 10px; }
-        }
+        .reveal-text { font-family: 'Syncopate', sans-serif; font-size: clamp(1.5rem, 5vw, 5rem); letter-spacing: 12px; text-transform: uppercase; animation: cinematicReveal 2.5s forwards; }
+        @keyframes cinematicReveal { 0% { opacity: 0; transform: scale(1.2); filter: blur(20px); } 100% { opacity: 1; transform: scale(1); filter: blur(0); } }
         .slide-left { transform: translateX(-100%); }
 
         /* --- BACKGROUND --- */
         .bg-container { position: fixed; inset: 0; z-index: -2; background: #000; }
         .bg-layer { position: absolute; inset: 0; background-size: cover; background-position: center; transition: opacity 2s; opacity: 0; }
         .bg-layer.active { opacity: 1; }
-        .overlay { position: fixed; inset: 0; background: radial-gradient(circle, transparent, rgba(0,0,0,0.8)); z-index: -1; }
+        .overlay { position: fixed; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.9)); z-index: -1; }
 
-        /* --- HEADER & XL TIME BOX --- */
-        header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 20px 40px; position: relative; z-index: 20;
+        /* --- HEADER --- */
+        header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 20px 5%; position: relative; z-index: 20; width: 100%;
         }
-
+        
         .info-panel {
-            background: var(--glass);
-            backdrop-filter: blur(30px) saturate(200%);
-            -webkit-backdrop-filter: blur(30px) saturate(200%);
-            border: 1px solid var(--border);
-            padding: 12px 25px;
-            border-radius: 24px;
-            display: flex; gap: 20px; align-items: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(30px) saturate(180%);
+            border: 1px solid var(--border); padding: 12px 25px; border-radius: 24px;
+            display: flex; gap: 20px; align-items: center; position: relative; overflow: hidden;
         }
-        .time-section { border-right: 1px solid rgba(255, 255, 255, 0.2); padding-right: 20px; }
-        .time-text { font-size: 2.2rem; font-weight: 300; letter-spacing: -1px; line-height: 1; }
-        .date-text { font-size: 0.65rem; text-transform: uppercase; font-weight: 600; opacity: 0.7; letter-spacing: 1px; }
-        .weather-main i { font-size: 1.5rem; color: #fbbf24; filter: drop-shadow(0 0 8px #fbbf24); }
+        #weather-canvas { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+
+        .time-section { border-right: 1px solid rgba(255, 255, 255, 0.2); padding-right: 20px; z-index: 1; }
+        .time-text { font-size: 1.8rem; font-weight: 300; line-height: 1; }
+        .date-text { font-size: 0.65rem; color: var(--ios-blue); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .weather-section { z-index: 1; }
+        .weather-main i { font-size: 1.5rem; color: var(--ios-yellow); filter: drop-shadow(0 0 10px var(--ios-yellow)); }
         #temp { font-weight: 600; font-size: 1rem; }
-        #location-name { font-size: 0.6rem; opacity: 0.6; text-transform: uppercase; font-weight: 700; margin-top: 2px; display: block;}
+        #location-name { font-size: 0.55rem; opacity: 0.7; font-weight: 700; text-transform: uppercase; display: block; }
 
-        /* ENLARGED LOGO STYLES */
-        .logo-container img {
-            height: 80px; /* Increased from 45px to 80px */
-            width: auto;
-            transition: all 0.4s ease; /* Smooth transition for hover effect */
-            filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.6));
-            cursor: pointer;
-        }
+        .logo-container img { height: clamp(60px, 12vw, 90px); filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5)); }
 
-        /* Add a glow effect when hovering over the logo */
-        .logo-container img:hover {
-            transform: scale(1.1); /* Slightly grows when hovered */
-            filter: drop-shadow(0 0 35px rgba(59, 130, 246, 0.9));
-        }
+        .auth-btn { background: #fff; color: #000; padding: 10px 22px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 0.7rem; text-transform: uppercase; }
 
-        .auth-btn {
-            background: #fff; color: #000; padding: 10px 20px; border-radius: 50px;
-            text-decoration: none; font-weight: 700; font-size: 0.7rem; text-transform: uppercase;
-        }
-
-        /* --- HERO (Centered Layout) --- */
+        /* --- HERO SECTION --- */
         .hero-section {
-            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
-            text-align: center; width: 90%; z-index: 5; opacity: 0;
+            margin-top: 2vh; text-align: center; width: 100%; z-index: 5; opacity: 0; padding: 0 20px;
         }
-        .hero-title { font-family: 'Syncopate', sans-serif; font-size: clamp(2rem, 6vw, 4rem); margin-bottom: 10px; }
-        .hero-description { font-size: 1rem; opacity: 0.8; font-weight: 300; letter-spacing: 1px; }
+        .hero-title { font-family: 'Syncopate', sans-serif; font-size: clamp(2rem, 6vw, 4.5rem); margin-bottom: 5px; }
+        .hero-description { font-size: clamp(0.9rem, 2vw, 1.2rem); font-weight: 300; letter-spacing: 5px; text-transform: uppercase; background: linear-gradient(to right, #fff, #999); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
         /* --- NAVIGATION --- */
         .main-nav {
-            position: absolute; bottom: 140px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 15px; z-index: 10;
+            margin-top: 30px; display: flex; justify-content: center; flex-wrap: wrap;
+            gap: 20px; padding: 0 20px; z-index: 10;
         }
 
         .nav-card {
-            text-decoration: none; color: #fff;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(15px);
-            border: 1px solid var(--border);
-            border-radius: 22px;
+            text-decoration: none; color: #fff; background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px); border: 1px solid var(--border); border-radius: 24px;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            width: 110px; height: 120px; cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative; overflow: hidden;
+            width: clamp(100px, 20vw, 130px); height: clamp(110px, 22vw, 140px);
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; overflow: hidden;
         }
+        .nav-card i { font-size: 2rem; margin-bottom: 12px; color: var(--accent); transition: 0.3s; }
+        .nav-card span { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* Pop-up Tooltip */
-        .nav-card::before {
-            content: attr(data-tooltip);
-            position: absolute; top: -45px;
-            background: var(--tooltip-bg);
-            padding: 6px 12px; border-radius: 10px;
-            font-size: 0.65rem; font-weight: 600; white-space: nowrap;
-            opacity: 0; transform: translateY(10px); transition: 0.3s;
-            border: 1px solid var(--border);
-        }
-
-        .nav-card i { font-size: 1.6rem; margin-bottom: 10px; color: var(--accent); transition: 0.3s; }
-        .nav-card span { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-
-        .nav-card:hover { 
-            background: var(--accent); transform: translateY(-10px); 
-            box-shadow: 0 15px 30px rgba(59, 130, 246, 0.3);
-        }
-        .nav-card:hover::before { opacity: 1; transform: translateY(0); }
+        .nav-card:hover { background: var(--accent); transform: translateY(-10px); box-shadow: 0 15px 30px rgba(59, 130, 246, 0.4); }
         .nav-card:hover i { color: #fff; }
 
-        /* Transport Sub-menu (Fixed Logic) */
+        /* --- TRANSPORT OPTIONS ANIMATION --- */
         .transport-options {
-            position: absolute; inset: 0;
-            display: flex; flex-direction: column;
-            background: #0a0a0a; border-radius: 22px;
-            transform: translateY(100%); transition: 0.4s ease;
-            z-index: 5;
+            position: absolute; inset: 0; background: #000; display: flex; flex-direction: column;
+            transform: translateY(100%); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 15;
         }
         .transport-options.active { transform: translateY(0); }
+        
         .sub-btn {
             flex: 1; display: flex; align-items: center; justify-content: center;
-            gap: 8px; text-decoration: none; color: #fff; font-size: 0.65rem;
-            font-weight: 700; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.05);
+            gap: 10px; text-decoration: none; color: #fff; font-size: 0.65rem;
+            font-weight: 700; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.1);
+            transition: 0.3s ease;
         }
+        .sub-btn i { font-size: 1.2rem; color: var(--accent); margin-bottom: 0; }
         .sub-btn:hover { background: var(--accent); }
+        .sub-btn:hover i { color: #fff; }
 
         /* --- FOOTER --- */
         footer {
-            position: absolute; bottom: 0; width: 100%;
-            padding: 20px 40px;
-            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-            display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: end; z-index: 10;
+            position: absolute; bottom: 0; width: 100%; padding: 25px 5%;
+            background: linear-gradient(to top, rgba(0,0,0,1) 40%, transparent);
+            display: flex; justify-content: space-between; align-items: flex-end; z-index: 10;
         }
-        .footer-left { font-size: 0.75rem; opacity: 0.7; line-height: 1.8; }
-        .footer-left i { color: var(--accent); margin-right: 8px; }
+        .footer-left { display: flex; flex-direction: column; gap: 5px; font-size: 0.8rem; opacity: 0.7; }
         .footer-center { text-align: center; }
-        .social-links { display: flex; justify-content: center; gap: 15px; margin-bottom: 10px; }
-        .social-links a { color: #fff; font-size: 1.1rem; opacity: 0.5; transition: 0.3s; }
-        .social-links a:hover { opacity: 1; color: var(--accent); }
-        .footer-right { text-align: right; font-size: 0.7rem; }
-        .shadow-coders { color: var(--accent); font-weight: 700; letter-spacing: 1px; }
+        .social-links { display: flex; gap: 20px; margin-bottom: 10px; }
+        .social-links a { color: #fff; font-size: 1.2rem; opacity: 0.6; transition: 0.3s; }
+        .social-links a:hover { opacity: 1; color: var(--accent); transform: translateY(-3px); }
+        .footer-right { text-align: right; }
+        .shadow-coders { color: var(--accent); font-weight: 700; letter-spacing: 1px; text-shadow: 0 0 10px var(--accent); }
 
-        @media (max-width: 850px) {
-            header { flex-direction: column; gap: 15px; }
-            .logo-container img {
-             height: 60px; /* Slightly smaller on mobile to save space */
-         }
-            .hero-section { top: 35%; }
-            .main-nav { bottom: 180px; gap: 8px; flex-wrap: wrap; justify-content: center; }
-            .nav-card { width: 95px; height: 105px; }
-            footer { grid-template-columns: 1fr; text-align: center; gap: 15px; padding: 15px; }
-            .footer-right { text-align: center; }
+        @media (max-width: 600px) {
+            header { flex-direction: column; gap: 20px; padding-top: 40px; }
+            .hero-section { margin-top: 15px; }
+            .main-nav { margin-bottom: 120px; gap: 10px; }
+            .nav-card { width: clamp(90px, 45vw, 120px); height: 110px; }
+            footer { flex-direction: column; align-items: center; gap: 15px; text-align: center; }
         }
     </style>
 </head>
@@ -187,7 +133,7 @@
         <div class="reveal-text">GoTravel</div>
     </div>
 
-    <div id="home-screen" style="opacity: 0; transition: opacity 1.5s;">
+    <div id="home-screen" style="opacity: 0; transition: opacity 1.5s; height: 100%; display: flex; flex-direction: column;">
         <div class="bg-container">
             <div id="bg1" class="bg-layer active"></div>
             <div id="bg2" class="bg-layer"></div>
@@ -196,67 +142,64 @@
 
         <header>
             <div class="info-panel">
+                <canvas id="weather-canvas"></canvas>
                 <div class="time-section">
                     <span id="time" class="time-text">00:00</span>
                     <span id="date" class="date-text">JAN 01</span>
                 </div>
                 <div class="weather-section">
-                    <div class="weather-main">
-                        <i id="w-icon" class="fas fa-cloud-sun"></i>
+                    <div class="weather-main" style="display: flex; align-items: center; gap: 8px;">
+                        <i id="w-icon" class="fas fa-sun"></i>
                         <span id="temp">--°C</span>
                     </div>
                     <span id="location-name">Detecting...</span>
                 </div>
             </div>
-
             <div class="logo-container">
                 <img src="GoTravels.png" alt="GoTravel Logo">
             </div>
-
             <a href="auth.html" class="auth-btn">Account</a>
         </header>
 
         <div class="hero-section" id="hero">
             <h1 class="hero-title">GoTravel</h1>
-            <p class="hero-description">Your gateway to extraordinary adventures.</p>
+            <p class="hero-description">The World Awaits You</p>
         </div>
 
         <nav class="main-nav">
-            <a href="places.html" class="nav-card" data-tooltip="View Destinations">
-                <i class="fas fa-mountain-sun"></i><span>Places</span>
-            </a>
+            <a href="places.html" class="nav-card"><i class="fas fa-mountain-sun"></i><span>Places</span></a>
             
-            <div class="nav-card" onclick="toggleTransport(this)" data-tooltip="Choose Travel Mode">
+            <div class="nav-card" onclick="toggleTransport(this)">
                 <i class="fas fa-route"></i><span>Transport</span>
                 <div class="transport-options" id="transportMenu">
-                    <a href="cabs.html" class="sub-btn"><i class="fas fa-taxi"></i> Cabs</a>
-                    <a href="buses.html" class="sub-btn"><i class="fas fa-bus"></i> Buses</a>
+                    <a href="cabs.html" class="sub-btn">
+                        <i class="fas fa-taxi"></i>
+                        <span>Cabs</span>
+                    </a>
+                    <a href="buses.html" class="sub-btn">
+                        <i class="fas fa-bus"></i>
+                        <span>Buses</span>
+                    </a>
                 </div>
             </div>
 
-            <a href="hotels.html" class="nav-card" data-tooltip="Luxury Bookings">
-                <i class="fas fa-hotel"></i><span>Hotels</span>
-            </a>
-            <a href="guides.html" class="nav-card" data-tooltip="Find a Guide">
-                <i class="fas fa-user-check"></i><span>Guides</span>
-            </a>
-            <a href="restaurants.html" class="nav-card" data-tooltip="Local Cuisines">
-                <i class="fas fa-utensils"></i><span>Dining</span>
-            </a>
+            <a href="hotels.html" class="nav-card"><i class="fas fa-hotel"></i><span>Hotels</span></a>
+            <a href="guides.html" class="nav-card"><i class="fas fa-user-check"></i><span>Guides</span></a>
+            <a href="restaurants.html" class="nav-card"><i class="fas fa-utensils"></i><span>Dining</span></a>
         </nav>
 
         <footer>
             <div class="footer-left">
-                <div><i class="fas fa-envelope"></i> gotravel.eng.pdn@gmail.com</div>
-                <div><i class="fas fa-phone-alt"></i>+94 71 357 4985</div>
+                <span><i class="fas fa-envelope" style="color:var(--accent)"></i> gotravel.eng.pdn@gmail.com</span>
+                <span><i class="fas fa-phone" style="color:var(--accent)"></i> +94 71 357 4985</span>
             </div>
             <div class="footer-center">
                 <div class="social-links">
                     <a href="#"><i class="fab fa-instagram"></i></a>
-                    <a href="#"><i class="fab fa-facebook-f"></i></a>
                     <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-facebook"></i></a>
                 </div>
-                <p style="font-size: 0.6rem; opacity: 0.5; letter-spacing: 2px;">DISCOVER THE WORLD</p>
+                <p style="font-size: 0.6rem; opacity: 0.5; letter-spacing: 2px;">EXPLORE THE UNKNOWN</p>
             </div>
             <div class="footer-right">
                 <p>&copy; 2024 GoTravel Experience</p>
@@ -266,7 +209,6 @@
     </div>
 
     <script>
-        // Reveal UI
         window.addEventListener('load', () => {
             setTimeout(() => {
                 document.getElementById('intro-screen').classList.add('slide-left');
@@ -276,22 +218,18 @@
             }, 3000);
         });
 
-        // Transport Toggle Fix
         function toggleTransport(card) {
             const menu = document.getElementById('transportMenu');
             menu.classList.toggle('active');
-            
-            // Close menu if clicking outside the card
-            const closeHandler = (e) => {
-                if (!card.contains(e.target)) {
-                    menu.classList.remove('active');
-                    document.removeEventListener('mousedown', closeHandler);
-                }
+            const close = (e) => { 
+                if (!card.contains(e.target)) { 
+                    menu.classList.remove('active'); 
+                    document.removeEventListener('mousedown', close); 
+                } 
             };
-            document.addEventListener('mousedown', closeHandler);
+            document.addEventListener('mousedown', close);
         }
 
-        // Live Clock
         function startClock() {
             const now = new Date();
             document.getElementById('time').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
@@ -300,8 +238,46 @@
         setInterval(startClock, 1000);
         startClock();
 
-        // Weather
+        const canvas = document.getElementById('weather-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function initCanvas() {
+            canvas.width = canvas.parentElement.offsetWidth;
+            canvas.height = canvas.parentElement.offsetHeight;
+        }
+
+        function createWeatherParticles(type) {
+            particles = [];
+            const count = type === 'rain' ? 30 : 15;
+            for(let i=0; i<count; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    speed: type === 'rain' ? 4 + Math.random() * 4 : 0.5 + Math.random(),
+                    size: type === 'rain' ? 1 : 2 + Math.random() * 2,
+                    opacity: Math.random()
+                });
+            }
+        }
+
+        function drawWeather(type) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = type === 'rain' ? '#ffffff' : '#FFD60A';
+            particles.forEach(p => {
+                ctx.globalAlpha = p.opacity;
+                ctx.beginPath();
+                if(type === 'rain') ctx.rect(p.x, p.y, 1, 10);
+                else ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                p.y += p.speed;
+                if(p.y > canvas.height) p.y = -10;
+            });
+            requestAnimationFrame(() => drawWeather(type));
+        }
+
         async function initWeather() {
+            initCanvas();
             if ("geolocation" in navigator) {
                 navigator.geolocation.getCurrentPosition(async (pos) => {
                     try {
@@ -310,28 +286,25 @@
                         const geo = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
                         const geoData = await geo.json();
                         document.getElementById('temp').innerText = `${Math.round(data.current_weather.temperature)}°C`;
-                        document.getElementById('location-name').innerText = geoData.address.city || geoData.address.town || "Nearby";
-                    } catch (e) { document.getElementById('location-name').innerText = "Weather Offline"; }
+                        document.getElementById('location-name').innerText = geoData.address.city || "Nearby";
+                        const type = data.current_weather.weathercode > 50 ? 'rain' : 'sun';
+                        document.getElementById('w-icon').className = type === 'rain' ? "fas fa-cloud-showers-heavy" : "fas fa-sun";
+                        createWeatherParticles(type);
+                        drawWeather(type);
+                    } catch (e) { console.log("Weather error"); }
                 });
             }
         }
 
-        // Background Slider
         const myImages = ['https://images.pexels.com/photos/35606862/pexels-photo-35606862.jpeg','https://images.pexels.com/photos/322437/pexels-photo-322437.jpeg','https://images.pexels.com/photos/1998434/pexels-photo-1998434.jpeg'];
         let currentIdx = 0;
         const layers = [document.getElementById('bg1'), document.getElementById('bg2')];
         let activeLayerIdx = 0;
-
         function updateSlider() {
             const nextIdx = (currentIdx + 1) % myImages.length;
             const nextLayerIdx = (activeLayerIdx + 1) % 2;
             layers[nextLayerIdx].style.backgroundImage = `url('${myImages[nextIdx]}')`;
-            setTimeout(() => {
-                layers[activeLayerIdx].classList.remove('active');
-                layers[nextLayerIdx].classList.add('active');
-                activeLayerIdx = nextLayerIdx;
-                currentIdx = nextIdx;
-            }, 50); 
+            setTimeout(() => { layers[activeLayerIdx].classList.remove('active'); layers[nextLayerIdx].classList.add('active'); activeLayerIdx = nextLayerIdx; currentIdx = nextIdx; }, 50); 
         }
         layers[0].style.backgroundImage = `url('${myImages[0]}')`;
         setInterval(updateSlider, 6000);
