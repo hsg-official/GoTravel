@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoTravel | Places</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    
+    <style>
+        :root {
+            --accent: #3b82f6;
+            --glass: rgba(0, 0, 0, 0.55);
+            --border: rgba(255, 255, 255, 0.15);
+            --gradient-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Background with gradient */
+        .gradient-bg {
+            position: fixed;
+            inset: 0;
+            background: var(--gradient-bg);
+            z-index: -3;
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: -2;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .info-panel {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            padding: 15px 20px;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+        }
+
+        .time-text { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+        .date-text { font-size: 0.7rem; letter-spacing: 1px; opacity: 0.6; display: block; }
+
+        .back-btn {
+            background: #fff;
+            color: #000;
+            padding: 10px 20px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Search Section */
+        .search-section {
+            position: relative;
+            height: 60vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: all 0.5s ease;
+        }
+
+        .search-section.expanded {
+            height: 40vh;
+        }
+
+        .search-title {
+            font-family: 'Syncopate', sans-serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .search-container {
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 20px 60px 20px 30px;
+            border-radius: 50px;
+            border: none;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+            transform: scale(1.02);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--accent);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background: #2563eb;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        /* Suggestions */
+        .suggestions-container {
+            width: 100%;
+            max-width: 600px;
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .suggestion-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .suggestion-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-5px);
+        }
+
+        .suggestion-card i {
+            font-size: 1.5rem;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        .suggestion-card h3 {
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        /* Destination Details */
+        .destination-section {
+            display: none;
+            padding: 40px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .destination-header {
+            position: relative;
+            height: 400px;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .destination-bg {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            filter: brightness(0.7);
+            transition: background-image 1s ease;
+        }
+
+        .destination-info {
+            position: relative;
+            z-index: 2;
+            padding: 40px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .destination-name {
+            font-family: 'Syncopate', sans-serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            margin-bottom: 10px;
+        }
+
+        .rating {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stars {
+            color: #fbbf24;
+        }
+
+        .rating-value {
+            font-weight: 600;
+        }
+
+        /* Content Sections */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        @media (min-width: 768px) {
+            .content-grid {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        .content-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-family: 'Syncopate', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--accent);
+        }
+
+        /* Image Gallery */
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .gallery-img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .gallery-img:hover {
+            transform: scale(1.05);
+        }
+
+        /* Ticket Information */
+        .ticket-info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid var(--accent);
+        }
+
+        .price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin: 10px 0;
+        }
+
+        .book-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        .book-btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        /* Things to Do List */
+        .things-list {
+            list-style: none;
+        }
+
+        .things-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .things-list li:last-child {
+            border-bottom: none;
+        }
+
+        .things-list i {
+            color: var(--accent);
+        }
+
+        /* Loading Spinner */
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Error Message */
+        .error-message {
+            display: none;
+            background: rgba(220, 38, 38, 0.2);
+            border: 1px solid rgba(220, 38, 38, 0.5);
+            color: #fca5a5;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px auto;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        /* Review Section */
+        .review-section {
+            margin-top: 30px;
+        }
+
+        .review-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .reviewer {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .review-date {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .search-section {
+                height: 50vh;
+            }
+            
+            .search-section.expanded {
+                height: 30vh;
+            }
+            
+            .destination-header {
+                height: 300px;
+            }
+            
+            .destination-info {
+                padding: 20px;
+            }
+            
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .suggestions-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .suggestions-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .search-input {
+                padding: 15px 50px 15px 20px;
+                font-size: 1rem;
+            }
+            
+            .search-title {
+                font-size: 1.8rem;
+            }
+            
+            .destination-name {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="gradient-bg"></div>
+    <div class="overlay"></div>
+
+    <header>
+        <div class="info-panel">
+            <span id="time" class="time-text">00:00</span>
+            <span id="date" class="date-text">DATE</span>
+            <div style="font-size: 0.8rem; margin-top: 5px;">
+                <i class="fas fa-sun" style="color: #fbbf24;"></i> <span id="temp">28°C</span>
+            </div>
+        </div>
+        <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Home</a>
+    </header>
+
+    <div class="search-section" id="searchSection">
+        <h1 class="search-title">Discover Sri Lanka</h1>
+        <div class="search-container">
+            <input type="text" 
+                   id="searchInput" 
+                   class="search-input" 
+                   placeholder="Search for destinations (e.g., Sigiriya, Ella, Galle...)"
+                   autocomplete="off">
+            <button class="search-btn" id="searchBtn">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+
+        <div class="suggestions-container" id="suggestions">
+            <div class="suggestion-card" data-destination="Sigiriya">
+                <i class="fas fa-mountain"></i>
+                <h3>Sigiriya</h3>
+                <p>Ancient Rock Fortress</p>
+            </div>
+            <div class="suggestion-card" data-destination="Ella">
+                <i class="fas fa-mountain-sun"></i>
+                <h3>Ella</h3>
+                <p>Hill Country Paradise</p>
+            </div>
+            <div class="suggestion-card" data-destination="Galle Fort">
+                <i class="fas fa-fort"></i>
+                <h3>Galle Fort</h3>
+                <p>Dutch Colonial Heritage</p>
+            </div>
+            <div class="suggestion-card" data-destination="Kandy">
+                <i class="fas fa-temple"></i>
+                <h3>Kandy</h3>
+                <p>Cultural Capital</p>
+            </div>
+            <div class="suggestion-card" data-destination="Yala National Park">
+                <i class="fas fa-paw"></i>
+                <h3>Yala National Park</h3>
+                <p>Wildlife Safari</p>
+            </div>
+            <div class="suggestion-card" data-destination="Mirissa">
+                <i class="fas fa-umbrella-beach"></i>
+                <h3>Mirissa</h3>
+                <p>Beach & Whale Watching</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="loader" id="loader">
+        <div class="spinner"></div>
+        <p>Getting information from Gemini AI...</p>
+    </div>
+
+    <div class="error-message" id="errorMessage">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p id="errorText">Failed to load destination information. Please try again.</p>
+    </div>
+
+    <div class="destination-section" id="destinationSection">
+        <div class="destination-header">
+            <div class="destination-bg" id="destinationBg"></div>
+            <div class="destination-info">
+                <h1 class="destination-name" id="destName">Destination Name</h1>
+                <div class="rating">
+                    <div class="stars" id="stars">
+                        <!-- Stars will be generated by JavaScript -->
+                    </div>
+                    <span class="rating-value" id="ratingValue">0.0/5</span>
+                    <span>(<span id="reviewCount">0</span> reviews)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div>
+                <div class="content-card">
+                    <h2 class="section-title">About</h2>
+                    <p id="description">Destination description will appear here...</p>
+                </div>
+
+                <div class="content-card">
+                    <h2 class="section-title">History</h2>
+                    <p id="history">Historical information will appear here...</p>
+                </div>
+
+                <div class="content-card">
+                    <h2 class="section-title">Image Gallery</h2>
+                    <div class="image-gallery" id="imageGallery">
+                        <div class="placeholder-img" style="text-align: center; padding: 40px; opacity: 0.5;">
+                            <i class="fas fa-image" style="font-size: 3rem; margin-bottom: 10px;"></i>
+                            <p>Images will appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="content-card ticket-info">
+                    <h2 class="section-title">Ticket Information</h2>
+                    <p><strong>Availability:</strong> <span id="ticketAvailability">Available</span></p>
+                    <p><strong>Opening Hours:</strong> <span id="openingHours">Loading...</span></p>
+                    <div class="price" id="ticketPrice">$--</div>
+                    <button class="book-btn" id="bookBtn"><i class="fas fa-ticket-alt"></i> Book Tickets</button>
+                </div>
+
+                <div class="content-card">
+                    <h2 class="section-title">Things to Do</h2>
+                    <ul class="things-list" id="thingsToDo">
+                        <li><i class="fas fa-spinner fa-spin"></i> Loading activities...</li>
+                    </ul>
+                </div>
+
+                <div class="content-card">
+                    <h2 class="section-title">Travel Information</h2>
+                    <p><strong>Best Time to Visit:</strong> <span id="bestTime">Loading...</span></p>
+                    <p><strong>Visit Duration:</strong> <span id="visitDuration">Loading...</span></p>
+                    <p><strong>Location:</strong> <span id="location">Sri Lanka</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =================== CONFIGURATION ===================
+        // 🚨🚨🚨 REPLACE THIS WITH YOUR GOOGLE SCRIPT URL 🚨🚨🚨
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzP59NUYEcW6j-6rQCj2GuVZ0nGFRz3-jAFnt5ubQWkJ8pZ8XJpNK5NEPqgLHgaUYno/exec';
+        // ↑↑↑ PASTE YOUR GOOGLE SCRIPT URL HERE ↑↑↑
+
+        // =================== DOM ELEMENTS ===================
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const searchSection = document.getElementById('searchSection');
+        const destinationSection = document.getElementById('destinationSection');
+        const loader = document.getElementById('loader');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        // Destination elements
+        const destName = document.getElementById('destName');
+        const destinationBg = document.getElementById('destinationBg');
+        const stars = document.getElementById('stars');
+        const ratingValue = document.getElementById('ratingValue');
+        const reviewCount = document.getElementById('reviewCount');
+        const description = document.getElementById('description');
+        const history = document.getElementById('history');
+        const imageGallery = document.getElementById('imageGallery');
+        const ticketPrice = document.getElementById('ticketPrice');
+        const openingHours = document.getElementById('openingHours');
+        const bestTime = document.getElementById('bestTime');
+        const visitDuration = document.getElementById('visitDuration');
+        const thingsToDo = document.getElementById('thingsToDo');
+
+        // =================== HELPER FUNCTIONS ===================
+        
+        // Generate star ratings
+        function generateStars(rating) {
+            let starsHTML = '';
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = rating % 1 >= 0.5;
+            
+            for (let i = 0; i < 5; i++) {
+                if (i < fullStars) {
+                    starsHTML += '<i class="fas fa-star"></i>';
+                } else if (i === fullStars && hasHalfStar) {
+                    starsHTML += '<i class="fas fa-star-half-alt"></i>';
+                } else {
+                    starsHTML += '<i class="far fa-star"></i>';
+                }
+            }
+            return starsHTML;
+        }
+
+        // Get images from Unsplash (free)
+        async function getDestinationImages(destination) {
+            try {
+                const query = encodeURIComponent(destination + ' Sri Lanka tourism');
+                const response = await fetch(`https://api.unsplash.com/search/photos?query=${query}&per_page=4&client_id=YOUR_UNSPLASH_KEY`);
+                const data = await response.json();
+                
+                if (data.results && data.results.length > 0) {
+                    return data.results.map(photo => photo.urls.regular);
+                }
+            } catch (error) {
+                console.log('Using fallback images:', error);
+            }
+            
+            // Fallback images
+            const fallbackImages = {
+                'Sigiriya': [
+                    'https://images.unsplash.com/photo-1551632811-561732d1e306',
+                    'https://images.unsplash.com/photo-1593693399744-6f0a3d37d6c7'
+                ],
+                'Ella': [
+                    'https://images.unsplash.com/photo-1578662996442-48f60103fc96',
+                    'https://images.unsplash.com/photo-1544551763-46a013bb70d5'
+                ],
+                'Galle': [
+                    'https://images.unsplash.com/photo-1551632811-561732d1e306',
+                    'https://images.unsplash.com/photo-1544551763-46a013bb70d5'
+                ],
+                'Kandy': [
+                    'https://images.unsplash.com/photo-1599658880432-56d56f8c1cf0',
+                    'https://images.unsplash.com/photo-1544551763-46a013bb70d5'
+                ],
+                'Yala': [
+                    'https://images.unsplash.com/photo-1550358864-518f202c02ba',
+                    'https://images.unsplash.com/photo-1544551763-46a013bb70d5'
+                ],
+                'Mirissa': [
+                    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
+                    'https://images.unsplash.com/photo-1544551763-46a013bb70d5'
+                ]
+            };
+            
+            const key = Object.keys(fallbackImages).find(k => destination.includes(k));
+            return fallbackImages[key] || fallbackImages['Sigiriya'];
+        }
+
+        // Call Google Apps Script for AI information
+        async function getAIInformation(destination) {
+            try {
+                console.log('Fetching AI info for:', destination);
+                
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `destination=${encodeURIComponent(destination)}`
+                });
+                
+                const data = await response.json();
+                console.log('AI Response:', data);
+                return data;
+                
+            } catch (error) {
+                console.error('Error fetching from AI:', error);
+                throw error;
+            }
+        }
+
+        // =================== MAIN FUNCTION ===================
+        async function loadDestination(destinationName) {
+            // Show loading state
+            loader.style.display = 'block';
+            errorMessage.style.display = 'none';
+            destinationSection.style.display = 'none';
+            searchSection.classList.add('expanded');
+            
+            try {
+                // Get data from AI and images in parallel
+                const [aiData, images] = await Promise.all([
+                    getAIInformation(destinationName),
+                    getDestinationImages(destinationName)
+                ]);
+                
+                // Update UI with AI data
+                updateDestinationUI(destinationName, aiData, images);
+                
+                // Hide loader and show destination
+                loader.style.display = 'none';
+                destinationSection.style.display = 'block';
+                
+                // Scroll to destination
+                setTimeout(() => {
+                    destinationSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+                
+            } catch (error) {
+                console.error('Failed to load destination:', error);
+                loader.style.display = 'none';
+                errorMessage.style.display = 'block';
+                searchSection.classList.remove('expanded');
+            }
+        }
+
+        // Update the UI with destination data
+        function updateDestinationUI(destinationName, aiData, images) {
+            // Basic info
+            destName.textContent = destinationName;
+            description.textContent = aiData.description || `Explore the beautiful ${destinationName} in Sri Lanka.`;
+            history.textContent = aiData.history || `Rich historical site in Sri Lanka.`;
+            
+            // Rating
+            const rating = aiData.rating || 4.5;
+            const reviews = aiData.reviews || Math.floor(Math.random() * 100) + 50;
+            stars.innerHTML = generateStars(rating);
+            ratingValue.textContent = `${rating.toFixed(1)}/5`;
+            reviewCount.textContent = reviews;
+            
+            // Ticket info
+            ticketPrice.textContent = aiData.ticketPrice || '$25';
+            openingHours.textContent = aiData.openingHours || '8:00 AM - 6:00 PM';
+            
+            // Travel info
+            bestTime.textContent = aiData.bestTime || 'December to April';
+            visitDuration.textContent = aiData.visitDuration || '2-3 hours';
+            
+            // Things to do
+            thingsToDo.innerHTML = '';
+            if (aiData.thingsToDo && Array.isArray(aiData.thingsToDo)) {
+                aiData.thingsToDo.slice(0, 6).forEach(item => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<i class="fas fa-check-circle"></i> ${item}`;
+                    thingsToDo.appendChild(li);
+                });
+            } else {
+                const defaultActivities = [
+                    'Explore the main attractions',
+                    'Take photographs',
+                    'Learn about local history',
+                    'Try local cuisine',
+                    'Visit nearby sites'
+                ];
+                defaultActivities.forEach(item => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<i class="fas fa-check-circle"></i> ${item}`;
+                    thingsToDo.appendChild(li);
+                });
+            }
+            
+            // Images
+            imageGallery.innerHTML = '';
+            images.forEach(imgUrl => {
+                const img = document.createElement('img');
+                img.src = imgUrl;
+                img.alt = destinationName;
+                img.className = 'gallery-img';
+                img.onclick = () => window.open(imgUrl, '_blank');
+                imageGallery.appendChild(img);
+            });
+            
+            // Set background image
+            if (images && images[0]) {
+                destinationBg.style.backgroundImage = `url('${images[0]}')`;
+            }
+        }
+
+        // =================== EVENT LISTENERS ===================
+        
+        // Search button
+        searchBtn.addEventListener('click', () => {
+            const query = searchInput.value.trim();
+            if (query) {
+                loadDestination(query);
+            } else {
+                alert('Please enter a destination to search');
+            }
+        });
+
+        // Enter key in search
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchBtn.click();
+            }
+        });
+
+        // Suggestion cards
+        document.querySelectorAll('.suggestion-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const destination = card.getAttribute('data-destination');
+                searchInput.value = card.querySelector('h3').textContent;
+                loadDestination(destination);
+            });
+        });
+
+        // Book button
+        document.getElementById('bookBtn').addEventListener('click', () => {
+            const destination = destName.textContent;
+            alert(`Redirecting to booking page for ${destination}...\n\nIn a real app, this would take you to ticket purchase.`);
+        });
+
+        // Escape key to reset
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (destinationSection.style.display === 'block') {
+                    destinationSection.style.display = 'none';
+                    searchSection.classList.remove('expanded');
+                    searchInput.value = '';
+                    errorMessage.style.display = 'none';
+                    searchInput.focus();
+                }
+            }
+        });
+
+        // =================== INITIALIZATION ===================
+        
+        // Real-time clock
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('time').textContent = 
+                now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('date').textContent = 
+                now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Focus search input on page load
+        setTimeout(() => {
+            searchInput.focus();
+        }, 500);
+
+        // Test the Google Script URL (optional)
+        console.log('Using Google Script URL:', GOOGLE_SCRIPT_URL);
+    </script>
+</body>
+</html>
