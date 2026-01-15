@@ -256,7 +256,7 @@ function loadServices(type){
   rows.forEach(r=>{
     const box = document.createElement("div");
     box.className = "service-box";
-    box.innerHTML = `<b>${r[0]}</b><br><small>${type}</small>`;
+    box.innerHTML = `<b>${r[1]}</b><br><small>${type}</small>`;
     box.onclick = () => openForm(type, r);
     document.getElementById("postedServices").appendChild(box);
   });
@@ -335,3 +335,4 @@ function save(e,type,old){
 
 </body>
 </html>
+
