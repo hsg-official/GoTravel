@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoTravel | Authentication Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            /* Glass Neon Theme Palette */
+            --bg-color: #0a0b1e;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --neon-primary: #00f2ff;
+            --neon-secondary: #7000ff;
+            --text-main: #ffffff;
+            --text-muted: #b0b0b0;
+            --accent-glow: 0 0 15px rgba(0, 242, 255, 0.5);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            /* Modified: Radial gradient with 0.9 (90% opacity / 10% transparency) */
+            background: radial-gradient(circle at top right, rgba(26, 27, 58, 0.9), rgba(10, 11, 30, 0.9)); 
+            color: var(--text-main); 
+            font-family: 'Inter', sans-serif; 
+            display: flex; 
+            min-height: 100vh;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            border-right: 1px solid var(--glass-border);
+            overflow-y: auto;
+        }
+
+        .logo-area { 
+            display: flex; align-items: center; gap: 10px; 
+            margin-bottom: 40px; font-weight: 800; 
+            color: var(--neon-primary); font-size: 1.3rem;
+            text-shadow: var(--accent-glow);
+        }
+
+        .logo-img { height: 75px; width: auto; flex-shrink: 0; border-radius: 50%; border: 2px solid var(--neon-primary); object-fit: cover; background: rgba(255, 255, 255, 0.05); }
+        
+        .nav-menu { flex: 1; }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 15px; text-decoration: none;
+            color: var(--text-muted); font-weight: 500;
+            border-radius: 12px; margin-bottom: 8px; transition: 0.3s;
+            border: 1px solid transparent;
+        }
+        .nav-item.active { 
+            background: rgba(0, 242, 255, 0.1); 
+            color: var(--neon-primary); 
+            border: 1px solid var(--neon-primary);
+            box-shadow: inset 0 0 10px rgba(0, 242, 255, 0.2);
+        }
+        .nav-item:hover:not(.active) { 
+            background: rgba(255, 255, 255, 0.05); 
+            color: #fff; 
+        }
+
+        .expand-section { margin-top: 15px; border-top: 1px solid var(--glass-border); padding-top: 15px; }
+        .plus-trigger {
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; padding: 10px 15px; color: var(--text-main);
+            font-weight: 600; font-size: 0.9rem;
+        }
+
+        .sub-menu {
+            max-height: 0; overflow: hidden;
+            transition: max-height 0.4s ease-out; padding-left: 10px;
+        }
+        .sub-menu.show { max-height: 1000px; margin-top: 10px; }
+        
+        .sub-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 15px; text-decoration: none;
+            color: var(--text-muted); font-size: 0.85rem;
+            font-weight: 500; border-radius: 8px; transition: 0.2s;
+        }
+        .sub-item:hover { color: var(--neon-primary); background: rgba(0, 242, 255, 0.05); }
+
+        .nested-menu { padding-left: 25px; border-left: 1px solid var(--glass-border); margin-left: 15px; }
+
+        /* --- MAIN CONTAINER --- */
+        .main-container { flex: 1; padding: 40px; }
+        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        
+        h1 { font-weight: 700; text-shadow: 0 0 20px rgba(255,255,255,0.2); }
+
+        .trip-tabs {
+            display: flex; gap: 30px; margin-bottom: 30px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .tab-btn {
+            background: none; border: none; padding: 12px 5px;
+            font-family: 'Inter', sans-serif; font-size: 0.95rem;
+            font-weight: 600; color: var(--text-muted); cursor: pointer;
+            position: relative; transition: 0.3s;
+        }
+        .tab-btn.active { color: var(--neon-primary); text-shadow: var(--accent-glow); }
+        .tab-btn.active::after {
+            content: ''; position: absolute; bottom: -1px; left: 0;
+            width: 100%; height: 2px; background: var(--neon-primary);
+            box-shadow: var(--accent-glow);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .placeholder-card { 
+            background: var(--glass-bg); 
+            backdrop-filter: blur(10px);
+            padding: 80px 50px; border-radius: 24px; 
+            text-align: center; 
+            border: 1px solid var(--glass-border); 
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .placeholder-card i { 
+            color: var(--neon-secondary); 
+            margin-bottom: 20px; 
+            font-size: 4rem; 
+            filter: drop-shadow(0 0 10px var(--neon-secondary));
+        }
+        .placeholder-card p { color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="logo-area">
+            <img src="GoTravel_Official_Logo.png" alt="GoTravel" class="logo-img">
+            <span>GoTravel</span>
+        </div>
+        
+        <nav class="nav-menu">
+            <a href="index.html" class="nav-item">
+                <i class="fas fa-home"></i> Home
+            </a>
+            <a href="dashboard.html" class="nav-item active">
+                <i class="fas fa-suitcase"></i> My Trips
+            </a>
+
+            <div class="expand-section">
+                <div class="plus-trigger" onclick="toggleMenu('services-menu')">
+                    <span>Explore Services</span>
+                    <i class="fas fa-plus-circle"></i>
+                </div>
+                <div class="sub-menu" id="services-menu">
+                    <a href="places.html" class="sub-item"><i class="fas fa-map-marked-alt"></i> Destinations</a>
+                    <a href="hotels.html" class="sub-item"><i class="fas fa-hotel"></i> Accommodations</a>
+                    
+                    <a href="restaurants.html" class="sub-item"><i class="fas fa-utensils"></i> Culinary Experiences</a>
+                    
+                    <a href="guides.html" class="sub-item"><i class="fas fa-user-tie"></i> Professional Tour Guiding</a>
+
+                    <div class="plus-trigger" onclick="toggleMenu('fleet-menu')" style="font-size: 0.85rem; padding: 10px 15px;">
+                        <span><i class="fas fa-route" style="margin-right: 8px;"></i> Transportation</span>
+                        <i class="fas fa-chevron-down" style="font-size: 0.7rem;"></i>
+                    </div>
+                    <div class="sub-menu nested-menu" id="fleet-menu">
+                        <a href="cabs.html" class="sub-item"><i class="fas fa-car-side"></i> Executive Private Cab</a>
+                        <a href="buses.html" class="sub-item"><i class="fas fa-bus-alt"></i> Public Transit Services</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div style="font-size: 0.75rem; color: #444; text-align: center; margin-top: 20px; padding-bottom: 15px;">
+            &copy; 2026 GoTravel Experience
+        </div>
+    </aside>
+
+    <main class="main-container">
+        <div class="header-row">
+            <h1>My Trips</h1>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <a href="dashboard.html"><img id = "userAvatar"src="" alt="User Avatar" style="width: 40px; border-radius: 50%; border: 1px solid var(--neon-secondary);"></a>
+            </div>
+        </div>
+
+        <div class="trip-tabs">
+            <button class="tab-btn active" onclick="openTab(event, 'ongoing')">Active Explorations</button>
+            <button class="tab-btn" onclick="openTab(event, 'past')">Travel History</button>
+            <button class="tab-btn" onclick="openTab(event, 'cancelled')">Cancelled Bookings</button>
+        </div>
+
+        <div id="ongoing" class="tab-content active">
+            <div class="placeholder-card">
+                <i class="fas fa-folder-open"></i>
+                <p>Your scheduled trips and ongoing explorations will appear here.</p>
+            </div>
+        </div>
+
+        <div id="past" class="tab-content">
+            <div class="placeholder-card">
+                <i class="fas fa-history"></i>
+                <p>Your past travel history will be listed here.</p>
+            </div>
+        </div>
+
+        <div id="cancelled" class="tab-content">
+            <div class="placeholder-card">
+                <i class="fas fa-calendar-times"></i>
+                <p>Cancelled bookings will appear here.</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function toggleMenu(menuId) {
+            const menu = document.getElementById(menuId);
+            menu.classList.toggle('show');
+            
+            const servicesMenu = document.getElementById('services-menu');
+            if (menuId === 'fleet-menu') {
+                servicesMenu.style.maxHeight = menu.classList.contains('show') ? "1200px" : "1000px";
+            }
+        }
+
+        function openTab(evt, tabName) {
+            let i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) { tabcontent[i].classList.remove("active"); }
+            tablinks = document.getElementsByClassName("tab-btn");
+            for (i = 0; i < tablinks.length; i++) { tablinks[i].classList.remove("active"); }
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+        function updateProfileAvatar(firstName, lastName) {
+        // Combine names with a plus sign for the API
+        const fullName = `${firstName}+${lastName}`;
+    
+        // Select your profile image element
+       const avatarImg = document.getElementById('userAvatar');
+    
+        // Set the source using the combined name
+       avatarImg.src = `https://ui-avatars.com/api/?name=${fullName}&background=7000ff&color=fff`;
+       }
+// Run this function as soon as the page loads
+// Fix: Use an anonymous function to pass the actual names
+window.onload = function() {
+    const fName = localStorage.getItem('userFName') || "Guest";
+    const lName = localStorage.getItem('userLName') || "User";
+    
+// Pass them into your existing function
+updateProfileAvatar(fName, lName);
+};
+
+
+
+    </script>
+</body>
+</html>
