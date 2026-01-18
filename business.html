@@ -8,10 +8,10 @@
 
 <style>
 :root{
-  --accent:#38bdf8; /* sky blue */
-  --glass:rgba(186,230,253,0.22); /* sky-blue glass */
-  --border:rgba(186,230,253,0.35);
-  --bg:#020617; /* deep blue-black */
+  --accent:#38bdf8;
+  --glass:rgba(186,230,253,0.18);
+  --border:rgba(186,230,253,0.28);
+  --bg:#020617;
 }
 
 *{box-sizing:border-box}
@@ -21,11 +21,92 @@ body{
   min-height:100vh;
   font-family:'Inter',system-ui;
   color:#fff;
+  display:flex;
   background:
     radial-gradient(circle at 20% 20%, rgba(56,189,248,0.35), transparent 45%),
     radial-gradient(circle at 80% 80%, rgba(125,211,252,0.35), transparent 45%),
-    linear-gradient(180deg,#020617,#020617);
+    linear-gradient(180deg,#010a35,#020617);
 }
+
+/* ===== SIDEBAR ===== */
+.sidebar{
+  width:260px;
+  height:150vh;
+  background:linear-gradient(
+    180deg,
+    rgba(1, 32, 47, 0.45),   /* darker sky blue */
+    rgba(2,132,199,0.28)
+  );
+  backdrop-filter:blur(20px);
+  border-right:1px solid rgba(186,230,253,0.35);
+}
+
+
+.logo{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-size:1.2rem;
+  font-weight:700;
+  color:var(--accent);
+  margin-bottom:35px;
+}
+
+.nav{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.nav a{
+  text-decoration:none;
+  color:#cbd5e1;
+  padding:12px 14px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  transition:.3s;
+  font-size:.95rem;
+  cursor:pointer;
+}
+
+.nav a:hover{
+  background:rgba(56,189,248,.15);
+  color:#fff;
+}
+
+.nav a.active{
+  background:linear-gradient(135deg,rgba(56,189,248,.35),rgba(56,189,248,.15));
+  color:#fff;
+}
+
+.section-title{
+  margin:20px 0 8px;
+  font-size:.7rem;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  opacity:.6;
+}
+
+.submenu{
+  margin-left:12px;
+  margin-top:6px;
+  display:flex;        /* ✅ allow flex */
+  flex-direction:column;
+  gap:4px;
+}
+
+.submenu a{
+  padding:10px 14px;
+  font-size:.9rem;
+  background:rgba(56,189,248,.08);
+  border-radius:12px;
+}
+
+/* ===== MAIN ===== */
+.main{flex:1}
+
 /* ===== HEADER ===== */
 header{
   padding:22px 5%;
@@ -33,23 +114,35 @@ header{
   justify-content:space-between;
   align-items:center;
   backdrop-filter:blur(25px);
-  background:rgba(0,0,0,0.6);
+  background:rgba(0,0,0,0.45);
   border-bottom:1px solid var(--border);
 }
-h1{
-  font-size:1.8rem;
-  font-weight:700;
-  letter-spacing:1px;
-}
 
-/* ===== LAYOUT ===== */
+h1{font-size:1.7rem}
+
+/* ===== CONTENT ===== */
 .container{
   max-width:1200px;
   margin:auto;
   padding:30px 5%;
 }
 
-/* ===== GLASS CARD ===== */
+/* ===== TABS ===== */
+.tabs{
+  display:flex;
+  gap:30px;
+  margin-bottom:25px;
+  border-bottom:1px solid rgba(255,255,255,.15);
+}
+
+.tab-active{
+  padding-bottom:10px;
+  border-bottom:2px solid var(--accent);
+  color:var(--accent);
+  font-weight:600;
+}
+
+/* ===== CARD ===== */
 .card{
   background:linear-gradient(
     180deg,
@@ -61,18 +154,10 @@ h1{
   border-radius:24px;
   padding:24px;
   margin-bottom:25px;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.25),
-    0 25px 60px rgba(14,165,233,0.35);
-  animation:fadeUp .6s ease;
+  box-shadow:0 25px 60px rgba(14,165,233,0.35);
 }
 
-@keyframes fadeUp{
-  from{opacity:0; transform:translateY(15px)}
-  to{opacity:1; transform:none}
-}
-
-/* ===== SERVICES GRID ===== */
+/* ===== GRID ===== */
 .flex{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
@@ -86,37 +171,15 @@ h1{
   border-radius:18px;
   padding:20px;
   cursor:pointer;
-  transition:.4s cubic-bezier(.2,.8,.2,1);
-  position:relative;
-  overflow:hidden;
+  transition:.3s;
 }
-.service-box::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:linear-gradient(120deg,transparent,rgba(59,130,246,.25),transparent);
-  opacity:0;
-  transition:.4s;
-}
-.service-box:hover::before{opacity:1}
 .service-box:hover{
-  transform:translateY(-8px) scale(1.02);
-  border-color:var(--accent);
-  box-shadow:0 25px 60px rgba(59,130,246,0.35);
+  transform:translateY(-6px);
+  box-shadow:0 20px 40px rgba(56,189,248,.35);
 }
-.service-box b{
-  font-size:1.05rem;
-  display:block;
-  margin-bottom:4px;
-}
-.service-box small{
-  opacity:.7;
-  text-transform:uppercase;
-  letter-spacing:1px;
-  font-size:.65rem;
-}
+.service-box b{display:block}
 
-/* ===== BUTTONS ===== */
+/* ===== BUTTON ===== */
 button{
   background:linear-gradient(135deg,var(--accent),#0ea5e9);
   border:none;
@@ -125,214 +188,458 @@ button{
   border-radius:14px;
   cursor:pointer;
   font-weight:700;
-  letter-spacing:.5px;
-  transition:.3s;
 }
-button:hover{
-  transform:translateY(-2px);
-  box-shadow:0 10px 30px rgba(59,130,246,.5);
+/* ===== FORM STYLING (CLEAN) ===== */
+form{
+  margin-top:20px;
 }
 
-/* ===== PLUS ===== */
-.plus{
-  font-size:28px;
-  color:var(--accent);
-  cursor:pointer;
-  margin-left:10px;
-  transition:.3s;
-}
-.plus:hover{
-  transform:rotate(90deg) scale(1.2);
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:16px;
 }
 
-/* ===== MENU ===== */
-.menu button{
-  width:100%;
-  margin-bottom:10px;
-  background:rgba(0,0,0,0.5);
-  border:1px solid var(--border);
+label{
+  font-size:.75rem;
+  opacity:.7;
+  margin-bottom:6px;
+  display:block;
 }
 
-/* ===== FORMS ===== */
-input,textarea,select{
+input, textarea, select{
   width:100%;
   padding:14px 16px;
-  background:rgba(0,0,0,0.45);
-  border:1px solid var(--border);
+  background:rgba(186,230,253,0.18);
+  border:1px solid rgba(186,230,253,0.35);
   border-radius:14px;
   color:#fff;
-  margin-bottom:14px;
   outline:none;
   transition:.3s;
-}
-input:focus,textarea:focus,select:focus{
-  border-color:var(--accent);
-  box-shadow:0 0 0 2px rgba(59,130,246,.25);
+  font-size:.9rem;
 }
 
-img.preview{
-  width:100%;
-  border-radius:14px;
-  margin-top:10px;
+textarea{
+  resize:none;
+  min-height:90px;
+}
+
+input:focus,
+textarea:focus,
+select:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 2px rgba(56,189,248,.35);
+}
+
+.form-actions{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:20px;
+}
+/* ===== PROFILE ICON ===== */
+.profile{
+  position:relative;
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  background:linear-gradient(
+    135deg,
+    rgba(56,189,248,.35),
+    rgba(56,189,248,.15)
+  );
+  border:1px solid rgba(56,189,248,.45);
+}
+
+.profile i{
+  font-size:18px;
+  color:#fff;
+}
+
+/* Tooltip */
+.profile-tooltip{
+  position:absolute;
+  top:52px;
+  right:0;
+  background:rgba(2, 18, 85, 0.95);
+  border:1px solid rgba(186,230,253,.35);
+  backdrop-filter:blur(12px);
+  padding:8px 12px;
+  border-radius:10px;
+  font-size:.8rem;
+  white-space:nowrap;
+  opacity:0;
+  pointer-events:none;
+  transform:translateY(-6px);
+  transition:.25s;
+  color:#fff;
+  z-index:10;
+}
+
+.profile:hover .profile-tooltip{
+  opacity:1;
+  transform:translateY(0);
+}
+.profile-letter{
+  font-size:18px;
+  font-weight:600;
+  color:#fff;
+  text-transform:uppercase;
+  user-select:none;
+}
+/* ===== LOGO IMAGE ===== */
+.logo{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.logo-img{
+  width:60px;
+  height:60px;
+  object-fit:cover;
+  border-radius:50%;
+  border:2px solid rgba(186,230,253,0.6);
+  box-shadow:0 0 12px rgba(56,189,248,.35);
+}
+.main header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+
+  padding:18px 24px;
+  margin-bottom:20px;
+  border-radius:18px;
+
+  background:linear-gradient(
+    180deg,
+    rgba(2,132,199,0.45),
+    rgba(2,132,199,0.28)
+  );
+
+  backdrop-filter:blur(18px);
+  border:1px solid rgba(186,230,253,0.35);
+  box-shadow:0 8px 24px rgba(2,132,199,.35);
+}
+
+.main header h1{
+  margin:0;
+  font-size:1.4rem;
+  font-weight:600;
+  color:#fff;
 }
 
 .hidden{display:none}
-
-/* ===== MOBILE ===== */
-@media(max-width:600px){
-  h1{font-size:1.4rem}
-}
 </style>
-
 </head>
 
 <body>
 
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar">
+  <div class="logo">
+    <img src="GoTravels.png" class="logo-img" alt="Go Travels">
+    <span> GoTravel</span>
+  </div>
+
+  <nav class="nav">
+    <a onclick=logout()>
+      <span><i class="fa-solid fa-house"></i> Home</span>
+    </a>
+    <a class="active"><span><i class="fa-solid fa-briefcase"></i> My Services</span></a>
+
+    <div class="section-title">Services</div>
+
+    <!-- ADD SERVICES -->
+    <a onclick="toggleAddServices()">
+      <span><i class="fa-solid fa-plus"></i> Add Services</span>
+      <i class="fa-solid fa-chevron-down"></i>
+    </a>
+
+    <div id="addServicesMenu" class="submenu hidden">
+      <a onclick="openForm('transport')">🚗 Transport</a>
+      <a onclick="openForm('hotel')">🏨 Hotel</a>
+      <a onclick="openForm('restaurant')">🍽 Restaurant</a>
+      <a onclick="openForm('guide')">🧭 Guide</a>
+    </div>
+  </nav>
+</aside>
+
+<!-- ===== MAIN ===== -->
+<div class="main">
+
 <header>
-  <h1>Business Dashboard <span style="opacity:.5;font-size:.8rem">GoTravel</span></h1>
-  <button onclick="logout()">Logout</button>
+  <h1>My Services</h1>
+  <div class="profile">
+  <span class="profile-letter" id="profileLetter"></span>
+  <div class="profile-tooltip" id="profileEmail"></div>
+</div>
 </header>
 
 <div class="container">
 
-<!-- MY SERVICES -->
-<div class="card">
-  <h2>
-    My Services
-    <span class="plus" onclick="toggleMenu()">＋</span>
-  </h2>
+  <div class="tabs">
+    <div class="tab-active">Posted Services</div>
+  </div>
 
-  <!-- Posted Services -->
-  <h3 style="margin:20px 0 10px;opacity:.8;font-weight:600">
-    Posted Services
-  </h3>
+  <div class="card">
+    <div id="postedServices" class="flex"></div>
+    <p id="noServices" style="opacity:.6;margin-top:15px">
+      No services posted yet.
+    </p>
+  </div>
 
-  <div id="postedServices" class="flex"></div>
-  <p id="noServices" style="opacity:.6;font-size:.9rem">
-  No services posted yet.
-</p>
+  <div id="formCard" class="card hidden"></div>
+
 </div>
-
-<!-- SERVICE MENU -->
-<div id="menu" class="card hidden menu">
-  <button onclick="openForm('transport')">🚗 Transport</button>
-  <button onclick="openForm('hotel')">🏨 Hotel</button>
-  <button onclick="openForm('restaurant')">🍽 Restaurant</button>
-  <button onclick="openForm('guide')">🧭 Guide</button>
-</div>
-
-<!-- FORM -->
-<div id="formCard" class="card hidden"></div>
-
 </div>
 
 <script>
-/* ================= CONFIG ================= */
-const API = "https://script.google.com/macros/s/AKfycbyBajUZwuiWX14g3MhDqF0jg9j-8O2A3T6MpLuVaVJbkqaB6PY2yqh1_EANKzP23_E/exec";
-const email = localStorage.getItem("user_email");
-if(!email) location.href="auth.html";
-/*const email = localStorage.getItem("user_email") || "testbusiness@gotravel.com";*/
+const API="https://script.google.com/macros/s/AKfycbx6nApwvPnka-mWBXyr3q8mmtv-6sTB0XGyTo45YtKfBFYzcfc7URIXNYCwdhkCzPI/exec";
+/*const email=localStorage.getItem("user_email");
+if(!email) location.href="auth.html";*/
+const email = localStorage.getItem("user_email") || "testbusiness@gotravel.com";
+let editingRow = null;
+document.addEventListener("DOMContentLoaded", () => {
+  if(!email) return;
 
-/* ================= UI ================= */
-function toggleMenu(){
-  document.getElementById("menu").classList.toggle("hidden");
-}
+  const letterEl = document.getElementById("profileLetter");
+  const emailEl  = document.getElementById("profileEmail");
+
+  if(letterEl){
+    letterEl.textContent = email.charAt(0).toUpperCase();
+  }
+
+  if(emailEl){
+    emailEl.textContent = email;
+  }
+});
+
 function logout(){
   localStorage.clear();
   location.href="index.html";
 }
 
-/* ================= LOAD SERVICES ================= */
+function toggleAddServices(){
+  document.getElementById("addServicesMenu").classList.toggle("hidden");
+}
+
 ["transport","hotel","restaurant","guide"].forEach(loadServices);
 
 function loadServices(type){
   fetch(`${API}?type=${type}&email=${email}`)
-  .then(r=>r.json())
-  .then(rows=>{
-  if(rows.length){
-    document.getElementById("noServices").style.display = "none";
-  }
-
-  rows.forEach(r=>{
-    const box = document.createElement("div");
-    box.className = "service-box";
-    box.innerHTML = `<b>${r[1]}</b><br><small>${type}</small>`;
-    box.onclick = () => openForm(type, r);
-    document.getElementById("postedServices").appendChild(box);
-  });
-});
+    .then(r=>r.json())
+    .then(rows=>{
+      if(rows.length){
+        document.getElementById("noServices").style.display="none";
+      }
+      rows.forEach(r=>{
+        const box=document.createElement("div");
+        box.className="service-box";
+        box.innerHTML=`<b>${r[1]}</b><small>${type}</small>`;
+        box.onclick = () => {
+          editingRow = r[r.length - 1]; // ⬅ last value = row number
+          openForm(type, r);
+        };
+        document.getElementById("postedServices").appendChild(box);
+      });
+    });
 }
+function openForm(type, data = null){
+  editingRow = null;
+  if (data) {
+    editingRow = data[data.length - 1];
+  }
+  // Close Add Services dropdown (optional UX)
+  const menu = document.getElementById("addServicesMenu");
+  if(menu) menu.classList.add("hidden");
 
-/* ================= FORMS ================= */
-function openForm(type,data=null){
-  toggleMenu();
-  const f=document.getElementById("formCard");
+  const f = document.getElementById("formCard");
   f.classList.remove("hidden");
 
-  const common=`
-    <input name="name" placeholder="Service Name" value="${data?.[0]||''}" required>
-    <input name="contact" placeholder="Contact No" value="${data?.[1]||''}">
-    <textarea name="desc" placeholder="Description">${data?.slice(-2,-1)||''}</textarea>
+  const common = `
+  <div>
+    <label>Service Name</label>
+    <input name="service_name" value="${data?.[1] || ''}" required>
+  </div>
+
+  <div>
+    <label>Contact</label>
+    <input name="contact" value="${data?.[2] || ''}">
+  </div>
+
+  <div style="grid-column:1/-1">
+    <label>Description</label>
+    <textarea name="description">${data?.[data.length - 4] || ''}</textarea>
+  </div>
+
+  <div>
+    <label>Photo</label>
     <input type="file" name="photo">
-  `;
+  </div>
+`;
 
-  let extra="";
-  if(type==="transport"){
-    extra=`
-      <input name="address" placeholder="Address">
-      <select name="public">
-        <option>Public</option><option>Private</option>
+  let extra = "";
+
+  if(type === "transport"){
+  extra = `
+    <div>
+      <label>Address</label>
+      <input name="address" value="${data?.[3] || ''}">
+    </div>
+
+    <div>
+      <label>Transport Type</label>
+      <select name="transport_type">
+        <option ${data?.[4]==="Public"?"selected":""}>Public</option>
+        <option ${data?.[4]==="Private"?"selected":""}>Private</option>
       </select>
-      <input name="price" placeholder="Price per KM">
-    `;
-  }
-  if(type==="hotel"){
-    extra=`
-      <input name="city" placeholder="City">
-      <input name="address" placeholder="Address">
-      <input name="price" placeholder="Room & Meals Price">
-    `;
-  }
-  if(type==="restaurant"){
-    extra=`
-      <input name="city" placeholder="City">
-      <input name="address" placeholder="Address">
-      <input name="price" placeholder="Average Price">
-      <select name="breakfast"><option>YES</option><option>NO</option></select>
-      <select name="lunch"><option>YES</option><option>NO</option></select>
-      <select name="dinner"><option>YES</option><option>NO</option></select>
-    `;
-  }
-  if(type==="guide"){
-    extra=`
-      <input name="location" placeholder="Service Location">
-      <input name="lang" placeholder="Languages">
-    `;
-  }
+    </div>
 
-  f.innerHTML=`
-    <h3>${data?"Edit":"Add"} ${type}</h3>
-    <form onsubmit="save(event,'${type}',${data?JSON.stringify(data):null})">
-      ${common}
-      ${extra}
-      <button>Save</button>
-    </form>
+    <div>
+      <label>Price per KM</label>
+      <input name="price_per_km" value="${data?.[5] || ''}">
+    </div>
   `;
 }
 
-/* ================= SAVE ================= */
-function save(e,type,old){
-  e.preventDefault();
-  const fd=new FormData(e.target);
-  fd.append("type",type);
-  fd.append("email",email);
-  if(old) fd.append("old",JSON.stringify(old));
+  if(type === "hotel"){
+  extra = `
+    <div>
+      <label>City</label>
+      <input name="city" value="${data?.[3] || ''}">
+    </div>
 
-  fetch(API,{method:"POST",body:fd})
-  .then(()=>location.reload());
+    <div>
+      <label>Address</label>
+      <input name="address" value="${data?.[4] || ''}">
+    </div>
+
+    <div>
+      <label>Price</label>
+      <input name="price" value="${data?.[5] || ''}">
+    </div>
+  `;
+}
+
+  if(type === "restaurant"){
+  extra = `
+    <div>
+      <label>City</label>
+      <input name="city" value="${data?.[3] || ''}">
+    </div>
+
+    <div>
+      <label>Address</label>
+      <input name="address" value="${data?.[4] || ''}">
+    </div>
+
+    <div>
+      <label>Average Price</label>
+      <input name="price" value="${data?.[5] || ''}">
+    </div>
+
+    <div>
+      <label>Breakfast</label>
+      <select name="breakfast">
+        <option ${data?.[6]==="YES"?"selected":""}>YES</option>
+        <option ${data?.[6]==="NO"?"selected":""}>NO</option>
+      </select>
+    </div>
+
+    <div>
+      <label>Lunch</label>
+      <select name="lunch">
+        <option ${data?.[7]==="YES"?"selected":""}>YES</option>
+        <option ${data?.[7]==="NO"?"selected":""}>NO</option>
+      </select>
+    </div>
+
+    <div>
+      <label>Dinner</label>
+      <select name="dinner">
+        <option ${data?.[8]==="YES"?"selected":""}>YES</option>
+        <option ${data?.[8]==="NO"?"selected":""}>NO</option>
+      </select>
+    </div>
+  `;
+}
+
+  if(type === "guide"){
+  extra = `
+    <div>
+      <label>Location</label>
+      <input name="location" value="${data?.[3] || ''}">
+    </div>
+
+    <div>
+      <label>Languages</label>
+      <input name="languages" value="${data?.[4] || ''}">
+    </div>
+  `;
+}
+
+f.innerHTML = `
+  <h3>${data ? "Edit" : "Add"} ${type}</h3>
+
+  <form id="serviceForm">
+    <div class="form-grid">
+      ${common}
+      ${extra}
+    </div>
+
+    <div class="form-actions" style="gap:12px">
+      ${data ? `
+    <button type="button" onclick="deleteService('${type}')"
+      style="background:#ef4444">
+      Delete Service
+    </button>
+  ` : ""}
+  <button type="submit">Save Service</button>
+</div>
+  </form>
+`;
+
+document
+  .getElementById("serviceForm")
+  .addEventListener("submit", e => save(e, type));
+}
+function save(e, type){
+  e.preventDefault();
+
+  const fd = new FormData(e.target);
+  fd.append("type", type);
+  fd.append("email", email);
+
+  if (editingRow !== null) {
+    fd.append("row", editingRow);
+  }
+
+  fetch(API, {
+    method: "POST",
+    body: fd
+  }).then(() => location.reload());
+}
+function deleteService(type){
+  if (!editingRow) return;
+
+  if (!confirm("Are you sure you want to delete this service?")) return;
+
+  const fd = new FormData();
+  fd.append("type", type);
+  fd.append("email", email);
+  fd.append("row", editingRow);
+  fd.append("delete", "true");
+
+  fetch(API, {
+    method: "POST",
+    body: fd
+  }).then(() => location.reload());
 }
 </script>
 
 </body>
 </html>
-
