@@ -487,6 +487,8 @@
                 ]);
 
                 if (dbError) throw dbError;
+                localStorage.setItem('userFName', tempUser.fname);
+                localStorage.setItem('userLName', tempUser.lname);
 
                 showToast("Account Created! Redirecting...", "success");
                 setTimeout(() => redirectToDashboard(tempUser.accType), 1500);
@@ -560,13 +562,15 @@
 
                 const { data: userData, error: userError } = await supabaseClient
                     .from('users')
-                    .select('account_type')
+                    .select('account_type, first_name, last_name')
                     .eq('email', email)
                     .single();
 
                 if (userError) throw userError;
 
                 if (userData) {
+                    localStorage.setItem('userFName', userData.first_name);
+                    localStorage.setItem('userLName', userData.last_name);
                     showToast("Login Successful!", "success");
                     setTimeout(() => redirectToDashboard(userData.account_type), 1000);
                 } else {
