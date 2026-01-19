@@ -375,6 +375,33 @@ select:focus{
   opacity:.7;
 }
 .modal-close:hover{opacity:1}
+
+/* ===== PROFILE MENU ===== */
+.profile-menu{
+  position:absolute;
+  top:52px;
+  right:0;
+  min-width:160px;
+  background:rgba(2, 18, 85, 0.95);
+  border:1px solid rgba(186,230,253,.35);
+  backdrop-filter:blur(12px);
+  border-radius:14px;
+  padding:8px;
+  box-shadow:0 10px 30px rgba(0,0,0,.45);
+  z-index:20;
+}
+
+.profile-menu div{
+  padding:10px 12px;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:.9rem;
+}
+
+.profile-menu div:hover{
+  background:rgba(56,189,248,.15);
+}
+
 .hidden{ display:none !important; }
 
 </style>
@@ -417,10 +444,16 @@ select:focus{
 
 <header>
   <h1>My Services</h1>
-  <div class="profile">
+  <div class="profile" id="profileBtn">
   <span class="profile-letter" id="profileLetter"></span>
-  <div class="profile-tooltip" id="profileEmail"></div>
+
+  <!-- PROFILE MENU -->
+  <div class="profile-menu hidden" id="profileMenu">
+    <div onclick="openProfileModal()">👤 Profile</div>
+    <div onclick="logout()" style="color:#f87171">🚪 Logout</div>
+  </div>
 </div>
+
 </header>
 
 <div class="container">
@@ -469,17 +502,27 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   email = data.user.email;
+  //const first_name = localStorage.getItem("userFName") || "";
+  //const last_name = localStorage.getItem("userLName") || "";
 
   document.getElementById("profileLetter").textContent =
     email.charAt(0).toUpperCase();
 
-  document.getElementById("profileEmail").textContent = email;
+  //document.getElementById("profileEmail").textContent = email;
 
   // load services AFTER email exists
   ["transport","hotel","restaurant","guide"].forEach(loadServices);
 
   document.getElementById("modalOverlay").addEventListener("click", e=>{
   if(e.target.id === "modalOverlay") closeModal();
+});
+  document.getElementById("profileBtn").addEventListener("click", e => {
+  e.stopPropagation();
+  document.getElementById("profileMenu").classList.toggle("hidden");
+});
+
+document.addEventListener("click", () => {
+  document.getElementById("profileMenu").classList.add("hidden");
 });
 
 });
@@ -505,6 +548,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 //}
 async function logout(){
   await supabaseClient.auth.signOut();
+  localStorage.removeItem("userFName");
+  localStorage.removeItem("userLName");
   location.href = "auth.html";
 }
 
@@ -731,6 +776,52 @@ function closeModal(){
   document.getElementById("modalOverlay").classList.add("hidden");
   editingRow = null;
 }
+
+function openProfileModal(){
+  document.getElementById("profileMenu").classList.add("hidden");
+
+  const modal = document.getElementById("modalOverlay");
+  const content = document.getElementById("modalContent");
+
+  const first_name = localStorage.getItem("userFName") || "";
+  const last_name = localStorage.getItem("userLName") || "";
+  const category = "Business";
+
+  content.innerHTML = `
+    <h3>My Profile</h3>
+
+    <form>
+      <div class="form-grid">
+        <div>
+          <label>First Name</label>
+          <input value="${first_name}" disabled>
+        </div>
+
+        <div>
+          <label>Last Name</label>
+          <input value="${last_name}" disabled>
+        </div>
+
+        <div>
+          <label>Email</label>
+          <input value="${email}" disabled>
+        </div>
+
+        <div>
+          <label>Account Type</label>
+          <input value="${category}" disabled>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" onclick="closeModal()">Close</button>
+      </div>
+    </form>
+  `;
+
+  modal.classList.remove("hidden");
+}
+
 </script>
 
 </body>
