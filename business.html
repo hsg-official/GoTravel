@@ -5,6 +5,7 @@
 <title>GoTravel | Business Dashboard</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 :root{
@@ -332,7 +333,50 @@ select:focus{
   color:#fff;
 }
 
-.hidden{display:none}
+/* ===== MODAL ===== */
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(2,6,23,.75);
+  backdrop-filter:blur(10px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+.modal-overlay.hidden{
+  display:none;
+}
+
+.modal{
+  width:90%;
+  max-width:700px;
+  max-height:90vh;
+  overflow-y:auto;
+
+  background:linear-gradient(
+    180deg,
+    rgba(224,242,254,0.35),
+    rgba(186,230,253,0.18)
+  );
+  border:1px solid rgba(186,230,253,.35);
+  border-radius:26px;
+  padding:28px;
+  box-shadow:0 30px 80px rgba(56,189,248,.45);
+  position:relative;
+}
+
+.modal-close{
+  position:absolute;
+  top:16px;
+  right:20px;
+  font-size:28px;
+  cursor:pointer;
+  opacity:.7;
+}
+.modal-close:hover{opacity:1}
+.hidden{ display:none !important; }
+
 </style>
 </head>
 
@@ -391,19 +435,56 @@ select:focus{
       No services posted yet.
     </p>
   </div>
-
+<!--
   <div id="formCard" class="card hidden"></div>
-
+-->
 </div>
+</div>
+<!-- ===== MODAL ===== -->
+<div id="modalOverlay" class="modal-overlay hidden">
+  <div class="modal">
+    <span class="modal-close" onclick="closeModal()">&times;</span>
+    <div id="modalContent"></div>
+  </div>
 </div>
 
 <script>
+const supabaseUrl = 'https://cdcolkoavowjjymzdzud.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkY29sa29hdm93amp5bXpkenVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MDI2NjQsImV4cCI6MjA4Mzk3ODY2NH0.JPzj9fI1pKpPbPxyGqsemjcwpKiu0h046H7aBSURnpM';
+const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
 const API="https://script.google.com/macros/s/AKfycbx6nApwvPnka-mWBXyr3q8mmtv-6sTB0XGyTo45YtKfBFYzcfc7URIXNYCwdhkCzPI/exec";
-/*const email=localStorage.getItem("user_email");
-if(!email) location.href="auth.html";*/
-const email = localStorage.getItem("user_email") || "testbusiness@gotravel.com";
+/*const email = localStorage.getItem("user_email");*/
+
+/*const email = localStorage.getItem("user_email") || "testbusiness@gotravel.com";*/
 let editingRow = null;
-document.addEventListener("DOMContentLoaded", () => {
+let email = null;
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const { data, error } = await supabaseClient.auth.getUser();
+
+  if (error || !data.user) {
+    location.href = "auth.html";
+    return;
+  }
+
+  email = data.user.email;
+
+  document.getElementById("profileLetter").textContent =
+    email.charAt(0).toUpperCase();
+
+  document.getElementById("profileEmail").textContent = email;
+
+  // load services AFTER email exists
+  ["transport","hotel","restaurant","guide"].forEach(loadServices);
+
+  document.getElementById("modalOverlay").addEventListener("click", e=>{
+  if(e.target.id === "modalOverlay") closeModal();
+});
+
+});
+
+/*document.addEventListener("DOMContentLoaded", () => {
   if(!email) return;
 
   const letterEl = document.getElementById("profileLetter");
@@ -417,17 +498,21 @@ document.addEventListener("DOMContentLoaded", () => {
     emailEl.textContent = email;
   }
 });
-
-function logout(){
-  localStorage.clear();
-  location.href="index.html";
+*/
+//function logout(){
+//  localStorage.clear();
+//  location.href="index.html";
+//}
+async function logout(){
+  await supabaseClient.auth.signOut();
+  location.href = "auth.html";
 }
 
 function toggleAddServices(){
   document.getElementById("addServicesMenu").classList.toggle("hidden");
 }
 
-["transport","hotel","restaurant","guide"].forEach(loadServices);
+//["transport","hotel","restaurant","guide"].forEach(loadServices);
 
 function loadServices(type){
   fetch(`${API}?type=${type}&email=${email}`)
@@ -457,8 +542,11 @@ function openForm(type, data = null){
   const menu = document.getElementById("addServicesMenu");
   if(menu) menu.classList.add("hidden");
 
-  const f = document.getElementById("formCard");
-  f.classList.remove("hidden");
+  //const f = document.getElementById("formCard");
+  //f.classList.remove("hidden");
+  const modal = document.getElementById("modalOverlay");
+  const f = document.getElementById("modalContent");
+  modal.classList.remove("hidden");
 
   const common = `
   <div>
@@ -638,6 +726,10 @@ function deleteService(type){
     method: "POST",
     body: fd
   }).then(() => location.reload());
+}
+function closeModal(){
+  document.getElementById("modalOverlay").classList.add("hidden");
+  editingRow = null;
 }
 </script>
 
