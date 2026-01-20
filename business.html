@@ -478,6 +478,32 @@ select:focus{
     margin-left: 0;
   }
 }
+/* ===== SIDEBAR CLOSE BUTTON ===== */
+.sidebar-close{
+  display: none;
+  position: absolute;
+  top: 16px;
+  right: -45px;
+  width: 40px;
+  height: 40px;
+  background: #020617;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(0,0,0,.4);
+}
+
+.sidebar-close i{
+  font-size: 18px;
+}
+
+/* Mobile only */
+@media (max-width: 768px){
+  .sidebar-close{
+    display: flex;
+  }
+}
 
 </style>
 </head>
@@ -486,6 +512,10 @@ select:focus{
 
 <!-- ===== SIDEBAR ===== -->
 <aside class="sidebar" onclick="event.stopPropagation()">
+<div class="sidebar-close" onclick="closeSidebar()">
+  <i class="fa-solid fa-chevron-left"></i>
+</div>
+
   <div class="logo">
     <img src="GoTravels.png" class="logo-img" alt="Go Travels">
     <span> GoTravel</span>
@@ -904,6 +934,9 @@ function openProfileModal(){
 }
 function toggleSidebar(){
   document.querySelector(".sidebar").classList.toggle("active");
+}
+function closeSidebar(){
+  document.querySelector(".sidebar").classList.remove("active");
 }
 
 </script>
