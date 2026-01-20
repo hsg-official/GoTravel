@@ -500,7 +500,7 @@ select:focus{
     <div class="section-title">Services</div>
 
     <!-- ADD SERVICES -->
-    <a onclick="toggleAddServices()">
+    <a onclick="toggleAddServices(event)">
       <span><i class="fa-solid fa-plus"></i> Add Services</span>
       <i class="fa-solid fa-chevron-down"></i>
     </a>
@@ -630,6 +630,7 @@ async function logout(){
 }
 
 function toggleAddServices(){
+  e.stopPropagation();
   document.getElementById("addServicesMenu").classList.toggle("hidden");
 }
 
