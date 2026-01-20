@@ -35,7 +35,7 @@ body{
 /* ===== SIDEBAR ===== */
 .sidebar{
   width:260px;
-  height:150vh;
+  height:100vh;
   background:linear-gradient(
     180deg,
     rgba(1, 32, 47, 0.45),   /* darker sky blue */
@@ -443,6 +443,41 @@ select:focus{
   }
 }
 
+/* ===== MOBILE SIDEBAR TOGGLE ===== */
+.mobile-menu-btn{
+  display:none;
+  font-size:26px;
+  cursor:pointer;
+}
+
+@media (max-width: 768px) {
+
+  .mobile-menu-btn{
+    display:block;
+  }
+
+  body{
+    flex-direction: column;
+  }
+
+  .sidebar{
+    position: fixed;
+    top: 0;
+    left: -100%;
+    height: 100vh;
+    width: 260px;
+    z-index: 1000;
+    transition: left .3s ease;
+  }
+
+  .sidebar.active{
+    left: 0;
+  }
+
+  .main{
+    margin-left: 0;
+  }
+}
 
 </style>
 </head>
@@ -483,6 +518,7 @@ select:focus{
 <div class="main">
 
 <header>
+  <i class="fa-solid fa-bars mobile-menu-btn" onclick="toggleSidebar()"></i>
   <h1>My Services</h1>
   <div class="profile" id="profileBtn">
   <span class="profile-letter" id="profileLetter"></span>
@@ -595,6 +631,9 @@ async function logout(){
 
 function toggleAddServices(){
   document.getElementById("addServicesMenu").classList.toggle("hidden");
+  if(window.innerWidth <= 768){
+    document.querySelector(".sidebar").classList.remove("active");
+  }
 }
 
 //["transport","hotel","restaurant","guide"].forEach(loadServices);
@@ -860,6 +899,9 @@ function openProfileModal(){
   `;
 
   modal.classList.remove("hidden");
+}
+function toggleSidebar(){
+  document.querySelector(".sidebar").classList.toggle("active");
 }
 
 </script>
