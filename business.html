@@ -631,9 +631,6 @@ async function logout(){
 
 function toggleAddServices(){
   document.getElementById("addServicesMenu").classList.toggle("hidden");
-  if(window.innerWidth <= 768){
-    document.querySelector(".sidebar").classList.remove("active");
-  }
 }
 
 //["transport","hotel","restaurant","guide"].forEach(loadServices);
@@ -661,6 +658,10 @@ function openForm(type, data = null){
   editingRow = null;
   if (data) {
     editingRow = data[data.length - 1];
+  }
+
+  if(window.innerWidth <= 768){
+    document.querySelector(".sidebar").classList.remove("active");
   }
   // Close Add Services dropdown (optional UX)
   const menu = document.getElementById("addServicesMenu");
