@@ -485,7 +485,7 @@ select:focus{
 <body>
 
 <!-- ===== SIDEBAR ===== -->
-<aside class="sidebar">
+<aside class="sidebar" onclick="event.stopPropagation()">
   <div class="logo">
     <img src="GoTravels.png" class="logo-img" alt="Go Travels">
     <span> GoTravel</span>
@@ -629,8 +629,8 @@ async function logout(){
   location.href = "auth.html";
 }
 
-function toggleAddServices(){
-  e.stopPropagation();
+function toggleAddServices(event){
+  event.stopPropagation();
   document.getElementById("addServicesMenu").classList.toggle("hidden");
 }
 
