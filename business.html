@@ -28,6 +28,8 @@ body{
     radial-gradient(circle at 20% 20%, rgba(56,189,248,0.35), transparent 45%),
     radial-gradient(circle at 80% 80%, rgba(125,211,252,0.35), transparent 45%),
     linear-gradient(180deg,#010a35,#020617);
+  overflow-x: hidden;
+
 }
 
 /* ===== SIDEBAR ===== */
@@ -427,23 +429,20 @@ select:focus{
   button{
     font-size: 1rem;
     padding: 16px 22px;
+    min-height: 48px;
   }
 
   .nav a{
     font-size: 1rem;
+    min-height: 48px;
   }
 
   .service-box{
     font-size: 1rem;
-  }
-}
-@media (max-width: 768px) {
-  .nav a,
-  button,
-  .service-box {
     min-height: 48px;
   }
 }
+
 
 </style>
 </head>
