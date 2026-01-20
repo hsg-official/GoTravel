@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GoTravel | Business Dashboard</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -403,6 +404,46 @@ select:focus{
 }
 
 .hidden{ display:none !important; }
+/* ===== MOBILE FIX ===== */
+@media (max-width: 768px) {
+
+  body{
+    font-size: 16px;
+  }
+
+  h1{
+    font-size: 1.6rem;
+  }
+
+  label{
+    font-size: .85rem;
+  }
+
+  input, textarea, select{
+    font-size: 1rem;
+    padding: 16px 18px;
+  }
+
+  button{
+    font-size: 1rem;
+    padding: 16px 22px;
+  }
+
+  .nav a{
+    font-size: 1rem;
+  }
+
+  .service-box{
+    font-size: 1rem;
+  }
+}
+@media (max-width: 768px) {
+  .nav a,
+  button,
+  .service-box {
+    min-height: 48px;
+  }
+}
 
 </style>
 </head>
