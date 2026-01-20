@@ -18,18 +18,31 @@
 
 *{box-sizing:border-box}
 
+
 body{
   margin:0;
   min-height:100vh;
   font-family:'Inter',system-ui;
   color:#fff;
   display:flex;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(56,189,248,0.35), transparent 45%),
-    radial-gradient(circle at 80% 80%, rgba(125,211,252,0.35), transparent 45%),
-    linear-gradient(180deg,#010a35,#020617);
-  overflow-x: hidden;
+  background:#000;
+  overflow-x:hidden;
+}
+/* ===== BUSINESS BACKGROUND IMAGE ===== */
+.bg-layer{
+  position: fixed;
+  inset: -5%;
+  background-image: url('https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg');
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.45);
+  animation: zoomBreath 20s infinite alternate ease-in-out;
+  z-index: -1;
+}
 
+@keyframes zoomBreath {
+  from { transform: scale(1); }
+  to   { transform: scale(1.1); }
 }
 
 /* ===== SIDEBAR ===== */
@@ -509,7 +522,7 @@ select:focus{
 </head>
 
 <body>
-
+<div class="bg-layer"></div>
 <!-- ===== SIDEBAR ===== -->
 <aside class="sidebar" onclick="event.stopPropagation()">
 <div class="sidebar-close" onclick="closeSidebar()">
@@ -592,12 +605,19 @@ const supabaseUrl = 'https://cdcolkoavowjjymzdzud.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkY29sa29hdm93amp5bXpkenVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MDI2NjQsImV4cCI6MjA4Mzk3ODY2NH0.JPzj9fI1pKpPbPxyGqsemjcwpKiu0h046H7aBSURnpM';
 const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-const API="https://script.google.com/macros/s/AKfycbx6nApwvPnka-mWBXyr3q8mmtv-6sTB0XGyTo45YtKfBFYzcfc7URIXNYCwdhkCzPI/exec";
+const API="https://script.google.com/macros/s/AKfycbwk2hQ7nbSdGQNmRxxVuCF6eoPXlMlaNErUnFdmGw8cuBByPV37DLVWq2G92TLR-hlQSw/exec";
 /*const email = localStorage.getItem("user_email");*/
 
 /*const email = localStorage.getItem("user_email") || "testbusiness@gotravel.com";*/
 let editingRow = null;
 let email = null;
+
+const photoIndex = {
+  transport: 7,
+  hotel: 7,
+  restaurant: 10,
+  guide: 6
+};
 
 document.addEventListener("DOMContentLoaded", async () => {
   const { data, error } = await supabaseClient.auth.getUser();
@@ -720,10 +740,24 @@ function openForm(type, data = null){
     <textarea name="description">${data?.[data.length - 4] || ''}</textarea>
   </div>
 
-  <div>
-    <label>Photo</label>
-    <input type="file" name="photo">
-  </div>
+  <div style="grid-column:1/-1">
+  <label>Photo</label>
+
+  <img id="photoPreview"
+       src="${data ? data[photoIndex[type]] : ''}"
+       style="
+         width:100%;
+         max-height:220px;
+         object-fit:cover;
+         border-radius:14px;
+         margin-bottom:10px;
+         display:${data && data[photoIndex[type]] ? 'block' : 'none'};
+       ">
+
+  <input type="file" accept="image/*" onchange="handlePhoto(event)">
+  <input type="hidden" name="photo" id="photoInput">
+</div>
+
 `;
 
   let extra = "";
@@ -937,6 +971,19 @@ function toggleSidebar(){
 }
 function closeSidebar(){
   document.querySelector(".sidebar").classList.remove("active");
+}
+
+function handlePhoto(e){
+  const file = e.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    document.getElementById("photoPreview").src = reader.result;
+    document.getElementById("photoPreview").style.display = "block";
+    document.getElementById("photoInput").value = reader.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 </script>
