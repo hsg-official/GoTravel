@@ -605,12 +605,14 @@ const supabaseUrl = 'https://cdcolkoavowjjymzdzud.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkY29sa29hdm93amp5bXpkenVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MDI2NjQsImV4cCI6MjA4Mzk3ODY2NH0.JPzj9fI1pKpPbPxyGqsemjcwpKiu0h046H7aBSURnpM';
 const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-const API="https://script.google.com/macros/s/AKfycbwk2hQ7nbSdGQNmRxxVuCF6eoPXlMlaNErUnFdmGw8cuBByPV37DLVWq2G92TLR-hlQSw/exec";
+const API="https://script.google.com/macros/s/AKfycbzv6-zAB61O4n4-4ofGXUXns2lAx8JrJcvOZQ6YnvuW1z7n1KvB90VMahIm27Q6xBpYrQ/exec";
 /*const email = localStorage.getItem("user_email");*/
 
 /*const email = localStorage.getItem("user_email") || "testbusiness@gotravel.com";*/
 let editingRow = null;
 let email = null;
+let selectedPhotoFile = null;
+let existingPhotoUrl = "";
 
 const photoIndex = {
   transport: 7,
@@ -711,6 +713,10 @@ function openForm(type, data = null){
     editingRow = data[data.length - 1];
   }
 
+  existingPhotoUrl = data ? data[photoIndex[type]] : "";
+  selectedPhotoFile = null;
+
+
   if(window.innerWidth <= 768){
     document.querySelector(".sidebar").classList.remove("active");
   }
@@ -755,7 +761,6 @@ function openForm(type, data = null){
        ">
 
   <input type="file" accept="image/*" onchange="handlePhoto(event)">
-  <input type="hidden" name="photo" id="photoInput">
 </div>
 
 `;
@@ -885,7 +890,7 @@ document
   .getElementById("serviceForm")
   .addEventListener("submit", e => save(e, type));
 }
-function save(e, type){
+/*function save(e, type){
   e.preventDefault();
 
   const fd = new FormData(e.target);
@@ -898,9 +903,37 @@ function save(e, type){
 
   fetch(API, {
     method: "POST",
-    body: fd
+    body: fd,
+    mode: "no-cors"
+  }).then(() => location.reload());
+}*/
+
+async function save(e, type){
+  e.preventDefault();
+
+  let photoUrl = existingPhotoUrl;
+
+  // upload only if user selected a new photo
+  if (selectedPhotoFile) {
+    photoUrl = await uploadToSupabase(selectedPhotoFile);
+  }
+
+  const fd = new FormData(e.target);
+  fd.append("type", type);
+  fd.append("email", email);
+  fd.append("photo_url", photoUrl);
+
+  if (editingRow !== null) {
+    fd.append("row", editingRow);
+  }
+
+  fetch(API, {
+    method: "POST",
+    body: fd,
+    mode: "no-cors"
   }).then(() => location.reload());
 }
+
 function deleteService(type){
   if (!editingRow) return;
 
@@ -975,15 +1008,35 @@ function closeSidebar(){
 
 function handlePhoto(e){
   const file = e.target.files[0];
-  if(!file) return;
+  if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = () => {
-    document.getElementById("photoPreview").src = reader.result;
-    document.getElementById("photoPreview").style.display = "block";
-    document.getElementById("photoInput").value = reader.result;
-  };
-  reader.readAsDataURL(file);
+  selectedPhotoFile = file;
+
+  const preview = document.getElementById("photoPreview");
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = "block";
+}
+
+async function uploadToSupabase(file) {
+  const ext = file.name.split('.').pop();
+  const path = `${email}/${Date.now()}.${ext}`;
+
+  const { error } = await supabaseClient
+    .storage
+    .from("service-photos")
+    .upload(path, file, { upsert: true });
+
+  if (error) {
+    alert("Photo upload failed");
+    throw error;
+  }
+
+  const { data } = supabaseClient
+    .storage
+    .from("service-photos")
+    .getPublicUrl(path);
+
+  return data.publicUrl;
 }
 
 </script>
