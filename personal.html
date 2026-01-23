@@ -23,7 +23,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body { 
-            /* Modified: Radial gradient with 0.9 (90% opacity / 10% transparency) */
             background: radial-gradient(circle at top right, rgba(26, 27, 58, 0.9), rgba(10, 11, 30, 0.9)); 
             color: var(--text-main); 
             font-family: 'Inter', sans-serif; 
@@ -140,13 +139,86 @@
             filter: drop-shadow(0 0 10px var(--neon-secondary));
         }
         .placeholder-card p { color: var(--text-muted); }
+
+        /* --- UPDATED USER PROFILE POPUP (GLASS NEON THEME) --- */
+        #userAvatar { cursor: pointer; position: relative; }
+        
+        .profile-popup {
+            position: absolute;
+            top: 70px;
+            right: 0px;
+            width: 280px;
+            background: rgba(15, 16, 45, 0.9); /* Dark glass background */
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 24px 16px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            z-index: 1000;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+        }
+
+        .profile-popup.show { display: flex; animation: fadeIn 0.3s ease; }
+
+        .popup-avatar-circle {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background-color: #008b8b;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            border: 2px solid var(--neon-primary);
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
+        }
+
+        .popup-name { font-weight: 700; font-size: 1.15rem; color: #fff; margin-bottom: 4px; }
+        .popup-email { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px; }
+
+        .logout-btn {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: #ff4d4d; /* Reddish logout color */
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 77, 77, 0.1);
+            border-color: #ff4d4d;
+            box-shadow: 0 0 10px rgba(255, 77, 77, 0.2);
+            transform: translateY(-2px);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
 
     <aside class="sidebar">
         <div class="logo-area">
-            <img src="GoTravels.png" alt="GoTravel" class="logo-img">
+            <img src="GoTravel_Official_Logo.png" alt="GoTravel" class="logo-img">
             <span>GoTravel</span>
         </div>
         
@@ -166,9 +238,7 @@
                 <div class="sub-menu" id="services-menu">
                     <a href="places.html" class="sub-item"><i class="fas fa-map-marked-alt"></i> Destinations</a>
                     <a href="hotels.html" class="sub-item"><i class="fas fa-hotel"></i> Accommodations</a>
-                    
                     <a href="restaurants.html" class="sub-item"><i class="fas fa-utensils"></i> Culinary Experiences</a>
-                    
                     <a href="guides.html" class="sub-item"><i class="fas fa-user-tie"></i> Professional Tour Guiding</a>
 
                     <div class="plus-trigger" onclick="toggleMenu('fleet-menu')" style="font-size: 0.85rem; padding: 10px 15px;">
@@ -191,8 +261,17 @@
     <main class="main-container">
         <div class="header-row">
             <h1>My Trips</h1>
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <a href="dashboard.html"><img id = "userAvatar"src="" alt="User Avatar" style="width: 40px; border-radius: 50%; border: 1px solid var(--neon-secondary);"></a>
+            <div style="position: relative;">
+                <img id="userAvatar" src="" alt="User Avatar" style="width: 40px; border-radius: 50%; border: 1px solid var(--neon-secondary);">
+                
+                <div id="profilePopup" class="profile-popup">
+                    <div id="popupInitial" class="popup-avatar-circle">S</div>
+                    <div id="popupName" class="popup-name">Name</div>
+                    <div id="popupEmail" class="popup-email">email@example.com</div>
+                    <button class="logout-btn" onclick="logoutUser()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -228,7 +307,6 @@
         function toggleMenu(menuId) {
             const menu = document.getElementById(menuId);
             menu.classList.toggle('show');
-            
             const servicesMenu = document.getElementById('services-menu');
             if (menuId === 'fleet-menu') {
                 servicesMenu.style.maxHeight = menu.classList.contains('show') ? "1200px" : "1000px";
@@ -244,28 +322,47 @@
             document.getElementById(tabName).classList.add("active");
             evt.currentTarget.classList.add("active");
         }
-        function updateProfileAvatar(firstName, lastName) {
-        // Combine names with a plus sign for the API
-        const fullName = `${firstName}+${lastName}`;
-    
-        // Select your profile image element
-       const avatarImg = document.getElementById('userAvatar');
-    
-        // Set the source using the combined name
-       avatarImg.src = `https://ui-avatars.com/api/?name=${fullName}&background=7000ff&color=fff`;
-       }
-// Run this function as soon as the page loads
-// Fix: Use an anonymous function to pass the actual names
-window.onload = function() {
-    const fName = localStorage.getItem('userFName') || "Guest";
-    const lName = localStorage.getItem('userLName') || "User";
-    
-// Pass them into your existing function
-updateProfileAvatar(fName, lName);
-};
 
+        function logoutUser() {
+            window.location.href = 'index.html';
+        }
 
+        function updateProfileAvatar(firstName, lastName, email) {
+            const fullName = `${firstName} ${lastName}`.trim();
+            const firstInitial = firstName ? firstName.charAt(0).toUpperCase() : "";
+            const lastInitial = lastName ? lastName.charAt(0).toUpperCase() : "";
+            const combinedInitials = firstInitial + lastInitial;
+            
+            const avatarImg = document.getElementById('userAvatar');
+            const popupInitial = document.getElementById('popupInitial');
+            const popupName = document.getElementById('popupName');
+            const popupEmail = document.getElementById('popupEmail');
+            const profilePopup = document.getElementById('profilePopup');
+            
+            avatarImg.src = `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=7000ff&color=fff`;
+            
+            popupInitial.innerText = combinedInitials;
+            popupName.innerText = fullName; 
+            popupEmail.innerText = email;
+            
+            avatarImg.onclick = function(e) {
+                e.stopPropagation();
+                profilePopup.classList.toggle('show');
+            };
 
+            document.addEventListener('click', function() {
+                profilePopup.classList.remove('show');
+            });
+            profilePopup.onclick = function(e) { e.stopPropagation(); };
+        }
+
+        window.onload = function() {
+            const fName = localStorage.getItem('userFName') || "Guest"; 
+            const lName = localStorage.getItem('userLName') || "";
+            const email = localStorage.getItem('userEmail') || "guest@example.com";
+            
+            updateProfileAvatar(fName, lName, email);
+        };
     </script>
 </body>
 </html>
