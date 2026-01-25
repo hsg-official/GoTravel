@@ -10,67 +10,110 @@
     <style>
         :root {
             /* Glass Neon Theme Palette */
-            --bg-color: #0a0b1e;
-            --glass-bg: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --bg-overlay: rgba(10, 11, 30, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.12);
             --neon-primary: #00f2ff;
             --neon-secondary: #7000ff;
+            --neon-gradient: linear-gradient(135deg, #00f2ff, #7000ff);
             --text-main: #ffffff;
             --text-muted: #b0b0b0;
-            --accent-glow: 0 0 15px rgba(0, 242, 255, 0.5);
+            --accent-glow: 0 0 20px rgba(0, 242, 255, 0.6);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body { 
-            background: radial-gradient(circle at top right, rgba(26, 27, 58, 0.9), rgba(10, 11, 30, 0.9)); 
+            background: url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=2070') no-repeat center center fixed;
+            background-size: cover;
             color: var(--text-main); 
             font-family: 'Inter', sans-serif; 
-            display: flex; 
             min-height: 100vh;
+            display: flex;
+            align-items: stretch;
         }
 
-        /* --- SIDEBAR --- */
+        /* Dark Overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-overlay);
+            z-index: -1;
+        }
+
+        /* --- NEW FLEX LAYOUT CONTAINER --- */
+        .app-container {
+            display: flex;
+            width: 100%;
+            padding: 20px;
+            gap: 20px; /* Physical gutter between panels */
+            align-items: stretch;
+        }
+
+        /* --- FLOATING SIDEBAR PANEL --- */
         .sidebar {
             width: 280px;
-            height: 100vh;
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: rgba(0, 0, 0, 0.4); /* Darker transparency */
+            backdrop-filter: blur(25px); /* Higher blur to anchor it */
+            -webkit-backdrop-filter: blur(25px);
             padding: 30px 20px;
             display: flex;
             flex-direction: column;
-            position: sticky;
-            top: 0;
-            border-right: 1px solid var(--glass-border);
+            border-radius: 24px; /* Rounded corners for floating look */
+            border: 1px solid var(--glass-border);
             overflow-y: auto;
+            height: calc(100vh - 40px);
+            position: sticky;
+            top: 20px;
+        }
+
+        /* --- FLOATING MAIN CONTENT PANEL --- */
+        .main-container {
+            flex: 1;
+            background: rgba(20, 20, 20, 0.4); /* Distinct transparency */
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 40px;
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            height: calc(100vh - 40px);
+            overflow-y: auto;
+            animation: popIn 0.6s ease-out;
         }
 
         .logo-area { 
-            display: flex; align-items: center; gap: 10px; 
+            display: flex; align-items: center; gap: 15px; 
             margin-bottom: 40px; font-weight: 800; 
-            color: var(--neon-primary); font-size: 1.3rem;
+            color: var(--neon-primary); font-size: 1.4rem;
             text-shadow: var(--accent-glow);
         }
 
-        .logo-img { height: 75px; width: auto; flex-shrink: 0; border-radius: 50%; border: 2px solid var(--neon-primary); object-fit: cover; background: rgba(255, 255, 255, 0.05); }
+        .logo-img { 
+            height: 60px; width: 60px; border-radius: 50%; 
+            border: 2px solid var(--neon-primary); 
+            object-fit: cover; 
+            box-shadow: var(--accent-glow);
+        }
         
         .nav-menu { flex: 1; }
         .nav-item {
             display: flex; align-items: center; gap: 12px;
             padding: 14px 15px; text-decoration: none;
             color: var(--text-muted); font-weight: 500;
-            border-radius: 12px; margin-bottom: 8px; transition: 0.3s;
+            border-radius: 16px; margin-bottom: 8px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border: 1px solid transparent;
         }
+
         .nav-item.active { 
-            background: rgba(0, 242, 255, 0.1); 
+            background: rgba(112, 0, 255, 0.15); 
             color: var(--neon-primary); 
             border: 1px solid var(--neon-primary);
-            box-shadow: inset 0 0 10px rgba(0, 242, 255, 0.2);
+            box-shadow: inset 0 0 15px rgba(0, 242, 255, 0.2), var(--accent-glow);
+            transform: translateX(5px);
         }
+
         .nav-item:hover:not(.active) { 
-            background: rgba(255, 255, 255, 0.05); 
+            background: rgba(255, 255, 255, 0.08); 
             color: #fff; 
         }
 
@@ -91,33 +134,38 @@
             display: flex; align-items: center; gap: 10px;
             padding: 10px 15px; text-decoration: none;
             color: var(--text-muted); font-size: 0.85rem;
-            font-weight: 500; border-radius: 8px; transition: 0.2s;
+            font-weight: 500; border-radius: 12px; transition: 0.3s;
         }
-        .sub-item:hover { color: var(--neon-primary); background: rgba(0, 242, 255, 0.05); }
+        .sub-item:hover { color: var(--neon-primary); background: rgba(0, 242, 255, 0.1); }
 
-        .nested-menu { padding-left: 25px; border-left: 1px solid var(--glass-border); margin-left: 15px; }
+        .nested-menu { padding-left: 20px; border-left: 1px solid var(--glass-border); margin-left: 15px; }
 
-        /* --- MAIN CONTAINER --- */
-        .main-container { flex: 1; padding: 40px; }
-        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
         
-        h1 { font-weight: 700; text-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        h1 { 
+            font-size: 2.5rem; 
+            font-weight: 700; 
+            background: var(--neon-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px rgba(112, 0, 255, 0.3));
+        }
 
         .trip-tabs {
-            display: flex; gap: 30px; margin-bottom: 30px;
+            display: flex; gap: 40px; margin-bottom: 30px;
             border-bottom: 1px solid var(--glass-border);
         }
 
         .tab-btn {
-            background: none; border: none; padding: 12px 5px;
-            font-family: 'Inter', sans-serif; font-size: 0.95rem;
+            background: none; border: none; padding: 15px 5px;
+            font-family: 'Inter', sans-serif; font-size: 1rem;
             font-weight: 600; color: var(--text-muted); cursor: pointer;
             position: relative; transition: 0.3s;
         }
         .tab-btn.active { color: var(--neon-primary); text-shadow: var(--accent-glow); }
         .tab-btn.active::after {
             content: ''; position: absolute; bottom: -1px; left: 0;
-            width: 100%; height: 2px; background: var(--neon-primary);
+            width: 100%; height: 3px; background: var(--neon-primary);
             box-shadow: var(--accent-glow);
         }
 
@@ -125,183 +173,150 @@
         .tab-content.active { display: block; }
 
         .placeholder-card { 
-            background: var(--glass-bg); 
-            backdrop-filter: blur(10px);
-            padding: 80px 50px; border-radius: 24px; 
+            background: rgba(255, 255, 255, 0.03); 
+            padding: 100px 50px; border-radius: 24px; 
             text-align: center; 
             border: 1px solid var(--glass-border); 
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
         .placeholder-card i { 
-            color: var(--neon-secondary); 
-            margin-bottom: 20px; 
-            font-size: 4rem; 
-            filter: drop-shadow(0 0 10px var(--neon-secondary));
+            background: var(--neon-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 25px; 
+            font-size: 5rem; 
         }
-        .placeholder-card p { color: var(--text-muted); }
 
-        /* --- UPDATED USER PROFILE POPUP (GLASS NEON THEME) --- */
-        #userAvatar { cursor: pointer; position: relative; }
-        
+        /* --- PROFILE POPUP --- */
         .profile-popup {
             position: absolute;
-            top: 70px;
-            right: 0px;
-            width: 280px;
-            background: rgba(15, 16, 45, 0.9); /* Dark glass background */
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border);
+            top: 70px; right: 0px; width: 300px;
+            background: rgba(15, 16, 45, 0.95);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--neon-primary);
             border-radius: 24px;
-            padding: 24px 16px;
+            padding: 30px 20px;
             display: none;
             flex-direction: column;
             align-items: center;
-            text-align: center;
             z-index: 1000;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.05);
-            color: var(--text-main);
         }
 
-        .profile-popup.show { display: flex; animation: fadeIn 0.3s ease; }
+        .profile-popup.show { display: flex; animation: popIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
 
         .popup-avatar-circle {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background-color: #008b8b;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            border: 2px solid var(--neon-primary);
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
+            width: 80px; height: 80px; border-radius: 50%;
+            background: var(--neon-gradient);
+            color: white; display: flex; align-items: center; justify-content: center;
+            font-size: 32px; font-weight: 700; margin-bottom: 15px;
         }
-
-        .popup-name { font-weight: 700; font-size: 1.15rem; color: #fff; margin-bottom: 4px; }
-        .popup-email { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px; }
 
         .logout-btn {
-            width: 100%;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            color: #ff4d4d; /* Reddish logout color */
-            font-weight: 600;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+            width: 100%; padding: 14px;
+            background: rgba(255, 77, 77, 0.05);
+            border: 1px solid rgba(255, 77, 77, 0.3);
+            border-radius: 14px; color: #ff4d4d;
+            font-weight: 700; cursor: pointer; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
         }
+        .logout-btn:hover { background: #ff4d4d; color: white; }
 
-        .logout-btn:hover {
-            background: rgba(255, 77, 77, 0.1);
-            border-color: #ff4d4d;
-            box-shadow: 0 0 10px rgba(255, 77, 77, 0.2);
-            transform: translateY(-2px);
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
     </style>
 </head>
 <body>
 
-    <aside class="sidebar">
-        <div class="logo-area">
-            <img src="GoTravel_Official_Logo.png" alt="GoTravel" class="logo-img">
-            <span>GoTravel</span>
-        </div>
-        
-        <nav class="nav-menu">
-            <a href="index.html" class="nav-item">
-                <i class="fas fa-home"></i> Home
-            </a>
-            <a href="dashboard.html" class="nav-item active">
-                <i class="fas fa-suitcase"></i> My Trips
-            </a>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo-area">
+                <img src="GoTravels.png" alt="GoTravel" class="logo-img">
+                <span>GoTravel</span>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-item">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="personal.html" class="nav-item active">
+                    <i class="fas fa-suitcase"></i> My Trips
+                </a>
 
-            <div class="expand-section">
-                <div class="plus-trigger" onclick="toggleMenu('services-menu')">
-                    <span>Explore Services</span>
-                    <i class="fas fa-plus-circle"></i>
-                </div>
-                <div class="sub-menu" id="services-menu">
-                    <a href="places.html" class="sub-item"><i class="fas fa-map-marked-alt"></i> Destinations</a>
-                    <a href="hotels.html" class="sub-item"><i class="fas fa-hotel"></i> Accommodations</a>
-                    <a href="restaurants.html" class="sub-item"><i class="fas fa-utensils"></i> Culinary Experiences</a>
-                    <a href="guides.html" class="sub-item"><i class="fas fa-user-tie"></i> Professional Tour Guiding</a>
-
-                    <div class="plus-trigger" onclick="toggleMenu('fleet-menu')" style="font-size: 0.85rem; padding: 10px 15px;">
-                        <span><i class="fas fa-route" style="margin-right: 8px;"></i> Transportation</span>
-                        <i class="fas fa-chevron-down" style="font-size: 0.7rem;"></i>
+                <div class="expand-section">
+                    <div class="plus-trigger" onclick="toggleMenu('services-menu')">
+                        <span>Explore Services</span>
+                        <i class="fas fa-plus-circle"></i>
                     </div>
-                    <div class="sub-menu nested-menu" id="fleet-menu">
-                        <a href="cabs.html" class="sub-item"><i class="fas fa-car-side"></i> Executive Private Cab</a>
-                        <a href="buses.html" class="sub-item"><i class="fas fa-bus-alt"></i> Public Transit Services</a>
+                    <div class="sub-menu" id="services-menu">
+                        <a href="places.html" class="sub-item"><i class="fas fa-map-marked-alt"></i> Destinations</a>
+                        <a href="hotels.html" class="sub-item"><i class="fas fa-hotel"></i> Accommodations</a>
+                        <a href="restaurants.html" class="sub-item"><i class="fas fa-utensils"></i> Culinary Experiences</a>
+                        <a href="guides.html" class="sub-item"><i class="fas fa-user-tie"></i> Professional Tour Guiding</a>
+
+                        <div class="plus-trigger" onclick="toggleMenu('fleet-menu')" style="font-size: 0.85rem; padding: 10px 15px;">
+                            <span><i class="fas fa-route" style="margin-right: 8px;"></i> Transportation</span>
+                            <i class="fas fa-chevron-down" style="font-size: 0.7rem;"></i>
+                        </div>
+                        <div class="sub-menu nested-menu" id="fleet-menu">
+                            <a href="cabs.html" class="sub-item"><i class="fas fa-car-side"></i> Executive Private Cab</a>
+                            <a href="buses.html" class="sub-item"><i class="fas fa-bus-alt"></i> Public Transit Services</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 20px; opacity: 0.6;">
+                &copy; 2026 GoTravel Experience
+            </div>
+        </aside>
+
+        <main class="main-container">
+            <div class="header-row">
+                <h1>My Trips</h1>
+                <div style="position: relative;">
+                    <img id="userAvatar" src="" alt="User Avatar" style="width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--neon-secondary); cursor: pointer;">
+                    
+                    <div id="profilePopup" class="profile-popup">
+                        <div id="popupInitial" class="popup-avatar-circle">S</div>
+                        <div id="popupName" class="popup-name">Name</div>
+                        <div id="popupEmail" class="popup-email">email@example.com</div>
+                        <button class="logout-btn" onclick="logoutUser()">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
                     </div>
                 </div>
             </div>
-        </nav>
 
-        <div style="font-size: 0.75rem; color: #444; text-align: center; margin-top: 20px; padding-bottom: 15px;">
-            &copy; 2026 GoTravel Experience
-        </div>
-    </aside>
+            <div class="trip-tabs">
+                <button class="tab-btn active" onclick="openTab(event, 'ongoing')">Active Explorations</button>
+                <button class="tab-btn" onclick="openTab(event, 'past')">Travel History</button>
+                <button class="tab-btn" onclick="openTab(event, 'cancelled')">Cancelled Bookings</button>
+            </div>
 
-    <main class="main-container">
-        <div class="header-row">
-            <h1>My Trips</h1>
-            <div style="position: relative;">
-                <img id="userAvatar" src="" alt="User Avatar" style="width: 40px; border-radius: 50%; border: 1px solid var(--neon-secondary);">
-                
-                <div id="profilePopup" class="profile-popup">
-                    <div id="popupInitial" class="popup-avatar-circle">S</div>
-                    <div id="popupName" class="popup-name">Name</div>
-                    <div id="popupEmail" class="popup-email">email@example.com</div>
-                    <button class="logout-btn" onclick="logoutUser()">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </button>
+            <div id="ongoing" class="tab-content active">
+                <div class="placeholder-card">
+                    <i class="fas fa-rocket"></i>
+                    <p>Your scheduled trips and ongoing explorations will appear here.</p>
                 </div>
             </div>
-        </div>
 
-        <div class="trip-tabs">
-            <button class="tab-btn active" onclick="openTab(event, 'ongoing')">Active Explorations</button>
-            <button class="tab-btn" onclick="openTab(event, 'past')">Travel History</button>
-            <button class="tab-btn" onclick="openTab(event, 'cancelled')">Cancelled Bookings</button>
-        </div>
-
-        <div id="ongoing" class="tab-content active">
-            <div class="placeholder-card">
-                <i class="fas fa-folder-open"></i>
-                <p>Your scheduled trips and ongoing explorations will appear here.</p>
+            <div id="past" class="tab-content">
+                <div class="placeholder-card">
+                    <i class="fas fa-history"></i>
+                    <p>Your past travel history will be listed here.</p>
+                </div>
             </div>
-        </div>
 
-        <div id="past" class="tab-content">
-            <div class="placeholder-card">
-                <i class="fas fa-history"></i>
-                <p>Your past travel history will be listed here.</p>
+            <div id="cancelled" class="tab-content">
+                <div class="placeholder-card">
+                    <i class="fas fa-calendar-times"></i>
+                    <p>Cancelled bookings will appear here.</p>
+                </div>
             </div>
-        </div>
-
-        <div id="cancelled" class="tab-content">
-            <div class="placeholder-card">
-                <i class="fas fa-calendar-times"></i>
-                <p>Cancelled bookings will appear here.</p>
-            </div>
-        </div>
-    </main>
+        </main>
+    </div>
 
     <script>
         function toggleMenu(menuId) {
@@ -360,7 +375,6 @@
             const fName = localStorage.getItem('userFName') || "Guest"; 
             const lName = localStorage.getItem('userLName') || "";
             const email = localStorage.getItem('userEmail') || "guest@example.com";
-            
             updateProfileAvatar(fName, lName, email);
         };
     </script>
