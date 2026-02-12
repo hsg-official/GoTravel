@@ -41,25 +41,25 @@
             z-index: -1;
         }
 
-        /* --- NEW FLEX LAYOUT CONTAINER --- */
+        /* --- FLEX LAYOUT CONTAINER --- */
         .app-container {
             display: flex;
             width: 100%;
             padding: 20px;
-            gap: 20px; /* Physical gutter between panels */
+            gap: 20px;
             align-items: stretch;
         }
 
-        /* --- FLOATING SIDEBAR PANEL --- */
+        /* --- SIDEBAR PANEL --- */
         .sidebar {
             width: 280px;
-            background: rgba(0, 0, 0, 0.4); /* Darker transparency */
-            backdrop-filter: blur(25px); /* Higher blur to anchor it */
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             padding: 30px 20px;
             display: flex;
             flex-direction: column;
-            border-radius: 24px; /* Rounded corners for floating look */
+            border-radius: 24px;
             border: 1px solid var(--glass-border);
             overflow-y: auto;
             height: calc(100vh - 40px);
@@ -67,10 +67,10 @@
             top: 20px;
         }
 
-        /* --- FLOATING MAIN CONTENT PANEL --- */
+        /* --- MAIN CONTENT PANEL --- */
         .main-container {
             flex: 1;
-            background: rgba(20, 20, 20, 0.4); /* Distinct transparency */
+            background: rgba(20, 20, 20, 0.4);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
             padding: 40px;
@@ -102,6 +102,7 @@
             color: var(--text-muted); font-weight: 500;
             border-radius: 16px; margin-bottom: 8px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border: 1px solid transparent;
+            cursor: pointer;
         }
 
         .nav-item.active { 
@@ -186,6 +187,209 @@
             font-size: 5rem; 
         }
 
+        /* --- TRIP PLANNER SPECIFIC STYLES --- */
+        .planner-form-container {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 40px;
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            animation: popIn 0.5s ease-out;
+        }
+        .planner-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px; margin-top: 30px;
+        }
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        .input-group label { color: var(--neon-primary); font-size: 0.9rem; font-weight: 600; }
+        .glass-input {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border);
+            border-radius: 12px; padding: 14px; color: white; font-family: inherit;
+            width: 100%;
+        }
+        .glass-input:focus { outline: none; border-color: var(--neon-primary); box-shadow: 0 0 10px rgba(0, 242, 255, 0.2); }
+        
+        .glass-select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 14px;
+            color: white;
+            font-family: inherit;
+            cursor: pointer;
+        }
+        .glass-select option { background: #1a1b2e; color: white; }
+        .glass-select:focus { outline: none; border-color: var(--neon-primary); }
+
+        .plan-btn {
+            background: var(--neon-gradient); border: none; padding: 16px; border-radius: 14px;
+            color: white; font-weight: 700; margin-top: 30px; cursor: pointer; width: 100%;
+            box-shadow: var(--accent-glow); transition: 0.3s;
+        }
+        .plan-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+        /* --- BOOKING BUTTONS STYLES --- */
+        .booking-section { margin-top: 30px; border-top: 1px solid var(--glass-border); padding-top: 30px; }
+        .booking-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+        
+        .booking-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            padding: 15px;
+            border-radius: 12px;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            transition: 0.3s;
+            cursor: pointer;
+            text-align: center;
+        }
+        .booking-btn i { color: var(--neon-primary); font-size: 1.2rem; }
+        .booking-btn:hover { background: rgba(112, 0, 255, 0.1); border-color: var(--neon-primary); transform: translateY(-3px); }
+
+        .transport-options {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+            margin-top: 10px;
+            animation: popIn 0.3s ease-out;
+        }
+        .transport-options.show { display: grid; }
+
+        /* --- SAVED TRIP CARD STYLE --- */
+        .trip-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-left: 4px solid var(--neon-primary);
+            cursor: pointer;
+            transition: 0.3s;
+            position: relative;
+        }
+        .trip-card:hover { background: rgba(255, 255, 255, 0.08); transform: scale(1.01); }
+        .trip-card-info h3 { color: var(--neon-primary); margin-bottom: 5px; }
+        .trip-card-info p { font-size: 0.85rem; color: var(--text-muted); display: flex; gap: 15px; align-items: center; }
+        
+        .delete-trip-btn {
+            margin-right: 15px;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            transition: 0.3s;
+            padding: 8px;
+            border-radius: 50%;
+        }
+        .delete-trip-btn:hover {
+            color: #ff4d4d;
+            background: rgba(255, 77, 77, 0.1);
+        }
+
+        .trip-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .trip-tag {
+            background: rgba(112, 0, 255, 0.2);
+            color: var(--neon-primary);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid var(--neon-primary);
+        }
+        .trip-tag.history {
+            background: rgba(0, 242, 255, 0.1);
+            color: var(--text-muted);
+            border-color: var(--glass-border);
+        }
+
+        /* --- DETAILS MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: none;
+            align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .modal-card {
+            background: rgba(15, 16, 45, 0.95);
+            border: 1px solid var(--neon-primary);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+            animation: popIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        /* CUSTOM CONFIRMATION MODAL STYLE */
+        .confirm-card {
+            max-width: 400px;
+            padding: 30px;
+            text-align: left;
+        }
+        .confirm-msg {
+            color: white;
+            font-size: 1rem;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        .confirm-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+        .confirm-btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 1px solid transparent;
+        }
+        .btn-ok {
+            background: #007bff;
+            color: white;
+        }
+        .btn-ok:hover {
+            background: #0056b3;
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+        }
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-color: var(--glass-border);
+        }
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .close-modal {
+            position: absolute; top: 20px; right: 20px;
+            color: var(--text-muted); cursor: pointer; font-size: 1.2rem; transition: 0.3s;
+        }
+        .close-modal:hover { color: #ff4d4d; }
+        .detail-row {
+            display: flex; justify-content: space-between;
+            padding: 15px 0; border-bottom: 1px solid var(--glass-border);
+        }
+        .detail-label { color: var(--neon-primary); font-weight: 600; font-size: 0.9rem; }
+        .detail-val { color: white; font-weight: 500; }
+
         /* --- PROFILE POPUP --- */
         .profile-popup {
             position: absolute;
@@ -225,9 +429,71 @@
             from { opacity: 0; transform: scale(0.9) translateY(20px); }
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
+
+        /* --- DATE TYPE TABS STYLE --- */
+        .date-type-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border: 1px solid var(--glass-border);
+        }
+        .date-tab {
+            flex: 1;
+            padding: 8px;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: 0.3s;
+        }
+        .date-tab.active {
+            background: var(--neon-secondary);
+            color: white;
+            box-shadow: 0 0 10px rgba(112, 0, 255, 0.4);
+        }
     </style>
 </head>
 <body>
+
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-card confirm-card">
+            <p class="confirm-msg">Are you sure you want to remove this trip blueprint?</p>
+            <div class="confirm-actions">
+                <button id="confirmOk" class="confirm-btn btn-ok">OK</button>
+                <button id="confirmCancel" class="confirm-btn btn-cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="detailsModal" class="modal-overlay">
+        <div class="modal-card">
+            <i class="fas fa-times close-modal" onclick="closeTripDetails()"></i>
+            <h2 id="modalTitle" style="color: var(--neon-primary); margin-bottom: 25px; border-bottom: 2px solid var(--neon-primary); padding-bottom: 10px;">Trip Details</h2>
+            
+            <div class="detail-row">
+                <span class="detail-label"><i class="fas fa-map-marker-alt"></i> Destination</span>
+                <span id="det-dest" class="detail-val"></span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label"><i class="fas fa-calendar-day"></i> Travel Date</span>
+                <span id="det-date" class="detail-val"></span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label"><i class="fas fa-wallet"></i> Budget</span>
+                <span id="det-budget" class="detail-val"></span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label"><i class="fas fa-clock"></i> Duration</span>
+                <span id="det-days" class="detail-val"></span>
+            </div>
+            
+            <button class="plan-btn" style="margin-top: 30px;" onclick="closeTripDetails()">Close Preview</button>
+        </div>
+    </div>
 
     <div class="app-container">
         <aside class="sidebar">
@@ -240,9 +506,12 @@
                 <a href="index.html" class="nav-item">
                     <i class="fas fa-home"></i> Home
                 </a>
-                <a href="personal.html" class="nav-item active">
+                <div id="nav-trips" class="nav-item active" onclick="showSection('trips-section')">
                     <i class="fas fa-suitcase"></i> My Trips
-                </a>
+                </div>
+                <div id="nav-planner" class="nav-item" onclick="showSection('planner-section')">
+                    <i class="fas fa-map-marked-alt"></i> Trip Planner
+                </div>
 
                 <div class="expand-section">
                     <div class="plus-trigger" onclick="toggleMenu('services-menu')">
@@ -274,9 +543,9 @@
 
         <main class="main-container">
             <div class="header-row">
-                <h1>My Trips</h1>
+                <h1 id="page-title">My Trips</h1>
                 <div style="position: relative;">
-                    <img id="userAvatar" src="" alt="User Avatar" style="width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--neon-secondary); cursor: pointer;">
+                    <img id="userAvatar" src="" alt="User Avatar" style="width: 48px; height: 48px; border-radius: 50%; border: 1 solid var(--neon-secondary); cursor: pointer;">
                     
                     <div id="profilePopup" class="profile-popup">
                         <div id="popupInitial" class="popup-avatar-circle">S</div>
@@ -289,42 +558,176 @@
                 </div>
             </div>
 
-            <div class="trip-tabs">
-                <button class="tab-btn active" onclick="openTab(event, 'ongoing')">Active Explorations</button>
-                <button class="tab-btn" onclick="openTab(event, 'past')">Travel History</button>
-                <button class="tab-btn" onclick="openTab(event, 'cancelled')">Cancelled Bookings</button>
-            </div>
+            <div id="trips-section">
+                <div class="trip-tabs">
+                    <button class="tab-btn active" onclick="openTab(event, 'ongoing')">Active Explorations</button>
+                    <button class="tab-btn" onclick="openTab(event, 'past')">Travel History</button>
+                    <button class="tab-btn" onclick="openTab(event, 'cancelled')">Cancelled Bookings</button>
+                </div>
 
-            <div id="ongoing" class="tab-content active">
-                <div class="placeholder-card">
-                    <i class="fas fa-rocket"></i>
-                    <p>Your scheduled trips and ongoing explorations will appear here.</p>
+                <div id="ongoing" class="tab-content active">
+                    <div class="placeholder-card" id="ongoing-placeholder">
+                        <i class="fas fa-rocket"></i>
+                        <p>Your scheduled trips and ongoing explorations will appear here.</p>
+                    </div>
+                    <div id="saved-trips-container"></div>
+                </div>
+
+                <div id="past" class="tab-content">
+                    <div class="placeholder-card" id="past-placeholder">
+                        <i class="fas fa-history"></i>
+                        <p>Your past travel history will be listed here.</p>
+                    </div>
+                    <div id="history-trips-container"></div>
+                </div>
+
+                <div id="cancelled" class="tab-content">
+                    <div class="placeholder-card">
+                        <i class="fas fa-calendar-times"></i>
+                        <p>Cancelled bookings will appear here.</p>
+                    </div>
                 </div>
             </div>
 
-            <div id="past" class="tab-content">
-                <div class="placeholder-card">
-                    <i class="fas fa-history"></i>
-                    <p>Your past travel history will be listed here.</p>
+            <div id="planner-section" style="display: none;">
+                <div class="planner-form-container">
+                    <h2 style="color: var(--neon-primary); margin-bottom: 10px;"><i class="fas fa-compass"></i> Plan Your Next Adventure</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 20px;">Fill in the details to blueprint your future journey.</p>
+                    
+                    <div class="planner-grid">
+                        <div class="input-group">
+                            <label>Adventure Title</label>
+                            <input type="text" id="trip-title" class="glass-input" placeholder="e.g. Summer Vacation 2026">
+                        </div>
+                        <div class="input-group">
+                            <label>Destination</label>
+                            <input type="text" id="trip-destination" class="glass-input" placeholder="e.g. Kandy, Sri Lanka">
+                        </div>
+                        <div class="input-group">
+                            <label>Target Date</label>
+                            <div class="date-type-tabs">
+                                <div id="tab-single" class="date-tab active" onclick="setDateMode('single')">Specific Date</div>
+                                <div id="tab-range" class="date-tab" onclick="setDateMode('range')">Flexible Range</div>
+                            </div>
+                            <div id="input-single">
+                                <input type="date" id="trip-date" class="glass-input">
+                            </div>
+                            <div id="input-range" style="display: none; gap: 10px;">
+                                <input type="date" id="trip-date-start" class="glass-input" title="Arrival Date">
+                                <input type="date" id="trip-date-end" class="glass-input" title="Departure Date">
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Estimated Budget</label>
+                            <div style="display: flex; gap: 10px;">
+                                <select id="trip-currency" class="glass-select" style="width: 80px; flex-shrink: 0;">
+                                    <option value="LKR">LKR</option>
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                    <option value="GBP">GBP</option>
+                                </select>
+                                <input type="number" id="trip-budget-amount" class="glass-input" style="flex: 1; min-width: 0;" placeholder="Amount">
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Number of Days</label>
+                            <input type="number" id="trip-days" class="glass-input" placeholder="e.g. 5">
+                        </div>
+                    </div>
+
+                    <div class="booking-section">
+                        <h3 style="color: var(--neon-primary); margin-bottom: 20px; font-size: 1.1rem;"><i class="fas fa-concierge-bell"></i> Quick Bookings</h3>
+                        <div class="booking-grid">
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <div class="booking-btn" onclick="toggleTransport()">
+                                    <i class="fas fa-route"></i>
+                                    <span>Transportation</span>
+                                </div>
+                                <div id="transportOptions" class="transport-options">
+                                    <a href="buses.html" class="booking-btn" style="padding: 10px; font-size: 0.8rem;">
+                                        <i class="fas fa-bus"></i> Buses
+                                    </a>
+                                    <a href="cabs.html" class="booking-btn" style="padding: 10px; font-size: 0.8rem;">
+                                        <i class="fas fa-car"></i> Cabs
+                                    </a>
+                                </div>
+                            </div>
+                            <a href="hotels.html" class="booking-btn">
+                                <i class="fas fa-hotel"></i>
+                                <span>Hotels</span>
+                            </a>
+                            <a href="guides.html" class="booking-btn">
+                                <i class="fas fa-user-tie"></i>
+                                <span>Guides</span>
+                            </a>
+                            <a href="restaurants.html" class="booking-btn">
+                                <i class="fas fa-utensils"></i>
+                                <span>Restaurants</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <button class="plan-btn" onclick="saveTrip()">Save Trip Blueprint</button>
                 </div>
             </div>
 
-            <div id="cancelled" class="tab-content">
-                <div class="placeholder-card">
-                    <i class="fas fa-calendar-times"></i>
-                    <p>Cancelled bookings will appear here.</p>
-                </div>
-            </div>
         </main>
     </div>
 
     <script>
+        // Global state for date mode
+        let currentDateMode = 'single';
+
         function toggleMenu(menuId) {
             const menu = document.getElementById(menuId);
             menu.classList.toggle('show');
             const servicesMenu = document.getElementById('services-menu');
             if (menuId === 'fleet-menu') {
                 servicesMenu.style.maxHeight = menu.classList.contains('show') ? "1200px" : "1000px";
+            }
+        }
+
+        function toggleTransport() {
+            const opts = document.getElementById('transportOptions');
+            opts.classList.toggle('show');
+        }
+
+        function setDateMode(mode) {
+            currentDateMode = mode;
+            const singleTab = document.getElementById('tab-single');
+            const rangeTab = document.getElementById('tab-range');
+            const singleInput = document.getElementById('input-single');
+            const rangeInput = document.getElementById('input-range');
+
+            if (mode === 'single') {
+                singleTab.classList.add('active');
+                rangeTab.classList.remove('active');
+                singleInput.style.display = 'block';
+                rangeInput.style.display = 'none';
+            } else {
+                rangeTab.classList.add('active');
+                singleTab.classList.remove('active');
+                singleInput.style.display = 'none';
+                rangeInput.style.display = 'flex';
+            }
+        }
+
+        function showSection(sectionId) {
+            document.getElementById('trips-section').style.display = 'none';
+            document.getElementById('planner-section').style.display = 'none';
+            document.getElementById(sectionId).style.display = 'block';
+            
+            document.getElementById('nav-trips').classList.remove('active');
+            document.getElementById('nav-planner').classList.remove('active');
+            
+            if(sectionId === 'trips-section') {
+                document.getElementById('nav-trips').classList.add('active');
+                document.getElementById('page-title').innerText = 'My Trips';
+            } else {
+                document.getElementById('nav-planner').classList.add('active');
+                document.getElementById('page-title').innerText = 'Trip Planner';
             }
         }
 
@@ -336,6 +739,132 @@
             for (i = 0; i < tablinks.length; i++) { tablinks[i].classList.remove("active"); }
             document.getElementById(tabName).classList.add("active");
             evt.currentTarget.classList.add("active");
+        }
+
+        function showTripDetails(title, dest, date, currency, amount, days) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('det-dest').innerText = dest;
+            document.getElementById('det-date').innerText = date || "Not set";
+            document.getElementById('det-budget').innerText = amount ? `${currency} ${amount}` : "Not specified";
+            document.getElementById('det-days').innerText = days ? days + " Days" : "Not specified";
+            document.getElementById('detailsModal').style.display = 'flex';
+        }
+
+        function closeTripDetails() {
+            document.getElementById('detailsModal').style.display = 'none';
+        }
+
+        // --- CUSTOM DELETE TRIP LOGIC ---
+        let tripToDelete = null;
+
+        function deleteTrip(event, element) {
+            event.stopPropagation();
+            tripToDelete = element.closest('.trip-card');
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+
+        document.getElementById('confirmOk').onclick = function() {
+            if(tripToDelete) {
+                tripToDelete.style.transform = "scale(0.8) translateY(20px)";
+                tripToDelete.style.opacity = "0";
+                
+                setTimeout(() => {
+                    tripToDelete.remove();
+                    tripToDelete = null;
+                    updatePlaceholders();
+                }, 300);
+            }
+            document.getElementById('confirmModal').style.display = 'none';
+        };
+
+        document.getElementById('confirmCancel').onclick = function() {
+            tripToDelete = null;
+            document.getElementById('confirmModal').style.display = 'none';
+        };
+
+        function updatePlaceholders() {
+            const activeContainer = document.getElementById('saved-trips-container');
+            const historyContainer = document.getElementById('history-trips-container');
+            
+            document.getElementById('ongoing-placeholder').style.display = activeContainer.children.length === 0 ? 'block' : 'none';
+            document.getElementById('past-placeholder').style.display = historyContainer.children.length === 0 ? 'block' : 'none';
+        }
+
+        function saveTrip() {
+            const title = document.getElementById('trip-title').value;
+            const dest = document.getElementById('trip-destination').value;
+            
+            let date;
+            if (currentDateMode === 'range') {
+                const start = document.getElementById('trip-date-start').value;
+                const end = document.getElementById('trip-date-end').value;
+                date = (start && end) ? `${start} to ${end}` : (start || end || 'TBD');
+            } else {
+                date = document.getElementById('trip-date').value || 'TBD';
+            }
+
+            const currency = document.getElementById('trip-currency').value;
+            const amount = document.getElementById('trip-budget-amount').value;
+            const days = document.getElementById('trip-days').value;
+
+            if(!title || !dest) {
+                alert("Please at least provide an Adventure Title and Destination!");
+                return;
+            }
+
+            const activeContainer = document.getElementById('saved-trips-container');
+            const historyContainer = document.getElementById('history-trips-container');
+            
+            const card = document.createElement('div');
+            card.className = 'trip-card';
+            card.onclick = function() {
+                showTripDetails(title, dest, date, currency, amount, days);
+            };
+            
+            card.innerHTML = `
+                <div class="trip-card-info">
+                    <h3>${title}</h3>
+                    <p>
+                        <span><i class="fas fa-map-marker-alt"></i> ${dest}</span>
+                        <span><i class="fas fa-calendar"></i> ${date}</span>
+                    </p>
+                </div>
+                <div class="trip-actions">
+                    <i class="fas fa-trash delete-trip-btn" title="Delete Trip" onclick="deleteTrip(event, this)"></i>
+                    <div class="trip-tag">Planned</div>
+                </div>
+            `;
+
+            activeContainer.prepend(card);
+            updatePlaceholders();
+
+            // Set auto-move timer (30 days = 2592000000 ms)
+            setTimeout(() => {
+                if (card.parentElement === activeContainer) {
+                    card.style.transition = "0.5s";
+                    card.style.opacity = "0";
+                    
+                    setTimeout(() => {
+                        card.querySelector('.trip-tag').innerText = "Visited";
+                        card.querySelector('.trip-tag').classList.add('history');
+                        historyContainer.prepend(card);
+                        card.style.opacity = "1";
+                        updatePlaceholders();
+                    }, 500);
+                }
+            }, 2592000000);
+
+            // Reset inputs
+            document.getElementById('trip-title').value = '';
+            document.getElementById('trip-destination').value = '';
+            document.getElementById('trip-date').value = '';
+            document.getElementById('trip-date-start').value = '';
+            document.getElementById('trip-date-end').value = '';
+            document.getElementById('trip-budget-amount').value = '';
+            document.getElementById('trip-days').value = '';
+
+            showSection('trips-section');
+            openTab({currentTarget: document.querySelector('.tab-btn')}, 'ongoing');
         }
 
         function logoutUser() {
