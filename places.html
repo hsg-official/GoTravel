@@ -12,7 +12,7 @@
             --accent: #3b82f6;
             --glass: rgba(0, 0, 0, 0.55);
             --border: rgba(255, 255, 255, 0.15);
-            --gradient-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success: #10b981;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -28,7 +28,7 @@
         .gradient-bg {
             position: fixed;
             inset: 0;
-            background: var(--gradient-bg);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             z-index: -3;
         }
 
@@ -158,25 +158,117 @@
 
         .destination-header {
             position: relative;
-            height: 300px;
+            height: 450px;
             border-radius: 20px;
             overflow: hidden;
             margin-bottom: 30px;
-            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.8));
+            background: #111;
+        }
+
+        .destination-image-bg {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            filter: brightness(0.65) contrast(1.1);
         }
 
         .destination-info {
-            padding: 30px;
+            position: relative;
+            z-index: 2;
             height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
+            padding: 0 30px 40px;
+            text-align: center;
+            background: linear-gradient(to top, rgba(0,0,0,0.4) 40%, transparent 80%);
         }
 
         .destination-name {
             font-family: 'Syncopate', sans-serif;
-            font-size: 2.5rem;
+            font-size: clamp(2.8rem, 7vw, 5rem);
             margin-bottom: 10px;
+            text-shadow: 3px 3px 12px rgba(0,0,0,0.9);
+            letter-spacing: 2px;
+        }
+
+        .rating {
+            font-size: 1.4rem;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.9);
+        }
+
+        /* Select Destination Button */
+        .select-destination-btn {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+            z-index: 3;
+        }
+
+        .select-destination-btn:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent);
+        }
+
+        .select-destination-btn.selected {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .select-destination-btn i {
+            font-size: 1.2rem;
+        }
+
+        /* Selected Destinations Badge */
+        .selected-badge {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-weight: 700;
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.3);
+            cursor: pointer;
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .selected-badge:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+        }
+
+        .selected-badge i {
+            font-size: 1.2rem;
+        }
+
+        .badge-count {
+            background: var(--accent);
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
         }
 
         .content-card {
@@ -189,57 +281,178 @@
         }
 
         .section-title {
-            font-family: 'Syncopate', sans-serif;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             margin-bottom: 15px;
             color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i { font-size: 1.1rem; }
+
+        .things-list {
+            list-style: none;
+            display: grid;
+            gap: 12px;
+        }
+
+        .things-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .things-list i {
+            color: var(--accent);
+            font-size: 1rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .info-label {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 600;
         }
 
         .loader {
             display: none;
             text-align: center;
-            padding: 40px;
+            padding: 60px;
+            font-size: 1.2rem;
         }
 
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            border-top-color: var(--accent);
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
+        .loader i {
+            font-size: 3rem;
+            color: var(--accent);
+            animation: spin 1.5s linear infinite;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
-        .things-list {
-            list-style: none;
-            padding-left: 0;
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            padding: 20px;
+            overflow-y: auto;
         }
 
-        .things-list li {
-            padding: 8px 0;
-            border-bottom: 1px solid var(--border);
+        .modal-content {
+            max-width: 800px;
+            margin: 50px auto;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 30px;
+        }
+
+        .modal-header {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 10px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
         }
 
-        .things-list li:last-child {
-            border-bottom: none;
-        }
-
-        .things-list i {
+        .modal-title {
+            font-family: 'Syncopate', sans-serif;
+            font-size: 1.5rem;
             color: var(--accent);
         }
 
-        @media (max-width: 768px) {
-            .suggestions-container {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        .close-modal {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            color: white;
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .close-modal:hover {
+            border-color: var(--accent);
+        }
+
+        .selected-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .selected-item {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .selected-item-info h3 {
+            margin-bottom: 5px;
+        }
+
+        .selected-item-info p {
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+
+        .remove-btn {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .remove-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: var(--accent);
         }
     </style>
 </head>
@@ -249,203 +462,267 @@
 
     <header>
         <div class="info-panel">
-            <span id="time" class="time-text">00:00</span>
-            <span id="date" class="date-text">DATE</span>
+            <div class="time-text" id="time">12:00</div>
+            <span class="date-text" id="date">Today</span>
         </div>
-        <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+        <a href="index.html" class="back-btn">
+            <i class="fas fa-arrow-left"></i> BACK
+        </a>
     </header>
 
     <div class="search-section">
-        <h1 class="search-title">Discover Sri Lanka</h1>
+        <h1 class="search-title">EXPLORE SRI LANKA</h1>
         <div class="search-container">
-            <input type="text" id="searchInput" class="search-input" placeholder="Search destinations...">
-            <button class="search-btn" id="searchBtn"><i class="fas fa-search"></i></button>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search for a destination...">
+            <button id="searchBtn" class="search-btn"><i class="fas fa-search"></i></button>
         </div>
+
         <div class="suggestions-container">
             <div class="suggestion-card" data-destination="Sigiriya">
                 <i class="fas fa-mountain"></i>
                 <h3>Sigiriya</h3>
+                <p>Ancient Rock Fortress</p>
             </div>
             <div class="suggestion-card" data-destination="Ella">
-                <i class="fas fa-mountain-sun"></i>
+                <i class="fas fa-leaf"></i>
                 <h3>Ella</h3>
+                <p>Hill Country</p>
             </div>
             <div class="suggestion-card" data-destination="Galle Fort">
-                <i class="fas fa-fort"></i>
+                <i class="fas fa-fort-awesome"></i>
                 <h3>Galle Fort</h3>
-            </div>
-            <div class="suggestion-card" data-destination="Kandy">
-                <i class="fas fa-temple"></i>
-                <h3>Kandy</h3>
-            </div>
-            <div class="suggestion-card" data-destination="Yala National Park">
-                <i class="fas fa-paw"></i>
-                <h3>Yala</h3>
-            </div>
-            <div class="suggestion-card" data-destination="Mirissa">
-                <i class="fas fa-umbrella-beach"></i>
-                <h3>Mirissa</h3>
+                <p>Historic Colonial Town</p>
             </div>
         </div>
     </div>
 
     <div class="loader" id="loader">
-        <div class="spinner"></div>
-        <p>Getting AI information from Gemini...</p>
+        <i class="fas fa-compass"></i>
+        <p>Loading destination info...</p>
     </div>
 
     <div class="destination-section" id="destinationSection">
         <div class="destination-header">
+            <div class="destination-image-bg" id="destImageBg"></div>
             <div class="destination-info">
-                <h1 class="destination-name" id="destName">Destination</h1>
-                <div class="rating">
-                    Rating: <span id="rating">4.5</span>/5 ⭐
-                </div>
+                <h1 class="destination-name" id="destName">DESTINATION</h1>
+                <div class="rating">⭐ <span id="rating">4.5</span></div>
             </div>
+            <button id="selectDestBtn" class="select-destination-btn">
+                <i class="fas fa-plus"></i>
+                <span>Select Destination</span>
+            </button>
         </div>
 
         <div class="content-card">
-            <h2 class="section-title">About</h2>
+            <h2 class="section-title"><i class="fas fa-info-circle"></i> Description</h2>
             <p id="description">Loading...</p>
         </div>
 
         <div class="content-card">
-            <h2 class="section-title">History</h2>
+            <h2 class="section-title"><i class="fas fa-book"></i> History</h2>
             <p id="history">Loading...</p>
         </div>
 
         <div class="content-card">
-            <h2 class="section-title">Things to Do</h2>
-            <ul class="things-list" id="thingsToDo">
-                <li><i class="fas fa-spinner fa-spin"></i> Loading...</li>
-            </ul>
+            <h2 class="section-title"><i class="fas fa-tasks"></i> Things to Do</h2>
+            <ul class="things-list" id="thingsToDo"></ul>
         </div>
 
         <div class="content-card">
-            <h2 class="section-title">Practical Info</h2>
-            <p><strong>Ticket Price:</strong> <span id="ticketPrice">$25</span></p>
-            <p><strong>Opening Hours:</strong> <span id="openingHours">8 AM - 6 PM</span></p>
-            <p><strong>Best Time:</strong> <span id="bestTime">Dec-Apr</span></p>
-            <p><strong>Visit Duration:</strong> <span id="visitDuration">2-3 hours</span></p>
+            <h2 class="section-title"><i class="fas fa-clipboard-list"></i> Visitor Information</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Ticket Price</div>
+                    <div class="info-value" id="ticketPrice">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Opening Hours</div>
+                    <div class="info-value" id="openingHours">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Best Time to Visit</div>
+                    <div class="info-value" id="bestTime">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Visit Duration</div>
+                    <div class="info-value" id="visitDuration">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Selected Destinations Badge -->
+    <div class="selected-badge" id="selectedBadge">
+        <i class="fas fa-map-marked-alt"></i>
+        <span>My Trip</span>
+        <span class="badge-count" id="badgeCount">0</span>
+    </div>
+
+    <!-- Modal for Selected Destinations -->
+    <div class="modal" id="selectedModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">MY TRIP DESTINATIONS</h2>
+                <button class="close-modal" id="closeModal">&times;</button>
+            </div>
+            <div class="selected-list" id="selectedList"></div>
         </div>
     </div>
 
     <script>
-    // 🚨 PUT YOUR GEMINI API KEY HERE 🚨
-    const GEMINI_API_KEY = 'AIzaSyBzloCUTs1WtNfkyKqWenPDCqkB2_-ZsH0'; // Your key
-    
-    // 🎯 Function to get AI info - Using gemini-2.5-flash (stable & working in 2026)
+    // ⚠️ IMPORTANT: Replace this with YOUR Google Apps Script URL
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwHltBHkWqBNrk67zieDRl9xr1hscq3ZlnJu7aHv6njFxhL0vt6tyWg0hJYeTxLz5liPA/exec';
+
+    // Store selected destinations
+    let selectedDestinations = JSON.parse(localStorage.getItem('selectedDestinations') || '[]');
+    let currentDestination = null;
+
+    // Update badge count
+    function updateBadge() {
+        const badge = document.getElementById('selectedBadge');
+        const count = document.getElementById('badgeCount');
+        count.textContent = selectedDestinations.length;
+        
+        if (selectedDestinations.length > 0) {
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    // Check if destination is already selected
+    function isSelected(destination) {
+        return selectedDestinations.some(d => d.name === destination);
+    }
+
+    // Toggle destination selection
+    function toggleSelection() {
+        if (!currentDestination) return;
+
+        const btn = document.getElementById('selectDestBtn');
+        
+        if (isSelected(currentDestination.name)) {
+            // Remove from selected
+            selectedDestinations = selectedDestinations.filter(d => d.name !== currentDestination.name);
+            btn.innerHTML = '<i class="fas fa-plus"></i><span>Select Destination</span>';
+            btn.classList.remove('selected');
+        } else {
+            // Add to selected
+            selectedDestinations.push({
+                name: currentDestination.name,
+                rating: currentDestination.rating,
+                imageUrl: currentDestination.imageUrl,
+                addedAt: new Date().toISOString()
+            });
+            btn.innerHTML = '<i class="fas fa-check"></i><span>Selected</span>';
+            btn.classList.add('selected');
+        }
+
+        localStorage.setItem('selectedDestinations', JSON.stringify(selectedDestinations));
+        updateBadge();
+    }
+
+    // Update select button state
+    function updateSelectButton() {
+        if (!currentDestination) return;
+        
+        const btn = document.getElementById('selectDestBtn');
+        if (isSelected(currentDestination.name)) {
+            btn.innerHTML = '<i class="fas fa-check"></i><span>Selected</span>';
+            btn.classList.add('selected');
+        } else {
+            btn.innerHTML = '<i class="fas fa-plus"></i><span>Select Destination</span>';
+            btn.classList.remove('selected');
+        }
+    }
+
+    // Show selected destinations modal
+    function showSelectedModal() {
+        const modal = document.getElementById('selectedModal');
+        const list = document.getElementById('selectedList');
+        
+        if (selectedDestinations.length === 0) {
+            list.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <p>No destinations selected yet</p>
+                    <p style="font-size: 0.9rem; margin-top: 10px;">Search for destinations and click "Select Destination" to build your trip!</p>
+                </div>
+            `;
+        } else {
+            list.innerHTML = selectedDestinations.map(dest => `
+                <div class="selected-item">
+                    <div class="selected-item-info">
+                        <h3>${dest.name}</h3>
+                        <p>⭐ ${dest.rating || '4.5'} • Added ${new Date(dest.addedAt).toLocaleDateString()}</p>
+                    </div>
+                    <button class="remove-btn" onclick="removeDestination('${dest.name}')">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
+                </div>
+            `).join('');
+        }
+        
+        modal.style.display = 'block';
+    }
+
+    // Remove destination
+    function removeDestination(name) {
+        selectedDestinations = selectedDestinations.filter(d => d.name !== name);
+        localStorage.setItem('selectedDestinations', JSON.stringify(selectedDestinations));
+        updateBadge();
+        showSelectedModal();
+        updateSelectButton();
+    }
+
+    // Event listeners
+    document.getElementById('closeModal').addEventListener('click', () => {
+        document.getElementById('selectedModal').style.display = 'none';
+    });
+
+    document.getElementById('selectedModal').addEventListener('click', (e) => {
+        if (e.target.id === 'selectedModal') {
+            document.getElementById('selectedModal').style.display = 'none';
+        }
+    });
+
+    document.getElementById('selectedBadge').addEventListener('click', showSelectedModal);
+    document.getElementById('selectDestBtn').addEventListener('click', toggleSelection);
+
     async function getAIInfo(destination) {
+        const cache = JSON.parse(localStorage.getItem('travelCache') || '{}');
+        if (cache[destination]) {
+            console.log('Using cached data for', destination);
+            return cache[destination];
+        }
+
         try {
-            console.log('Asking Gemini about:', destination);
-            
-            const prompt = `Provide information about ${destination} in Sri Lanka in this exact JSON format:
-{
-  "description": "Brief 2-3 sentence description",
-  "history": "Historical background in 2-3 sentences",
-  "thingsToDo": ["Activity 1", "Activity 2", "Activity 3", "Activity 4", "Activity 5"],
-  "ticketPrice": "Price in USD like $25 or Free",
-  "openingHours": "Opening hours like 8:00 AM - 6:00 PM",
-  "bestTime": "Best time to visit like December to April",
-  "visitDuration": "Recommended visit duration like 2-3 hours",
-  "rating": 4.5
-}
-
-Make it accurate and specific to ${destination}.`;
-
-            // ✅ UPDATED to gemini-2.5-flash
-            const response = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: prompt
-                            }]
-                        }]
-                    })
-                }
-            );
+            const response = await fetch(`${GOOGLE_SCRIPT_URL}?destination=${encodeURIComponent(destination)}`);
             
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('API Error:', errorText);
-                
-                // Try alternative endpoint
-                return await tryAlternativeEndpoint(destination, prompt);
+                throw new Error('Network response was not ok');
             }
             
             const data = await response.json();
-            console.log('Gemini response received');
             
-            if (data.candidates && data.candidates[0]) {
-                const text = data.candidates[0].content.parts[0].text;
-                console.log('AI Response text:', text.substring(0, 100) + '...');
-                
-                // Extract JSON
-                const jsonMatch = text.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                    try {
-                        const result = JSON.parse(jsonMatch[0]);
-                        console.log('✅ AI Data extracted for', destination);
-                        return result;
-                    } catch (e) {
-                        console.log('JSON parse failed, using fallback');
-                    }
-                }
+            if (data.error && data.fallback) {
+                console.log('Using fallback data:', data.error);
+                return data.fallback;
             }
             
-            // Fallback if AI response is not in expected format
-            return getFallbackData(destination);
+            cache[destination] = data;
+            localStorage.setItem('travelCache', JSON.stringify(cache));
             
-        } catch (error) {
-            console.error('❌ Gemini Error:', error);
-            return getFallbackData(destination);
-        }
-    }
-    
-    // Try alternative endpoint if first fails
-    async function tryAlternativeEndpoint(destination, prompt) {
-        try {
-            console.log('Trying alternative endpoint...');
-            
-            // ✅ UPDATED alternative to gemini-2.5-flash as well (more consistent)
-            const response = await fetch(
-                `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-                {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{text: prompt}]
-                        }]
-                    })
-                }
-            );
-            
-            const data = await response.json();
-            if (data.candidates && data.candidates[0]) {
-                const text = data.candidates[0].content.parts[0].text;
-                const jsonMatch = text.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                    return JSON.parse(jsonMatch[0]);
-                }
-            }
+            return data;
+
         } catch (e) {
-            console.log('Alternative endpoint also failed');
+            console.error('Error fetching from Google Script:', e);
+            return getLocalFallback(destination);
         }
-        
-        return getFallbackData(destination);
     }
-    
-    // Fallback data if AI fails (unchanged)
-    function getFallbackData(destination) {
-        console.log('Using fallback data for', destination);
-        
+
+    function getLocalFallback(destination) {
         const fallbacks = {
             "Sigiriya": {
                 description: "Sigiriya, also known as Lion Rock, is an ancient rock fortress and UNESCO World Heritage Site in Sri Lanka, famous for its stunning views and historical frescoes.",
@@ -455,7 +732,8 @@ Make it accurate and specific to ${destination}.`;
                 openingHours: "7:00 AM - 5:30 PM",
                 bestTime: "December to April",
                 visitDuration: "3-4 hours",
-                rating: 4.8
+                rating: 4.8,
+                imageUrl: "https://images.unsplash.com/photo-1564507592333-cb6f2f40d3b9?auto=format&fit=crop&q=80"
             },
             "Ella": {
                 description: "Ella is a scenic hill town in Sri Lanka's tea country, known for cool weather, waterfalls, hiking trails, and the famous Nine Arches Bridge.",
@@ -465,7 +743,8 @@ Make it accurate and specific to ${destination}.`;
                 openingHours: "Always accessible",
                 bestTime: "January to March",
                 visitDuration: "2-3 days",
-                rating: 4.6
+                rating: 4.6,
+                imageUrl: "https://images.unsplash.com/photo-1564507592333-cb6f2f40d3b9?auto=format&fit=crop&q=80"
             },
             "Galle Fort": {
                 description: "Galle Fort is a UNESCO World Heritage Site featuring historic Portuguese and Dutch fortifications by the sea, with charming streets and colonial architecture.",
@@ -475,135 +754,98 @@ Make it accurate and specific to ${destination}.`;
                 openingHours: "24 hours",
                 bestTime: "November to April",
                 visitDuration: "1 full day",
-                rating: 4.7
+                rating: 4.7,
+                imageUrl: "https://images.unsplash.com/photo-1564507592333-cb6f2f40d3b9?auto=format&fit=crop&q=80"
             }
         };
-        
         return fallbacks[destination] || {
-            description: `${destination} is a beautiful tourist destination in Sri Lanka with rich cultural heritage and natural beauty.`,
-            history: `${destination} has significant historical importance in Sri Lanka's tourism and cultural landscape.`,
-            thingsToDo: ["Explore main attractions", "Take photographs", "Learn local history", "Try Sri Lankan cuisine", "Visit nearby sites"],
-            ticketPrice: "$20 USD",
-            openingHours: "8:00 AM - 6:00 PM",
-            bestTime: "December to April",
-            visitDuration: "2-3 hours",
-            rating: 4.5
+            description: `${destination} is a beautiful destination in Sri Lanka.`,
+            history: "Rich cultural and natural history.",
+            thingsToDo: ["Explore", "Photograph", "Relax"],
+            ticketPrice: "Varies",
+            openingHours: "Open daily",
+            bestTime: "Dec-Apr",
+            visitDuration: "2-4 hours",
+            rating: 4.5,
+            imageUrl: "https://images.unsplash.com/photo-1564507592333-cb6f2f40d3b9?auto=format&fit=crop&q=80"
         };
     }
-    
-    // 🎯 Load destination (unchanged)
+
     async function loadDestination(destination) {
         document.getElementById('loader').style.display = 'block';
         document.getElementById('destinationSection').style.display = 'none';
-        
-        try {
-            console.log(`Starting AI request for: ${destination}`);
-            const aiData = await getAIInfo(destination);
-            console.log(`AI Data received for ${destination}:`, aiData);
-            
-            // Update UI
-            updateDestinationUI(destination, aiData);
-            
-            document.getElementById('loader').style.display = 'none';
-            document.getElementById('destinationSection').style.display = 'block';
-            
-            setTimeout(() => {
-                document.getElementById('destinationSection').scrollIntoView({ 
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }, 100);
-            
-            console.log(`✅ ${destination} displayed successfully`);
-            
-        } catch (error) {
-            console.error('Error loading destination:', error);
-            document.getElementById('loader').style.display = 'none';
-            alert(`Could not load ${destination}. Please try again.`);
-        }
-    }
-    
-    // Update UI function (unchanged)
-    function updateDestinationUI(destination, aiData) {
-        document.getElementById('destName').textContent = destination;
-        document.getElementById('description').textContent = aiData.description || "Information about this destination.";
-        document.getElementById('history').textContent = aiData.history || aiData.description || "Historical information.";
-        document.getElementById('rating').textContent = aiData.rating || 4.5;
-        document.getElementById('ticketPrice').textContent = aiData.ticketPrice || "$25";
-        document.getElementById('openingHours').textContent = aiData.openingHours || "8:00 AM - 6:00 PM";
-        document.getElementById('bestTime').textContent = aiData.bestTime || "December to April";
-        document.getElementById('visitDuration').textContent = aiData.visitDuration || "2-3 hours";
-        
-        // Things to do list
-        const thingsList = document.getElementById('thingsToDo');
-        thingsList.innerHTML = '';
-        
-        const activities = aiData.thingsToDo || ["Explore the area", "Take photos", "Learn history"];
-        
-        activities.forEach(item => {
+
+        const aiData = await getAIInfo(destination);
+
+        // Store current destination
+        currentDestination = {
+            name: destination,
+            rating: aiData.rating || '4.5',
+            imageUrl: aiData.imageUrl
+        };
+
+        document.getElementById('destName').textContent = destination.toUpperCase();
+        document.getElementById('rating').textContent = aiData.rating || '4.5';
+
+        document.getElementById('description').textContent = aiData.description || 'No description available.';
+        document.getElementById('history').textContent = aiData.history || 'No history available.';
+        document.getElementById('ticketPrice').textContent = aiData.ticketPrice || 'N/A';
+        document.getElementById('openingHours').textContent = aiData.openingHours || 'N/A';
+        document.getElementById('bestTime').textContent = aiData.bestTime || 'N/A';
+        document.getElementById('visitDuration').textContent = aiData.visitDuration || 'N/A';
+
+        const list = document.getElementById('thingsToDo');
+        list.innerHTML = '';
+        (aiData.thingsToDo || []).forEach(item => {
             const li = document.createElement('li');
             li.innerHTML = `<i class="fas fa-check-circle"></i> ${item}`;
-            thingsList.appendChild(li);
+            list.appendChild(li);
         });
+
+        const bg = document.getElementById('destImageBg');
+        bg.style.backgroundImage = aiData.imageUrl ? `url(${aiData.imageUrl})` : 'none';
+
+        // Update select button state
+        updateSelectButton();
+
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('destinationSection').style.display = 'block';
+
+        setTimeout(() => {
+            document.getElementById('destinationSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 150);
     }
-    
-    // Event listeners (unchanged)
+
     document.getElementById('searchBtn').addEventListener('click', () => {
-        const query = document.getElementById('searchInput').value.trim();
-        if (query) {
-            loadDestination(query);
-        } else {
-            alert('Please enter a destination name');
-        }
+        const q = document.getElementById('searchInput').value.trim();
+        if (q) loadDestination(q);
+        else alert('Please enter a destination name');
     });
-    
-    document.getElementById('searchInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            document.getElementById('searchBtn').click();
-        }
+
+    document.getElementById('searchInput').addEventListener('keypress', e => {
+        if (e.key === 'Enter') document.getElementById('searchBtn').click();
     });
-    
-    // Click on suggestion cards
+
     document.querySelectorAll('.suggestion-card').forEach(card => {
         card.addEventListener('click', () => {
-            const destination = card.getAttribute('data-destination');
+            const dest = card.getAttribute('data-destination');
             document.getElementById('searchInput').value = card.querySelector('h3').textContent;
-            loadDestination(destination);
+            loadDestination(dest);
         });
     });
-    
-    // Clock
+
     function updateClock() {
-        const now = new Date();
-        document.getElementById('time').textContent = 
-            now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        document.getElementById('date').textContent = 
-            now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+        const n = new Date();
+        document.getElementById('time').textContent = n.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        document.getElementById('date').textContent = n.toLocaleDateString([], {weekday:'short', month:'short', day:'numeric'});
     }
     setInterval(updateClock, 1000);
     updateClock();
-    
-    // Auto-focus search
-    setTimeout(() => {
-        document.getElementById('searchInput').focus();
-    }, 500);
-    
-    // Test API key on load - UPDATED model here too
-    console.log('🔧 Testing Gemini API key with gemini-2.5-flash...');
-    fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({contents:[{parts:[{text:"Test"}]}]})
-    })
-    .then(r => r.json())
-    .then(data => {
-        if(data.candidates) {
-            console.log('✅ API Key is working with gemini-2.5-flash!');
-        } else {
-            console.log('❌ API Key issue:', data.error);
-        }
-    })
-    .catch(err => console.log('❌ Network error:', err.message));
-</script>
+
+    setTimeout(() => document.getElementById('searchInput').focus(), 600);
+
+    // Initialize badge on page load
+    updateBadge();
+    </script>
 </body>
 </html>
