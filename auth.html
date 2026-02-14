@@ -12,93 +12,44 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script type="text/javascript">
+        // [1] EMAILJS INIT (Still used for Signup)
         (function() {
             emailjs.init("0snPOI_S_7ftRX9BK"); 
         })();
 
+        // [2] SUPABASE INIT
         const supabaseUrl = 'https://cdcolkoavowjjymzdzud.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkY29sa29hdm93amp5bXpkenVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MDI2NjQsImV4cCI6MjA4Mzk3ODY2NH0.JPzj9fI1pKpPbPxyGqsemjcwpKiu0h046H7aBSURnpM';
         const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
     </script>
 
     <style>
+        /* --- YOUR ORIGINAL STYLES --- */
         :root {
-            --primary: #4f46e5;
-            --accent: #0ea5e9;
-            --success: #10b981;
-            --error: #ef4444;
-            --glass: rgba(15, 23, 42, 0.75);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --text-muted: #94a3b8;
+            --primary: #4f46e5; --accent: #0ea5e9; --success: #10b981; --error: #ef4444;
+            --glass: rgba(15, 23, 42, 0.75); --glass-border: rgba(255, 255, 255, 0.1); --text-muted: #94a3b8;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body { 
-            background: #000; 
-            font-family: 'Outfit', sans-serif; 
-            height: 100vh; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            overflow: hidden; 
-            position: relative;
-        }
-
-        .bg-layer {
-            position: fixed; inset: -5%; 
-            background-image: url('https://images.pexels.com/photos/1268855/pexels-photo-1268855.jpeg'); 
-            background-size: cover; 
-            background-position: center; 
-            filter: brightness(0.4);
-            animation: zoomBreath 20s infinite alternate ease-in-out;
-            z-index: -1;
-        }
+        body { background: #000; font-family: 'Outfit', sans-serif; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        .bg-layer { position: fixed; inset: -5%; background-image: url('https://images.pexels.com/photos/1268855/pexels-photo-1268855.jpeg'); background-size: cover; filter: brightness(0.4); z-index: -1; animation: zoomBreath 20s infinite alternate; }
         @keyframes zoomBreath { from { transform: scale(1); } to { transform: scale(1.1); } }
-
-        #toast-container {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            z-index: 1000; width: 90%; max-width: 400px;
-            display: flex; flex-direction: column; gap: 10px;
-        }
-        .toast {
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid var(--glass-border);
-            color: #fff; padding: 15px; border-radius: 12px;
-            display: flex; align-items: center; gap: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            animation: slideDown 0.3s ease-out;
-        }
+        
+        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: rgba(15, 23, 42, 0.95); border: 1px solid var(--glass-border); color: #fff; padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 12px; animation: slideDown 0.3s ease-out; }
         .toast.success { border-left: 4px solid var(--success); }
         .toast.error { border-left: 4px solid var(--error); }
         @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        .auth-card {
-            width: 90%; max-width: 420px;
-            background: var(--glass);
-            backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 2.5rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-            position: relative;
-            overflow-y: auto;
-            max-height: 90vh;
-        }
-
+        .auth-card { width: 90%; max-width: 420px; background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 24px; padding: 2.5rem; position: relative; max-height: 90vh; overflow-y: auto; }
+        .auth-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+        
         .header-text { text-align: center; margin-bottom: 20px; }
-        .logo { font-family: 'Syncopate', sans-serif; font-weight: 700; font-size: 1.8rem; letter-spacing: 2px; background: linear-gradient(to right, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .logo { font-family: 'Syncopate', sans-serif; font-size: 1.8rem; background: linear-gradient(to right, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .subtitle { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; }
 
         .tab-container { display: flex; background: rgba(0,0,0,0.4); border-radius: 12px; padding: 4px; margin-bottom: 20px; }
-        .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; color: var(--text-muted); font-weight: 600; cursor: pointer; border-radius: 8px; transition: 0.3s; }
-        .tab-btn.active { background: rgba(255,255,255,0.1); color: #fff; }
-
-        .acc-type-label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; font-weight: 700; }
-        .acc-selector { display: flex; gap: 10px; margin-bottom: 20px; }
-        .acc-option { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px; border: 1px solid var(--glass-border); border-radius: 12px; cursor: pointer; transition: 0.3s; }
-        .acc-option.selected { border-color: var(--accent); background: rgba(14, 165, 233, 0.1); }
-        .acc-option.selected i, .acc-option.selected span { color: #fff; }
+        .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; color: var(--text-muted); font-weight: 600; cursor: pointer; transition: 0.3s; }
+        .tab-btn.active { background: rgba(255,255,255,0.1); color: #fff; border-radius: 8px; }
 
         .form-slide { display: none; animation: fadeIn 0.4s ease; }
         .form-slide.active { display: block; }
@@ -109,13 +60,23 @@
         .input-field:focus { border-color: var(--accent); background: rgba(0,0,0,0.5); }
         .input-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); cursor: pointer; }
 
-        .action-btn { width: 100%; padding: 16px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-        .action-btn:hover { transform: translateY(-2px); }
-
+        .action-btn { width: 100%; padding: 16px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+        .action-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(14, 165, 233, 0.6); }
+        
         .link-text { display: block; text-align: right; color: var(--text-muted); font-size: 0.8rem; margin-top: 10px; cursor: pointer; text-decoration: none; }
-        .back-home { position: absolute; top: 20px; left: 20px; color: rgba(255,255,255,0.5); text-decoration: none; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; }
+        .link-text:hover { color: #fff; }
 
-        @media (max-width: 480px) { .auth-card { padding: 1.5rem; } }
+        .modal { position: absolute; inset: 0; background: rgba(15, 23, 42, 0.98); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 20; opacity: 0; pointer-events: none; transition: 0.3s; padding: 20px; text-align: center; }
+        .modal.visible { opacity: 1; pointer-events: all; }
+        .code-input { font-size: 2rem; letter-spacing: 0.5rem; text-align: center; font-family: 'Syncopate', sans-serif; background: transparent; border: none; border-bottom: 2px solid var(--accent); color: #fff; width: 200px; padding: 10px; outline: none; margin: 20px 0; }
+        
+        .acc-selector { display: flex; gap: 10px; margin-bottom: 20px; }
+        .acc-option { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px; border: 1px solid var(--glass-border); border-radius: 12px; cursor: pointer; }
+        .acc-option.selected { border-color: var(--accent); background: rgba(14, 165, 233, 0.1); }
+        .acc-option i, .acc-option span { color: var(--text-muted); }
+        .acc-option.selected i, .acc-option.selected span { color: #fff; }
+
+        .back-home { position: absolute; top: 20px; left: 20px; color: rgba(255,255,255,0.5); text-decoration: none; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; }
     </style>
 </head>
 <body>
@@ -136,6 +97,7 @@
         </div>
 
         <div class="form-container">
+            
             <div id="login-form" class="form-slide active">
                 <form onsubmit="handleLogin(event)">
                     <div class="input-group">
@@ -152,24 +114,22 @@
             </div>
 
             <div id="signup-form" class="form-slide">
-                <form onsubmit="initiateVerification(event)">
-                    <div class="acc-type-label">Select Account Type</div>
+                <form onsubmit="initiateSignupVerification(event)">
                     <div class="acc-selector">
                         <div class="acc-option selected" id="opt-personal" onclick="selectAccType('personal')">
-                            <i class="fas fa-user"></i><span style="font-size: 0.7rem;">Personal</span>
+                            <i class="fas fa-user"></i><span style="font-size:0.8rem; font-weight:600;">Personal</span>
                         </div>
                         <div class="acc-option" id="opt-business" onclick="selectAccType('business')">
-                            <i class="fas fa-briefcase"></i><span style="font-size: 0.7rem;">Business</span>
+                            <i class="fas fa-briefcase"></i><span style="font-size:0.8rem; font-weight:600;">Business</span>
                         </div>
                     </div>
                     <input type="hidden" id="selected-acc-type" value="personal">
+
                     <div style="display:flex; gap:10px;">
                         <input type="text" id="reg-fname" class="input-field" placeholder="First Name" required>
                         <input type="text" id="reg-lname" class="input-field" placeholder="Last Name" required>
                     </div><br>
-                    <div class="input-group">
-                        <input type="email" id="reg-email" class="input-field" placeholder="Email Address" required>
-                    </div>
+                    <input type="email" id="reg-email" class="input-field" placeholder="Email Address" required><br>
                     <div class="input-group">
                         <input type="password" id="reg-pass" class="input-field" placeholder="Create Password" required>
                         <i class="fas fa-eye input-icon" onclick="togglePass('reg-pass', this)"></i>
@@ -180,43 +140,54 @@
 
             <div id="forgot-form" class="form-slide">
                 <h3 style="text-align:center; color:#fff; margin-bottom:10px;">Reset Password</h3>
-                <p style="text-align:center; font-size:0.8rem; color:var(--text-muted); margin-bottom:20px;">We will send a recovery link to your email.</p>
-                <form onsubmit="sendResetLink(event)">
+                <p style="text-align:center; font-size:0.8rem; color:var(--text-muted); margin-bottom:20px;">We will send a code to your email.</p>
+                <form onsubmit="sendSupabaseCode(event)">
                     <div class="input-group">
                         <input type="email" id="reset-email" class="input-field" placeholder="Your Email Address" required>
                     </div>
-                    <button type="submit" id="reset-btn" class="action-btn">SEND RECOVERY LINK</button>
+                    <button type="submit" id="reset-btn" class="action-btn">SEND CODE</button>
                     <a href="#" class="link-text" style="text-align:center;" onclick="setMode('login')">Back to Login</a>
                 </form>
             </div>
 
+            <div id="verify-reset-form" class="form-slide">
+                <h3 style="text-align:center; color:#fff; margin-bottom:10px;">Enter Code</h3>
+                <input type="text" id="reset-code-input" class="code-input" placeholder="000000" maxlength="6">
+                <button onclick="verifySupabaseCode()" id="verify-btn" class="action-btn">VERIFY CODE</button>
+            </div>
+
             <div id="new-pass-form" class="form-slide">
                 <h3 style="text-align:center; color:#fff; margin-bottom:10px;">New Password</h3>
-                <form onsubmit="updatePassword(event)">
+                <form onsubmit="updatePasswordReal(event)">
                     <div class="input-group">
                         <input type="password" id="new-pass" class="input-field" placeholder="New Password" required>
-                        <i class="fas fa-eye input-icon" onclick="togglePass('new-pass', this)"></i>
                     </div>
                     <div class="input-group">
                         <input type="password" id="confirm-pass" class="input-field" placeholder="Confirm Password" required>
                     </div>
-                    <button type="submit" id="update-pass-btn" class="action-btn">UPDATE & LOGIN</button>
+                    <button type="submit" id="update-pass-btn" class="action-btn">UPDATE PASSWORD</button>
                 </form>
             </div>
+
+        </div>
+
+        <div id="verify-modal" class="modal">
+            <i class="fas fa-shield-alt" style="font-size: 3rem; color: var(--accent); margin-bottom: 20px;"></i>
+            <h2>Verify Email</h2>
+            <p class="subtitle">Code sent to <span id="display-email"></span></p>
+            <input type="text" id="signup-verify-code" class="code-input" placeholder="000000" maxlength="6">
+            <button class="action-btn" onclick="handleSignupVerifySubmit()">VERIFY & START</button>
+            <button style="background:none; border:none; color:var(--text-muted); margin-top:20px; cursor:pointer;" onclick="closeModal()">Cancel</button>
         </div>
     </div>
 
     <script>
-        // Check for recovery link on page load
-        window.onload = function() {
-            if (window.location.hash.includes('type=recovery')) {
-                document.querySelectorAll('.form-slide').forEach(s => s.classList.remove('active'));
-                document.getElementById('main-tabs').style.display = 'none';
-                document.getElementById('new-pass-form').classList.add('active');
-                showToast("Identity verified. Set your new password.", "success");
-            }
-        };
+        // GLOBAL VARIABLES
+        let generatedCode = null;
+        let tempUser = {};
+        let resetEmail = "";
 
+        // --- TOAST NOTIFICATIONS ---
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -226,6 +197,7 @@
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
+        // --- NAVIGATION ---
         function setMode(mode) {
             document.getElementById('main-tabs').style.display = 'flex';
             document.querySelectorAll('.form-slide').forEach(s => s.classList.remove('active'));
@@ -256,54 +228,63 @@
             document.getElementById('opt-personal').classList.toggle('selected', type === 'personal');
             document.getElementById('opt-business').classList.toggle('selected', type === 'business');
         }
+        function closeModal() { document.getElementById('verify-modal').classList.remove('visible'); }
 
-        // --- AUTH LOGIC ---
-
-        async function handleLogin(e) {
+        // ==========================================
+        // 1. PASSWORD RESET (REAL WORKING FLOW)
+        // ==========================================
+        
+        // A. Send Code (Using Supabase OTP)
+        async function sendSupabaseCode(e) {
             e.preventDefault();
-            const btn = document.getElementById('login-btn');
-            btn.innerText = "AUTHENTICATING...";
-            try {
-                const { data, error } = await supabaseClient.auth.signInWithPassword({
-                    email: document.getElementById('login-email').value,
-                    password: document.getElementById('login-pass').value,
-                });
-                if (error) throw error;
-
-                const { data: userData } = await supabaseClient.from('users').select('*').eq('email', data.user.email).single();
-                localStorage.setItem('userFName', userData.first_name);
-                window.location.href = userData.account_type === 'business' ? "business.html" : "personal.html";
-            } catch (error) {
-                btn.innerText = "ACCESS ACCOUNT";
-                showToast(error.message, "error");
-            }
-        }
-
-        async function sendResetLink(e) {
-            e.preventDefault();
-            const btn = document.getElementById('reset-btn');
             const email = document.getElementById('reset-email').value;
+            const btn = document.getElementById('reset-btn');
             btn.innerText = "SENDING...";
-            
-            const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-                redirectTo: 'https://hsg-official.github.io/GoTravel/auth.html',
-            });
+
+            // Use Supabase built-in OTP
+            const { error } = await supabaseClient.auth.signInWithOtp({ email: email });
 
             if (error) {
                 showToast(error.message, "error");
-                btn.innerText = "SEND RECOVERY LINK";
+                btn.innerText = "TRY AGAIN";
             } else {
-                showToast("Check your email for the reset link!", "success");
-                btn.innerText = "LINK SENT";
+                resetEmail = email;
+                showToast("Code sent to your email!", "success");
+                document.getElementById('forgot-form').classList.remove('active');
+                document.getElementById('verify-reset-form').classList.add('active');
             }
         }
 
-        async function updatePassword(e) {
+        // B. Verify Code & Log In
+        async function verifySupabaseCode() {
+            const code = document.getElementById('reset-code-input').value;
+            const btn = document.getElementById('verify-btn');
+            btn.innerText = "VERIFYING...";
+
+            const { data, error } = await supabaseClient.auth.verifyOtp({
+                email: resetEmail,
+                token: code,
+                type: 'email' // 'email' type works for OTP verification
+            });
+
+            if (error) {
+                showToast("Invalid Code. Try again.", "error");
+                btn.innerText = "VERIFY CODE";
+            } else {
+                // SUCCESS! User is now LOGGED IN.
+                showToast("Verified! Create new password.", "success");
+                document.getElementById('verify-reset-form').classList.remove('active');
+                document.getElementById('new-pass-form').classList.add('active');
+            }
+        }
+
+        // C. Update Password (Now works because we are logged in)
+        async function updatePasswordReal(e) {
             e.preventDefault();
             const newPass = document.getElementById('new-pass').value;
-            if (newPass !== document.getElementById('confirm-pass').value) {
-                return showToast("Passwords do not match", "error");
-            }
+            const confirmPass = document.getElementById('confirm-pass').value;
+
+            if (newPass !== confirmPass) return showToast("Passwords do not match", "error");
 
             const btn = document.getElementById('update-pass-btn');
             btn.innerText = "UPDATING...";
@@ -312,17 +293,104 @@
 
             if (error) {
                 showToast(error.message, "error");
-                btn.innerText = "UPDATE & LOGIN";
+                btn.innerText = "UPDATE PASSWORD";
             } else {
-                showToast("Password updated successfully!", "success");
+                showToast("Password Reset Successful!", "success");
                 setTimeout(() => setMode('login'), 2000);
             }
         }
 
-        // Signup Logic (Uses EmailJS for the front-end code, then Supabase)
-        async function initiateVerification(e) {
+        // ==========================================
+        // 2. SIGN UP (EmailJS + Supabase)
+        // ==========================================
+        function initiateSignupVerification(e) {
             e.preventDefault();
-            // ... (Your existing EmailJS signup logic goes here)
+            const btn = document.getElementById('signup-btn');
+            const email = document.getElementById('reg-email').value;
+            
+            // Generate Random Code for Signup
+            generatedCode = Math.floor(100000 + Math.random() * 900000);
+            
+            tempUser = {
+                email: email,
+                fname: document.getElementById('reg-fname').value,
+                lname: document.getElementById('reg-lname').value,
+                pass: document.getElementById('reg-pass').value,
+                accType: document.getElementById('selected-acc-type').value
+            };
+
+            btn.innerText = "SENDING...";
+            
+            emailjs.send("service_kix8fen", "template_vij2vyj", {
+                to_name: tempUser.fname,
+                to_email: email,
+                code: generatedCode
+            }).then(() => {
+                btn.innerText = "CREATE & VERIFY";
+                document.getElementById('display-email').innerText = email;
+                document.getElementById('verify-modal').classList.add('visible');
+                showToast("Code sent!", "success");
+            }).catch(err => {
+                showToast("Email failed.", "error");
+                btn.innerText = "TRY AGAIN";
+            });
+        }
+
+        async function handleSignupVerifySubmit() {
+            const inputCode = document.getElementById('signup-verify-code').value;
+            if (parseInt(inputCode) !== generatedCode) return showToast("Invalid Code", "error");
+
+            closeModal();
+            
+            // Create User
+            const { data, error } = await supabaseClient.auth.signUp({
+                email: tempUser.email,
+                password: tempUser.pass
+            });
+
+            if (error) return showToast(error.message, "error");
+
+            // Save Details
+            await supabaseClient.from('users').insert([{
+                email: tempUser.email,
+                first_name: tempUser.fname,
+                last_name: tempUser.lname,
+                account_type: tempUser.accType
+            }]);
+
+            localStorage.setItem('userFName', tempUser.fname);
+            showToast("Account Created!", "success");
+            setTimeout(() => {
+                window.location.href = tempUser.accType === 'business' ? "business.html" : "personal.html";
+            }, 1500);
+        }
+
+        // ==========================================
+        // 3. LOGIN
+        // ==========================================
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('login-btn');
+            btn.innerText = "CHECKING...";
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
+                email: document.getElementById('login-email').value,
+                password: document.getElementById('login-pass').value
+            });
+
+            if (error) {
+                btn.innerText = "ACCESS ACCOUNT";
+                return showToast("Invalid Credentials", "error");
+            }
+
+            // Get User Name
+            const { data: userData } = await supabaseClient.from('users').select('first_name, account_type').eq('email', data.user.email).single();
+            localStorage.setItem('userFName', userData?.first_name || "User");
+            
+            showToast("Login Successful!", "success");
+            setTimeout(() => {
+                window.location.href = userData?.account_type === 'business' ? "business.html" : "personal.html";
+            }, 1000);
         }
     </script>
 </body>
