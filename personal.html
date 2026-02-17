@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GoTravel | Authentication Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -677,6 +678,10 @@
     </div>
 
     <script>
+
+        const SUPABASE_URL = 'https://cdcolkoavowjjymzdzud.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_aXQLF_zuk6pGmo4v0E1LPg_-TzUnQ0_';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         // Global state for date mode
         let currentDateMode = 'single';
 
@@ -867,9 +872,15 @@
             openTab({currentTarget: document.querySelector('.tab-btn')}, 'ongoing');
         }
 
-        function logoutUser() {
-            window.location.href = 'index.html';
-        }
+        async function logoutUser() {
+            const { error } = await _supabase.auth.signOut();
+            if (!error) {
+                // Move to the home or login page after successful logout
+                window.location.href = 'index.html';
+            } else {
+                alert("Error logging out: " + error.message);
+    }
+}
 
         function updateProfileAvatar(firstName, lastName, email) {
             const fullName = `${firstName} ${lastName}`.trim();
@@ -900,12 +911,24 @@
             profilePopup.onclick = function(e) { e.stopPropagation(); };
         }
 
-        window.onload = function() {
-            const fName = localStorage.getItem('userFName') || "Guest"; 
-            const lName = localStorage.getItem('userLName') || "";
-            const email = localStorage.getItem('userEmail') || "guest@example.com";
-            updateProfileAvatar(fName, lName, email);
-        };
+        window.onload = async function() {
+    // 1. Ask Supabase for the current logged-in user
+    const { data: { user }, error } = await _supabase.auth.getUser();
+
+    if (user) {
+        // 2. Extract details from the user's metadata
+        // Note: Supabase usually stores these during the Sign-Up process
+        const fName = user.user_metadata.first_name || "Traveler";
+        const lName = user.user_metadata.last_name || "";
+        const email = user.email;
+
+        // 3. Update the UI using your existing function
+        updateProfileAvatar(fName, lName, email);
+    } else {
+        // If no user is found, send them back to the login page
+        window.location.href = 'auth.html'; 
+    }
+};
     </script>
 </body>
 </html>
