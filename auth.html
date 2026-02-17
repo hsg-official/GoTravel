@@ -201,6 +201,7 @@
         // GLOBAL VARIABLES
         let generatedCode = null;
         let tempUser = {};
+        let resetEmailAddr = "";
         
         // --- TOAST NOTIFICATIONS ---
         function showToast(message, type = 'success') {
@@ -255,7 +256,7 @@
             if (!email) return showToast("Please enter email", "error");
             btn.innerText = "SENDING...";
 
-            localStorage.setItem('resetEmail', email);
+            
 
             // Using signInWithOtp
             const { error } = await supabaseClient.auth.signInWithOtp({ 
@@ -275,7 +276,7 @@
 
         // B. Verify Code (Tries ALL types)
         async function verifySmartCode() {
-            const email = localStorage.getItem('resetEmail');
+            const email = document.getElementById('reset-email').value.trim().toLowerCase();
             const code = document.getElementById('reset-code-input').value.trim();
             const btn = document.getElementById('verify-btn');
             
@@ -295,7 +296,7 @@
                 const { data, error } = await supabaseClient.auth.verifyOtp({
                     email: email,
                     token: code,
-                    type: type
+                    type: 'recovery'
                 });
 
                 if (!error && data.session) {
@@ -332,7 +333,7 @@
                 btn.innerText = "UPDATE PASSWORD";
             } else {
                 showToast("Success! Logging you in...", "success");
-                localStorage.removeItem('resetEmail');
+                
                 setTimeout(() => {
                     checkUserAndRedirect();
                 }, 1500);
@@ -392,7 +393,14 @@
             
             const { data, error } = await supabaseClient.auth.signUp({
                 email: tempUser.email,
-                password: tempUser.pass
+                password: tempUser.pass,
+                options: {
+                    data: {
+                        first_name: tempUser.fname,
+                        last_name: tempUser.lname,
+                        account_type: tempUser.accType
+                        }
+                 }
             });
 
             if (error) return showToast(error.message, "error");
@@ -404,7 +412,7 @@
                 account_type: tempUser.accType
             }]);
 
-            localStorage.setItem('userFName', tempUser.fname);
+            //localStorage.setItem('userFName', tempUser.fname);
             showToast("Account Created!", "success");
             setTimeout(() => {
                 window.location.href = tempUser.accType === 'business' ? "business.html" : "personal.html";
@@ -430,7 +438,6 @@
             }
 
             const { data: userData } = await supabaseClient.from('users').select('first_name, account_type').eq('email', data.user.email).single();
-            localStorage.setItem('userFName', userData?.first_name || "User");
             
             showToast("Login Successful!", "success");
             setTimeout(() => {
