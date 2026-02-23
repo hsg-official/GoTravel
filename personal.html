@@ -340,27 +340,57 @@
         /* CUSTOM CONFIRMATION MODAL STYLE */
         .confirm-card {
             max-width: 400px;
-            padding: 30px;
-            text-align: left;
+            background: rgba(15, 16, 45, 0.9);
+            border: 2px solid #ff4d4d; /* Red alert border */
+            box-shadow: 0 0 20px rgba(255, 77, 77, 0.4); /* Red glow */
+            padding: 40px;
+            text-align: center;
         }
         .confirm-msg {
-            color: white;
-            font-size: 1rem;
-            margin-bottom: 25px;
-            line-height: 1.5;
+            color: #fff;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            font-weight: 500;
         }
+
         .confirm-actions {
             display: flex;
-            justify-content: flex-end;
-            gap: 15px;
+            justify-content: center;
+            gap: 20px;
         }
+
         .confirm-btn {
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-weight: 600;
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             cursor: pointer;
             transition: 0.3s;
-            border: 1px solid transparent;
+            border: none;
+        }
+
+        .btn-delete-final {
+            background: #ff4d4d;
+            color: white;
+            box-shadow: 0 0 15px rgba(255, 77, 77, 0.5);
+        }  
+
+        .btn-delete-final:hover {
+            transform: scale(1.05);
+            background: #ff3333;
+            box-shadow: 0 0 25px rgba(255, 77, 77, 0.8);
+        }
+
+        /* The "No, Keep it" Button */
+        .btn-keep {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-keep:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
         .btn-ok {
             background: #007bff;
@@ -460,15 +490,18 @@
 </head>
 <body>
 
-    <div id="confirmModal" class="modal-overlay">
-        <div class="modal-card confirm-card">
-            <p class="confirm-msg">Are you sure you want to remove this trip blueprint?</p>
-            <div class="confirm-actions">
-                <button id="confirmOk" class="confirm-btn btn-ok">OK</button>
-                <button id="confirmCancel" class="confirm-btn btn-cancel">Cancel</button>
-            </div>
+<div id="confirmModal" class="modal-overlay">
+    <div class="modal-card confirm-card">
+        <div style="font-size: 3rem; color: #ff4d4d; margin-bottom: 20px;">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <p class="confirm-msg">Abandon this journey?</p>
+        <div class="confirm-actions">
+            <button id="confirmOk" class="confirm-btn btn-delete-final">Delete</button>
+            <button id="confirmCancel" class="confirm-btn btn-keep">Cancel</button>
         </div>
     </div>
+</div>
 
     <div id="detailsModal" class="modal-overlay">
         <div class="modal-card">
@@ -559,6 +592,17 @@
                 </div>
             </div>
 
+            <div id="successModal" class="modal-overlay">
+                <div class="modal-card" style="text-align: center; max-width: 350px;">
+                    <div style="font-size: 3rem; color: var(--neon-primary); margin-bottom: 20px;">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h2 style="color: #fff; margin-bottom: 10px;">Success!</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 25px;">Your trip blueprint has been saved to your dashboard.</p>
+                    <button class="plan-btn" style="margin-top: 0;" onclick="closeSuccessModal()">Great!</button>
+                </div>
+            </div>
+
             <div id="trips-section">
                 <div class="trip-tabs">
                     <button class="tab-btn active" onclick="openTab(event, 'ongoing')">Active Explorations</button>
@@ -598,11 +642,17 @@
                     <div class="planner-grid">
                         <div class="input-group">
                             <label>Adventure Title</label>
-                            <input type="text" id="trip-title" class="glass-input" placeholder="e.g. Summer Vacation 2026">
+                            <input type="text" id="trip-title"  class="glass-input" placeholder="e.g. Summer Vacation 2026" autocomplete="off" >
+                            
                         </div>
                         <div class="input-group">
                             <label>Destination</label>
-                            <input type="text" id="trip-destination" class="glass-input" placeholder="e.g. Kandy, Sri Lanka">
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" id="trip-destination" class="glass-input" placeholder="Select from destinations..." readonly>
+                                <button type="button" class="glass-btn" onclick="goToPlaces()" style="padding: 0 15px; background: var(--neon-secondary); border: none; border-radius: 12px; color: white; cursor: pointer;">
+                                    <i class="fas fa-search-location"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="input-group">
                             <label>Target Date</label>
@@ -628,13 +678,15 @@
                                     <option value="EUR">EUR</option>
                                     <option value="GBP">GBP</option>
                                 </select>
-                                <input type="number" id="trip-budget-amount" class="glass-input" style="flex: 1; min-width: 0;" placeholder="Amount">
+                                <input type="number" id="trip-budget-amount" class="glass-input" style="flex: 1; min-width: 0;" placeholder="Amount" autocomplete="off" >
+                               
                             </div>
                         </div>
 
                         <div class="input-group">
                             <label>Number of Days</label>
-                            <input type="number" id="trip-days" class="glass-input" placeholder="e.g. 5">
+                            <input type="number" id="trip-days" class="glass-input" placeholder="e.g. 5"  autocomplete="off">
+                            
                         </div>
                     </div>
 
@@ -692,6 +744,10 @@
             if (menuId === 'fleet-menu') {
                 servicesMenu.style.maxHeight = menu.classList.contains('show') ? "1200px" : "1000px";
             }
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('successModal').style.display = 'none';
         }
 
         function toggleTransport() {
@@ -755,6 +811,20 @@
             document.getElementById('detailsModal').style.display = 'flex';
         }
 
+        function goToPlaces() {
+    // Save current form drafts so they aren't lost on reload
+    const draftData = {
+        title: document.getElementById('trip-title').value,
+        budget: document.getElementById('trip-budget-amount').value,
+        days: document.getElementById('trip-days').value,
+        currency: document.getElementById('trip-currency').value
+    };
+    localStorage.setItem('tripDraft', JSON.stringify(draftData));
+    
+    localStorage.setItem('isSelectingDestination', 'true');
+    window.location.href = 'places.html';
+    } 
+
         function closeTripDetails() {
             document.getElementById('detailsModal').style.display = 'none';
         }
@@ -762,24 +832,27 @@
         // --- CUSTOM DELETE TRIP LOGIC ---
         let tripToDelete = null;
 
-        function deleteTrip(event, element) {
+        async function deleteTripFromDB(event, tripId) {
             event.stopPropagation();
-            tripToDelete = element.closest('.trip-card');
+            tripIdToDelete = tripId; // Store the ID
             document.getElementById('confirmModal').style.display = 'flex';
         }
 
-        document.getElementById('confirmOk').onclick = function() {
-            if(tripToDelete) {
-                tripToDelete.style.transform = "scale(0.8) translateY(20px)";
-                tripToDelete.style.opacity = "0";
-                
-                setTimeout(() => {
-                    tripToDelete.remove();
-                    tripToDelete = null;
-                    updatePlaceholders();
-                }, 300);
-            }
-            document.getElementById('confirmModal').style.display = 'none';
+
+        document.getElementById('confirmOk').onclick = async function() {
+            if (tripIdToDelete) {
+                const { error } = await _supabase
+                    .from('trips')
+                    .delete()
+                    .eq('id', tripIdToDelete);
+
+                if (!error) {
+                    fetchUserTrips(); // Refresh the UI
+                }
+        
+                tripIdToDelete = null; // Reset
+                document.getElementById('confirmModal').style.display = 'none'; // Hide modal
+           }
         };
 
         document.getElementById('confirmCancel').onclick = function() {
@@ -795,83 +868,56 @@
             document.getElementById('past-placeholder').style.display = historyContainer.children.length === 0 ? 'block' : 'none';
         }
 
-        function saveTrip() {
-            const title = document.getElementById('trip-title').value;
-            const dest = document.getElementById('trip-destination').value;
-            
-            let date;
-            if (currentDateMode === 'range') {
-                const start = document.getElementById('trip-date-start').value;
-                const end = document.getElementById('trip-date-end').value;
-                date = (start && end) ? `${start} to ${end}` : (start || end || 'TBD');
-            } else {
-                date = document.getElementById('trip-date').value || 'TBD';
-            }
+        async function saveTrip() {
+    const { data: { user } } = await _supabase.auth.getUser();
+    
+    // Get values from inputs
+    const title = document.getElementById('trip-title').value;
+    const dest = document.getElementById('trip-destination').value;
+    const amount = document.getElementById('trip-budget-amount').value;
+    const currency = document.getElementById('trip-currency').value;
+    const days = document.getElementById('trip-days').value;
+    const destImage = document.getElementById('trip-destination').dataset.img || '';
 
-            const currency = document.getElementById('trip-currency').value;
-            const amount = document.getElementById('trip-budget-amount').value;
-            const days = document.getElementById('trip-days').value;
+    let date;
+    if (currentDateMode === 'range') {
+        const start = document.getElementById('trip-date-start').value;
+        const end = document.getElementById('trip-date-end').value;
+        date = (start && end) ? `${start} to ${end}` : (start || end || 'TBD');
+    } else {
+        date = document.getElementById('trip-date').value || 'TBD';
+    }
 
-            if(!title || !dest) {
-                alert("Please at least provide an Adventure Title and Destination!");
-                return;
-            }
+    if(!title || !dest) {
+        alert("Please provide a Title and Destination!");
+        return;
+    }
 
-            const activeContainer = document.getElementById('saved-trips-container');
-            const historyContainer = document.getElementById('history-trips-container');
-            
-            const card = document.createElement('div');
-            card.className = 'trip-card';
-            card.onclick = function() {
-                showTripDetails(title, dest, date, currency, amount, days);
-            };
-            
-            card.innerHTML = `
-                <div class="trip-card-info">
-                    <h3>${title}</h3>
-                    <p>
-                        <span><i class="fas fa-map-marker-alt"></i> ${dest}</span>
-                        <span><i class="fas fa-calendar"></i> ${date}</span>
-                    </p>
-                </div>
-                <div class="trip-actions">
-                    <i class="fas fa-trash delete-trip-btn" title="Delete Trip" onclick="deleteTrip(event, this)"></i>
-                    <div class="trip-tag">Planned</div>
-                </div>
-            `;
+    // --- NEW: Insert into Supabase ---
+    const { error } = await _supabase
+        .from('trips')
+        .insert([{
+            user_id: user.id,
+            title: title,
+            destination: dest,
+            image_url: destImage,
+            travel_date: date,
+            budget_amount: amount,
+            currency: currency,
+            duration_days: days,
+            status: 'Planned'
+        }]);
 
-            activeContainer.prepend(card);
-            updatePlaceholders();
-
-            // Set auto-move timer (30 days = 2592000000 ms)
-            setTimeout(() => {
-                if (card.parentElement === activeContainer) {
-                    card.style.transition = "0.5s";
-                    card.style.opacity = "0";
-                    
-                    setTimeout(() => {
-                        card.querySelector('.trip-tag').innerText = "Visited";
-                        card.querySelector('.trip-tag').classList.add('history');
-                        historyContainer.prepend(card);
-                        card.style.opacity = "1";
-                        updatePlaceholders();
-                    }, 500);
-                }
-            }, 2592000000);
-
-            // Reset inputs
-            document.getElementById('trip-title').value = '';
-            document.getElementById('trip-destination').value = '';
-            document.getElementById('trip-date').value = '';
-            document.getElementById('trip-date-start').value = '';
-            document.getElementById('trip-date-end').value = '';
-            document.getElementById('trip-budget-amount').value = '';
-            document.getElementById('trip-days').value = '';
-
-            showSection('trips-section');
-            openTab({currentTarget: document.querySelector('.tab-btn')}, 'ongoing');
-        }
-
+    if (error) {
+        alert("Error saving trip: " + error.message);
+    } else {
+        document.getElementById('successModal').style.display = 'flex';
+        clearPlannerForm();
+        // Refresh the list and switch view
+        fetchUserTrips(); 
+        showSection('trips-section');
+    }
+    }       
         async function logoutUser() {
             const { error } = await _supabase.auth.signOut();
             if (!error) {
@@ -880,7 +926,81 @@
             } else {
                 alert("Error logging out: " + error.message);
     }
-}
+    }
+        async function fetchUserTrips() {
+    const activeContainer = document.getElementById('saved-trips-container');
+    const historyContainer = document.getElementById('history-trips-container');
+
+    // Clear current UI to prevent duplicates
+    activeContainer.innerHTML = '';
+    historyContainer.innerHTML = '';
+
+    const { data: trips, error } = await _supabase
+        .from('trips')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error("Error fetching trips:", error);
+        return;
+    }
+
+    trips.forEach(trip => {
+        const card = document.createElement('div');
+        card.className = 'trip-card';
+        card.onclick = () => showTripDetails(trip.title, trip.destination, trip.travel_date, trip.currency, trip.budget_amount, trip.duration_days);
+
+        // Logic for which tab it belongs to
+        const isHistory = trip.status === 'Visited';
+        const tagClass = isHistory ? 'trip-tag history' : 'trip-tag';
+        
+        card.innerHTML = `
+    <div style="display: flex; gap: 15px; align-items: center;">
+        <img src="${trip.image_url || 'default-placeholder.jpg'}" 
+             style="width: 80px; height: 60px; border-radius: 12px; object-fit: cover;">
+        <div class="trip-card-info">
+            <h3>${trip.title}</h3>
+            <p>
+                <span><i class="fas fa-map-marker-alt"></i> ${trip.destination}</span>
+                <span><i class="fas fa-calendar"></i> ${trip.travel_date}</span>
+            </p>
+        </div>
+    </div>
+    <div class="trip-actions">
+        <i class="fas fa-trash delete-trip-btn" onclick="deleteTripFromDB(event, '${trip.id}')"></i>
+        <div class="${tagClass}">${trip.status}</div>
+    </div>
+    `;
+
+        if (isHistory) historyContainer.appendChild(card);
+        else activeContainer.appendChild(card);
+    });
+
+    updatePlaceholders();
+    }
+        function clearPlannerForm() {
+    // Clear text and number inputs
+    document.getElementById('trip-title').value = '';
+    document.getElementById('trip-destination').value = '';
+    document.getElementById('trip-budget-amount').value = '';
+    document.getElementById('trip-days').value = '';
+
+    localStorage.removeItem('tripDraft');
+    
+    // Clear date inputs
+    document.getElementById('trip-date').value = '';
+    document.getElementById('trip-date-start').value = '';
+    document.getElementById('trip-date-end').value = '';
+
+    // Reset the currency dropdown to the first option (LKR)
+    document.getElementById('trip-currency').selectedIndex = 0;
+
+    // Reset the Date Mode back to 'single' for a fresh start
+    setDateMode('single');
+    
+    // Hide transport options if they were left open
+    document.getElementById('transportOptions').classList.remove('show');
+    }
 
         function updateProfileAvatar(firstName, lastName, email) {
             const fullName = `${firstName} ${lastName}`.trim();
@@ -912,21 +1032,41 @@
         }
 
         window.onload = async function() {
-    // 1. Ask Supabase for the current logged-in user
     const { data: { user }, error } = await _supabase.auth.getUser();
 
     if (user) {
-        // 2. Extract details from the user's metadata
-        // Note: Supabase usually stores these during the Sign-Up process
         const fName = user.user_metadata.first_name || "Traveler";
         const lName = user.user_metadata.last_name || "";
         const email = user.email;
 
-        // 3. Update the UI using your existing function
         updateProfileAvatar(fName, lName, email);
+        fetchUserTrips();
     } else {
-        // If no user is found, send them back to the login page
         window.location.href = 'auth.html'; 
+    }
+
+    // --- RESTORE DRAFT DATA ---
+    const draft = localStorage.getItem('tripDraft');
+    if (draft) {
+        const data = JSON.parse(draft);
+        document.getElementById('trip-title').value = data.title || '';
+        document.getElementById('trip-budget-amount').value = data.budget || '';
+        document.getElementById('trip-days').value = data.days || '';
+        document.getElementById('trip-currency').value = data.currency || 'LKR';
+        // Keep the draft until the user successfully saves the trip
+
+        localStorage.removeItem('tripDraft');
+    }
+
+    const pickedDest = localStorage.getItem('selectedDestination');
+    const pickedImage = localStorage.getItem('selectedDestImage');
+    if (pickedDest) {
+        document.getElementById('trip-destination').value = pickedDest;
+        // We store the image in a temporary variable or hidden attribute
+        document.getElementById('trip-destination').dataset.img = pickedImage;
+        showSection('planner-section');
+        localStorage.removeItem('selectedDestination');
+        localStorage.removeItem('selectedDestImage');
     }
 };
     </script>
