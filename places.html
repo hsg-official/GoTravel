@@ -508,7 +508,7 @@
                 <h1 class="destination-name" id="destName">DESTINATION</h1>
                 <div class="rating">⭐ <span id="rating">4.5</span></div>
             </div>
-            <button id="selectDestBtn" class="select-destination-btn">
+            <button id="selectDestBtn" class="select-destination-btn" onclick="handlePlannerSelection()">
                 <i class="fas fa-plus"></i>
                 <span>Select Destination</span>
             </button>
@@ -838,6 +838,56 @@
         const n = new Date();
         document.getElementById('time').textContent = n.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
         document.getElementById('date').textContent = n.toLocaleDateString([], {weekday:'short', month:'short', day:'numeric'});
+    }
+
+    function selectThisDestination() {
+    // 1. Check if a destination is actually loaded on the screen
+    if (!currentDestination) {
+        alert("Please search and load a destination first!");
+        return;
+    }
+
+    // 2. Check if the user came here from the Dashboard Planner
+    const isPlanning = localStorage.getItem('isSelectingDestination');
+
+    if (isPlanning === 'true') {
+        // Save the current destination name to the "notebook"
+        localStorage.setItem('selectedDestination', currentDestination.name);
+        
+        // Clean up: stop the planning mode so it doesn't loop
+        localStorage.removeItem('isSelectingDestination');
+
+        // Send the user back to the dashboard
+        window.location.href = 'personal.html'; 
+    } else {
+        // If they aren't planning, just use your existing 'My Trip' list logic
+        toggleSelection();
+    }
+    }
+
+    function handlePlannerSelection() {
+    // 1. Check if a destination is actually loaded
+    if (!currentDestination) {
+        alert("Please search and load a destination first!");
+        return;
+    }
+
+    // 2. Check if the user is in "Planning Mode" from the dashboard
+    const isPlanning = localStorage.getItem('isSelectingDestination');
+
+    if (isPlanning === 'true') {
+        // Save the current destination name
+        localStorage.setItem('selectedDestination', currentDestination.name);
+        localStorage.setItem('selectedDestImage', currentDestination.imageUrl);
+        // Turn off planning mode
+        localStorage.removeItem('isSelectingDestination');
+
+        // REDIRECT TO THE CORRECT FILENAME
+        window.location.href = 'personal.html'; 
+    } else {
+        // If not planning, run your normal toggle logic for the badge
+        toggleSelection();
+    }
     }
     setInterval(updateClock, 1000);
     updateClock();
