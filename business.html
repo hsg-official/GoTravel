@@ -688,24 +688,41 @@ function toggleAddServices(event){
 
 //["transport","hotel","restaurant","guide"].forEach(loadServices);
 
-function loadServices(type){
-  fetch(`${API}?type=${type}&email=${email}`)
-    .then(r=>r.json())
-    .then(rows=>{
-      if(rows.length){
-        document.getElementById("noServices").style.display="none";
-      }
-      rows.forEach(r=>{
-        const box=document.createElement("div");
-        box.className="service-box";
-        box.innerHTML=`<b>${r[1]}</b><small>${type}</small>`;
-        box.onclick = () => {
-          editingRow = r[r.length - 1]; // ⬅ last value = row number
-          openForm(type, r);
-        };
-        document.getElementById("postedServices").appendChild(box);
-      });
-    });
+async function loadServices(type){
+
+  const { data, error } = await supabaseClient
+    .from("services")
+    .select("*")
+    .eq("email", email)
+    .eq("service_type", type);
+
+  if(error){
+    console.error(error);
+    return;
+  }
+
+  if(data.length){
+    document.getElementById("noServices").style.display="none";
+  }
+
+  data.forEach(r=>{
+
+    const box=document.createElement("div");
+    box.className="service-box";
+
+    box.innerHTML=`
+      <b>${r.service_name}</b>
+      <small>${r.service_type}</small>
+    `;
+
+    box.onclick=()=>{
+      editingRow=r.id;
+      openForm(type,Object.values(r));
+    };
+
+    document.getElementById("postedServices").appendChild(box);
+
+  });
 }
 function openForm(type, data = null){
   editingRow = null;
@@ -713,7 +730,7 @@ function openForm(type, data = null){
     editingRow = data[data.length - 1];
   }
 
-  existingPhotoUrl = data ? data[photoIndex[type]] : "";
+  existingPhotoUrl = data?.[14] || '';
   selectedPhotoFile = null;
 
 
@@ -733,31 +750,31 @@ function openForm(type, data = null){
   const common = `
   <div>
     <label>Service Name</label>
-    <input name="service_name" value="${data?.[1] || ''}" required>
+    <input name="service_name" value="${data?.[3] || ''}" required>
   </div>
 
   <div>
     <label>Contact</label>
-    <input name="contact" value="${data?.[2] || ''}">
+    <input name="contact" value="${data?.[4] || ''}">
   </div>
 
   <div style="grid-column:1/-1">
     <label>Description</label>
-    <textarea name="description">${data?.[data.length - 4] || ''}</textarea>
+    <textarea name="description">${data?.[13] || ''}</textarea>
   </div>
 
   <div style="grid-column:1/-1">
   <label>Photo</label>
 
   <img id="photoPreview"
-       src="${data ? data[photoIndex[type]] : ''}"
+       src="${data?.[14] || ''}"
        style="
          width:100%;
          max-height:220px;
          object-fit:cover;
          border-radius:14px;
          margin-bottom:10px;
-         display:${data && data[photoIndex[type]] ? 'block' : 'none'};
+         display:${data && data?.[14] ? 'block' : 'none'};
        ">
 
   <input type="file" accept="image/*" onchange="handlePhoto(event)">
@@ -771,20 +788,20 @@ function openForm(type, data = null){
   extra = `
     <div>
       <label>Address</label>
-      <input name="address" value="${data?.[3] || ''}">
+      <input name="address" value="${data?.[6] || ''}">
     </div>
 
     <div>
       <label>Transport Type</label>
       <select name="transport_type">
-        <option ${data?.[4]==="Public"?"selected":""}>Public</option>
-        <option ${data?.[4]==="Private"?"selected":""}>Private</option>
+        <option ${data?.[8]==="Public"?"selected":""}>Public</option>
+        <option ${data?.[8]==="Private"?"selected":""}>Private</option>
       </select>
     </div>
 
     <div>
       <label>Price per KM</label>
-      <input name="price_per_km" value="${data?.[5] || ''}">
+      <input name="price" value="${data?.[7] || ''}">
     </div>
   `;
 }
@@ -793,17 +810,17 @@ function openForm(type, data = null){
   extra = `
     <div>
       <label>City</label>
-      <input name="city" value="${data?.[3] || ''}">
+      <input name="city" value="${data?.[5] || ''}">
     </div>
 
     <div>
       <label>Address</label>
-      <input name="address" value="${data?.[4] || ''}">
+      <input name="address" value="${data?.[6] || ''}">
     </div>
 
     <div>
       <label>Price</label>
-      <input name="price" value="${data?.[5] || ''}">
+      <input name="price" value="${data?.[7] || ''}">
     </div>
   `;
 }
@@ -812,40 +829,40 @@ function openForm(type, data = null){
   extra = `
     <div>
       <label>City</label>
-      <input name="city" value="${data?.[3] || ''}">
+      <input name="city" value="${data?.[5] || ''}">
     </div>
 
     <div>
       <label>Address</label>
-      <input name="address" value="${data?.[4] || ''}">
+      <input name="address" value="${data?.[6] || ''}">
     </div>
 
     <div>
       <label>Average Price</label>
-      <input name="price" value="${data?.[5] || ''}">
+      <input name="price" value="${data?.[7] || ''}">
     </div>
 
     <div>
       <label>Breakfast</label>
       <select name="breakfast">
-        <option ${data?.[6]==="YES"?"selected":""}>YES</option>
-        <option ${data?.[6]==="NO"?"selected":""}>NO</option>
+        <option ${data?.[10]==="YES"?"selected":""}>YES</option>
+        <option ${data?.[10]==="NO"?"selected":""}>NO</option>
       </select>
     </div>
 
     <div>
       <label>Lunch</label>
       <select name="lunch">
-        <option ${data?.[7]==="YES"?"selected":""}>YES</option>
-        <option ${data?.[7]==="NO"?"selected":""}>NO</option>
+        <option ${data?.[11]==="YES"?"selected":""}>YES</option>
+        <option ${data?.[11]==="NO"?"selected":""}>NO</option>
       </select>
     </div>
 
     <div>
       <label>Dinner</label>
       <select name="dinner">
-        <option ${data?.[8]==="YES"?"selected":""}>YES</option>
-        <option ${data?.[8]==="NO"?"selected":""}>NO</option>
+        <option ${data?.[12]==="YES"?"selected":""}>YES</option>
+        <option ${data?.[12]==="NO"?"selected":""}>NO</option>
       </select>
     </div>
   `;
@@ -855,12 +872,12 @@ function openForm(type, data = null){
   extra = `
     <div>
       <label>Location</label>
-      <input name="location" value="${data?.[3] || ''}">
+      <input name="city" value="${data?.[5] || ''}">
     </div>
 
     <div>
       <label>Languages</label>
-      <input name="languages" value="${data?.[4] || ''}">
+      <input name="languages" value="${data?.[9] || ''}">
     </div>
   `;
 }
@@ -908,48 +925,71 @@ document
   }).then(() => location.reload());
 }*/
 
-async function save(e, type){
+async function save(e,type){
+
   e.preventDefault();
+
+  const fd = new FormData(e.target);
+  const data = Object.fromEntries(fd.entries());
 
   let photoUrl = existingPhotoUrl;
 
-  // upload only if user selected a new photo
-  if (selectedPhotoFile) {
+  if(selectedPhotoFile){
     photoUrl = await uploadToSupabase(selectedPhotoFile);
   }
 
-  const fd = new FormData(e.target);
-  fd.append("type", type);
-  fd.append("email", email);
-  fd.append("photo_url", photoUrl);
+  data.email = email;
+  data.service_type = type;
+  data.photo_url = photoUrl;
 
-  if (editingRow !== null) {
-    fd.append("row", editingRow);
+  if(editingRow){
+
+    const { error } = await supabaseClient
+      .from("services")
+      .update(data)
+      .eq("id", editingRow);
+
+    if(error){
+      console.error(error);
+      alert("Update failed");
+      return;
+    }
+
+  }else{
+
+    const { error } = await supabaseClient
+      .from("services")
+      .insert(data);
+
+    if(error){
+      console.error(error);
+      alert("Insert failed");
+      return;
+    }
+
   }
 
-  fetch(API, {
-    method: "POST",
-    body: fd,
-    mode: "no-cors"
-  }).then(() => location.reload());
+  location.reload();
 }
 
-function deleteService(type){
-  if (!editingRow) return;
+async function deleteService(){
 
-  if (!confirm("Are you sure you want to delete this service?")) return;
+  if(!confirm("Delete this service?")) return;
 
-  const fd = new FormData();
-  fd.append("type", type);
-  fd.append("email", email);
-  fd.append("row", editingRow);
-  fd.append("delete", "true");
+  const { error } = await supabaseClient
+    .from("services")
+    .delete()
+    .eq("id", editingRow);
 
-  fetch(API, {
-    method: "POST",
-    body: fd
-  }).then(() => location.reload());
+  if(error){
+    alert("Delete failed");
+    console.error(error);
+    return;
+  }
+
+  location.reload();
 }
+
 function closeModal(){
   document.getElementById("modalOverlay").classList.add("hidden");
   editingRow = null;
