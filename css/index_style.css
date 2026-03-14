@@ -1,0 +1,164 @@
+:root {
+            --accent: #3b82f6;
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+            --ios-blue: #007AFF;
+            --ios-yellow: #FFD60A;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            background: #000; 
+            color: #fff; 
+            font-family: 'Inter', sans-serif; 
+            /* Default: No scroll on desktop */
+            overflow: hidden; 
+            height: 100dvh; 
+        }
+
+        /* --- INTRO SCREEN --- */
+        #intro-screen {
+            position: fixed; inset: 0; background: #050505;
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
+            transition: transform 1.2s cubic-bezier(0.8, 0, 0.2, 1);
+        }
+        .reveal-text { font-family: 'Syncopate', sans-serif; font-size: clamp(1.5rem, 5vw, 5rem); letter-spacing: 12px; text-transform: uppercase; animation: cinematicReveal 2.5s forwards; }
+        @keyframes cinematicReveal { 0% { opacity: 0; transform: scale(1.2); filter: blur(20px); } 100% { opacity: 1; transform: scale(1); filter: blur(0); } }
+        .slide-left { transform: translateX(-100%); }
+
+        /* --- BACKGROUND --- */
+        .bg-container { position: fixed; inset: 0; z-index: -2; background: #000; }
+        .bg-layer { position: absolute; inset: 0; background-size: cover; background-position: center; transition: opacity 2s; opacity: 0; }
+        .bg-layer.active { opacity: 1; }
+        .overlay { position: fixed; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.9)); z-index: -1; }
+
+        /* --- HEADER --- */
+        header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 20px 5%; position: relative; z-index: 20; width: 100%;
+            gap: 15px;
+            flex-wrap: wrap; 
+        }
+        
+        .info-panel {
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(30px) saturate(180%);
+            border: 1px solid var(--border); padding: 12px 25px; border-radius: 24px;
+            display: flex; gap: 20px; align-items: center; position: relative; overflow: hidden;
+            flex-shrink: 0;
+        }
+        #weather-canvas { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+
+        .time-section { border-right: 1px solid rgba(255, 255, 255, 0.2); padding-right: 20px; z-index: 1; }
+        .time-text { font-size: 1.8rem; font-weight: 300; line-height: 1; }
+        .date-text { font-size: 0.65rem; color: var(--ios-blue); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .weather-section { z-index: 1; }
+        .weather-main i { font-size: 1.5rem; color: var(--ios-yellow); filter: drop-shadow(0 0 10px var(--ios-yellow)); }
+        #temp { font-weight: 600; font-size: 1rem; }
+        #location-name { font-size: 0.55rem; opacity: 0.7; font-weight: 700; text-transform: uppercase; display: block; }
+
+        .logo-container img { height: clamp(80px, 30vw, 120px); filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5)); }
+
+        .auth-btn { background: #fff; color: #000; padding: 10px 22px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 0.7rem; text-transform: uppercase; white-space: nowrap; }
+
+        /* --- HERO SECTION --- */
+        .hero-section {
+            margin-top: 2vh; text-align: center; width: 100%; z-index: 5; opacity: 0; padding: 0 20px;
+        }
+        .hero-title { font-family: 'Syncopate', sans-serif; font-size: clamp(2rem, 6vw, 4.5rem); margin-bottom: 5px; }
+        .hero-description { font-size: clamp(0.9rem, 2vw, 1.2rem); font-weight: 300; letter-spacing: 5px; text-transform: uppercase; background: linear-gradient(to right, #fff, #999); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        /* --- NAVIGATION --- */
+        .main-nav {
+            margin-top: 30px; display: flex; justify-content: center; flex-wrap: wrap;
+            gap: 20px; padding: 0 20px; z-index: 10;
+        }
+
+        .nav-card {
+            text-decoration: none; color: #fff; background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px); border: 1px solid var(--border); border-radius: 24px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            width: clamp(100px, 20vw, 130px); height: clamp(110px, 22vw, 140px);
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; overflow: hidden;
+        }
+        .nav-card i { font-size: 2rem; margin-bottom: 12px; color: var(--accent); transition: 0.3s; }
+        .nav-card span { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+
+        .nav-card:hover { background: var(--accent); transform: translateY(-10px); box-shadow: 0 15px 30px rgba(59, 130, 246, 0.4); }
+        .nav-card:hover i { color: #fff; }
+
+        /* --- TRANSPORT OPTIONS ANIMATION --- */
+        .transport-options {
+            position: absolute; inset: 0; background: #000; display: flex; flex-direction: column;
+            transform: translateY(100%); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 15;
+        }
+        .transport-options.active { transform: translateY(0); }
+        
+        .sub-btn {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            gap: 10px; text-decoration: none; color: #fff; font-size: 0.65rem;
+            font-weight: 700; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.1);
+            transition: 0.3s ease;
+        }
+        .sub-btn i { font-size: 1.2rem; color: var(--accent); margin-bottom: 0; }
+        .sub-btn:hover { background: var(--accent); }
+        .sub-btn:hover i { color: #fff; }
+
+        /* --- FOOTER --- */
+        footer {
+            /* Positioned absolute for desktop to stay at bottom */
+            position: absolute; bottom: 0; width: 100%; padding: 25px 5%;
+            background: linear-gradient(to top, rgba(0,0,0,1) 40%, transparent);
+            display: flex; justify-content: space-between; align-items: flex-end; z-index: 10;
+        }
+        .footer-left { display: flex; flex-direction: column; gap: 5px; font-size: 0.8rem; opacity: 0.7; }
+        .footer-center { text-align: center; }
+        .social-links { display: flex; gap: 20px; margin-bottom: 10px; }
+        .social-links a { color: #fff; font-size: 1.2rem; opacity: 0.6; transition: 0.3s; }
+        .social-links a:hover { opacity: 1; color: var(--accent); transform: translateY(-3px); }
+        .footer-right { text-align: right; }
+        .shadow-coders { color: var(--accent); font-weight: 700; letter-spacing: 1px; text-shadow: 0 0 10px var(--accent); }
+
+        /* --- MOBILE ADJUSTMENTS (THE FIX) --- */
+        @media (max-width: 600px) {
+            /* 1. Allow scrolling on mobile so content fits */
+            body {
+                overflow-y: auto; 
+                height: auto;
+                min-height: 100dvh;
+            }
+
+            header { 
+                padding-top: 15px; 
+                justify-content: center; 
+            }
+            .info-panel { 
+                order: 2; 
+                width: 100%; 
+                justify-content: center;
+                margin-top: 5px;
+            }
+            .logo-container { order: 1; margin-right: auto; }
+            .auth-btn { order: 1; }
+
+            .hero-section { margin-top: 15px; }
+            .main-nav { 
+                margin-bottom: 40px; /* Reduced from 120px */
+                gap: 10px; 
+            }
+            .nav-card { width: 45%; height: 110px; }
+            
+            /* 2. Un-pin the footer so it sits naturally below the nav */
+            footer { 
+                position: relative; /* Changing from absolute to relative */
+                bottom: auto;
+                flex-direction: column; 
+                align-items: center; 
+                gap: 15px; 
+                text-align: center; 
+                padding-bottom: 30px;
+                margin-top: 20px;
+            }
+            .footer-right { text-align: center; }
+        }

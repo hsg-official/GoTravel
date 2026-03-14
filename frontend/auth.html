@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GoTravel | Access</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Syncopate:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script type="text/javascript">
+        // [1] INIT EMAILJS
+        (function() { emailjs.init("0snPOI_S_7ftRX9BK"); })();
+
+        // [2] INIT SUPABASE
+        const supabaseUrl = 'https://cdcolkoavowjjymzdzud.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkY29sa29hdm93amp5bXpkenVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MDI2NjQsImV4cCI6MjA4Mzk3ODY2NH0.JPzj9fI1pKpPbPxyGqsemjcwpKiu0h046H7aBSURnpM';
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+    </script>
+    <link rel="stylesheet" href="../css/auth_style.css">
+</head>
+<body>
+
+    <div class="bg-layer"></div>
+    <div id="toast-container"></div> 
+    <a href="index.html" class="back-home"><i class="fas fa-chevron-left"></i> Home</a>
+
+    <div class="auth-card">
+        <div class="header-text">
+            <h1 class="logo">GoTravel</h1>
+            <p class="subtitle">Experience the world, your way.</p>
+        </div>
+
+        <div class="tab-container" id="main-tabs">
+            <button class="tab-btn active" onclick="setMode('login')">Login</button>
+            <button class="tab-btn" onclick="setMode('signup')">Sign Up</button>
+        </div>
+
+        <div class="form-container">
+            <div id="login-form" class="form-slide active">
+                <form onsubmit="handleLogin(event)">
+                    <div class="input-group">
+                        <input type="email" id="login-email" class="input-field" placeholder="Email Address" required>
+                        <i class="fas fa-envelope input-icon"></i>
+                    </div>
+                    <div class="input-group">
+                        <input type="password" id="login-pass" class="input-field" placeholder="Password" required>
+                        <i class="fas fa-eye input-icon" onclick="togglePass('login-pass', this)"></i>
+                    </div>
+                    <button type="submit" id="login-btn" class="action-btn">ACCESS ACCOUNT</button>
+                    <a href="#" class="link-text" onclick="showForgotPassword()">Forgot Password?</a>
+                </form>
+            </div>
+
+            <div id="signup-form" class="form-slide">
+                <form onsubmit="initiateSignupVerification(event)">
+                    <div class="acc-selector">
+                        <div class="acc-option selected" id="opt-personal" onclick="selectAccType('personal')">
+                            <i class="fas fa-user"></i><span style="font-size: 0.8rem;">Personal</span>
+                        </div>
+                        <div class="acc-option" id="opt-business" onclick="selectAccType('business')">
+                            <i class="fas fa-briefcase"></i><span style="font-size: 0.8rem;">Business</span>
+                        </div>
+                    </div>
+                    <input type="hidden" id="selected-acc-type" value="personal">
+
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="reg-fname" class="input-field" placeholder="First Name" required>
+                        <input type="text" id="reg-lname" class="input-field" placeholder="Last Name" required>
+                    </div><br>
+                    <input type="email" id="reg-email" class="input-field" placeholder="Email Address" required><br>
+                    <div class="input-group">
+                        <input type="password" id="reg-pass" class="input-field" placeholder="Create Password" required>
+                        <i class="fas fa-eye input-icon" onclick="togglePass('reg-pass', this)"></i>
+                    </div>
+                    <button type="submit" id="signup-btn" class="action-btn">CREATE & VERIFY</button>
+                </form>
+            </div>
+
+            <div id="forgot-form" class="form-slide">
+                <h3 style="text-align:center; color:#fff; margin-bottom:10px;">Reset Password</h3>
+                <p style="text-align:center; font-size:0.8rem; color:var(--text-muted); margin-bottom:20px;">We will send a code to your email.</p>
+                <form onsubmit="sendSmartCode(event)">
+                    <div class="input-group">
+                        <input type="email" id="reset-email" class="input-field" placeholder="Your Email Address" required>
+                    </div>
+                    <button type="submit" id="reset-btn" class="action-btn">SEND CODE</button>
+                    <a href="#" class="link-text" style="text-align:center;" onclick="setMode('login')">Back to Login</a>
+                </form>
+            </div>
+
+            <div id="verify-reset-form" class="form-slide">
+                <h3 style="text-align:center; color:#fff; margin-bottom:10px;">Enter Code</h3>
+                <p style="text-align:center; font-size:0.8rem; color:var(--text-muted);">Check your inbox (and spam).</p>
+                
+                <input type="text" id="reset-code-input" class="code-input" placeholder="000000" maxlength="8">
+                
+                <button onclick="verifySmartCode()" id="verify-btn" class="action-btn">VERIFY CODE</button>
+                <a href="#" class="link-text" style="text-align:center;" onclick="setMode('login')">Cancel</a>
+            </div>
+
+            <div id="new-pass-form" class="form-slide">
+                <h3 style="text-align:center; color:#fff; margin-bottom:10px;">New Password</h3>
+                <form onsubmit="updatePasswordSmart(event)">
+                    <div class="input-group">
+                        <input type="password" id="new-pass" class="input-field" placeholder="New Password" required>
+                        <i class="fas fa-eye input-icon" onclick="togglePass('new-pass', this)"></i>
+                    </div>
+                    <div class="input-group">
+                        <input type="password" id="confirm-pass" class="input-field" placeholder="Confirm Password" required>
+                    </div>
+                    <button type="submit" id="update-pass-btn" class="action-btn">UPDATE PASSWORD</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="verify-modal" class="modal">
+            <i class="fas fa-shield-alt" style="font-size: 3rem; color: var(--accent); margin-bottom: 20px;"></i>
+            <h2>Verify Email</h2>
+            <p class="subtitle">Code sent to <span id="display-email"></span></p>
+            <input type="text" id="signup-verify-code" class="code-input" placeholder="000000" maxlength="6">
+            <button class="action-btn" onclick="handleSignupVerifySubmit()">VERIFY & START</button>
+            <button style="background:none; border:none; color:var(--text-muted); margin-top:20px; cursor:pointer;" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script src="../backend/auth_script.js"></script>
+</body>
+</html>
