@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoTravel | Tour Guides</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Syncopate:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script type="text/javascript">
+        // [1] EMAILJS INIT 
+        (function() { emailjs.init("0snPOI_S_7ftRX9BK"); })();
+
+        // [2] SUPABASE INIT
+        const supabaseUrl = 'https://cdcolkoavowjjymzdzud.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkY29sa29hdm93amp5bXpkenVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MDI2NjQsImV4cCI6MjA4Mzk3ODY2NH0.JPzj9fI1pKpPbPxyGqsemjcwpKiu0h046H7aBSURnpM';
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+    </script>
+
+    <link rel="stylesheet" href="../css/guides_style.css">
+</head>
+
+<body>
+
+    <div class="bg-layer"></div>
+    <div id="toast-container"></div>
+
+    <header>
+        <a href="index.html" class="logo">GoTravel</a>
+        <a href="personal.html" class="back-btn"><i class="fas fa-chevron-left"></i> Dashboard</a>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">Local Experts</h1>
+        <p class="page-subtitle">Add a professional guide to your planned trips.</p>
+
+        <div class="guides-grid" id="guidesContainer">
+            <div class="loader" id="loader">
+                <i class="fas fa-compass"></i>
+                <span>Locating guides in Supabase...</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="bookingModal">
+        <div class="modal-content">
+            <i class="fas fa-times close-modal" onclick="closeModal()"></i>
+            <h2 class="modal-title">Attach Guide to Trip</h2>
+            <p class="modal-subtitle" id="modalGuideName">Guide: ---</p>
+
+            <form id="bookingForm" onsubmit="confirmBooking(event)">
+                <input type="hidden" id="guideEmail">
+                <input type="hidden" id="guideNameStr">
+
+                <div class="input-group">
+                    <label>Select Your Planned Trip</label>
+                    <select id="tripSelect" class="input-field" required>
+                        <option value="">Loading trips...</option>
+                    </select>
+                </div>
+
+                <button type="submit" id="confirmBtn" class="book-btn" style="margin-top: 10px;">ADD TO MY TRIP</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="../backend/guides_script.js"></script>
+</body>
+</html>
