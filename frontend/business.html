@@ -611,8 +611,9 @@ const API="https://script.google.com/macros/s/AKfycbzv6-zAB61O4n4-4ofGXUXns2lAx8
 /*const email = localStorage.getItem("user_email") || "testbusiness@gotravel.com";*/
 let editingRow = null;
 let email = null;
-let selectedPhotoFile = null;
-let existingPhotoUrl = "";
+let selectedPhotoFiles = [];
+let existingPhotos = [];
+let removedPhotoPaths = [];
 
 const photoIndex = {
   transport: 7,
@@ -703,9 +704,16 @@ async function loadServices(type){
 }
 function openForm(type, data = null){
   editingRow = data ? data.id : null;
-  existingPhotoUrl = data?.photo_url || '';
-  selectedPhotoFile = null;
+  //existingPhotoUrl = data?.photo_url || '';
+  //existingPhotoPath = data?.photo_path || '';
+  //selectedPhotoFile = null;
+  existingPhotos = (data?.photo_urls || []).map((url, i) => ({
+    url: url,
+    path: data?.photo_paths?.[i]
+  }));
 
+  selectedPhotoFiles = [];
+  removedPhotoPaths = [];
 
   if(window.innerWidth <= 768){
     document.querySelector(".sidebar").classList.remove("active");
@@ -738,19 +746,10 @@ function openForm(type, data = null){
 
   <div style="grid-column:1/-1">
   <label>Photo</label>
+  <div id="photoPreviewContainer"
+    style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;"></div>
 
-  <img id="photoPreview"
-       src="${data?.photo_url || ''}"
-       style="
-         width:100%;
-         max-height:220px;
-         object-fit:cover;
-         border-radius:14px;
-         margin-bottom:10px;
-         display:${data && data?.photo_url ? 'block' : 'none'};
-       ">
-
-  <input type="file" accept="image/*" onchange="handlePhoto(event)">
+  <input type="file" accept="image/*" multiple onchange="handlePhoto(event)">
 </div>
 
 `;
@@ -879,6 +878,7 @@ f.innerHTML = `
 document
   .getElementById("serviceForm")
   .addEventListener("submit", e => save(e, type));
+renderPhotos();
 }
 
 
@@ -888,16 +888,46 @@ async function save(e,type){
 
   const fd = new FormData(e.target);
   const data = Object.fromEntries(fd.entries());
+  let photoUrls = existingPhotos
+    .filter(p => p.path)
+    .map(p => p.url);
 
-  let photoUrl = existingPhotoUrl;
+  let photoPaths = existingPhotos
+    .filter(p => p.path)
+    .map(p => p.path);
 
-  if(selectedPhotoFile){
-    photoUrl = await uploadToSupabase(selectedPhotoFile);
+  // upload new photos
+  for (let file of selectedPhotoFiles) {
+    const upload = await uploadToSupabase(file);
+
+    photoUrls.push(upload.url);
+    photoPaths.push(upload.path);
   }
 
+  // delete removed photos from storage
+  for (let path of removedPhotoPaths) {
+    await supabaseClient
+      .storage
+      .from("service-photos")
+      .remove([path]);
+  }
+
+  data.photo_urls = photoUrls;
+  data.photo_paths = photoPaths;
+/*
+  let photoUrl = existingPhotoUrl;
+  let photoPath = existingPhotoPath || "";
+
+  if(selectedPhotoFile){
+    const upload = await uploadToSupabase(selectedPhotoFile);
+    photoUrl = upload.url;
+    photoPath = upload.path;
+  }
+*/
   data.email = email;
   data.service_type = type;
-  data.photo_url = photoUrl;
+  //data.photo_url = photoUrl;
+  //data.photo_path = photoPath;
 
   if(editingRow){
 
@@ -933,6 +963,38 @@ async function deleteService(){
 
   if(!confirm("Delete this service?")) return;
 
+  // 1. Get photo_path
+  const { data: service, error: fetchError } = await supabaseClient
+    .from("services")
+    .select("photo_paths")
+    //.select("photo_path")
+    .eq("id", editingRow)
+    .single();
+
+  if(fetchError){
+    console.error(fetchError);
+    alert("Failed to fetch service");
+    return;
+  }
+
+  // 2. Delete photo from storage
+  if(service?.photo_path && service.photo_paths.length){
+    console.log("Deleting paths:", service.photo_paths);
+    //const { error: storageError } = await supabaseClient
+    //  .storage
+    //  .from("service-photos")
+    //  .remove([service.photo_path]);
+    const { error: storageError } = await supabaseClient
+      .storage
+      .from("service-photos")
+      .remove(service.photo_paths);
+
+    if(storageError){
+      console.error("Storage delete error:", storageError);
+    }
+  }
+
+  // 3. Delete DB row
   const { error } = await supabaseClient
     .from("services")
     .delete()
@@ -1003,7 +1065,7 @@ function closeSidebar(){
   document.querySelector(".sidebar").classList.remove("active");
 }
 
-function handlePhoto(e){
+/*function handlePhoto(e){
   const file = e.target.files[0];
   if (!file) return;
 
@@ -1012,6 +1074,25 @@ function handlePhoto(e){
   const preview = document.getElementById("photoPreview");
   preview.src = URL.createObjectURL(file);
   preview.style.display = "block";
+}
+*/
+function handlePhoto(e){
+  const files = Array.from(e.target.files);
+
+  files.forEach(file => {
+
+    selectedPhotoFiles.push(file);
+
+    const previewUrl = URL.createObjectURL(file);
+
+    existingPhotos.push({
+      url: previewUrl,
+      path: null
+    });
+
+  });
+
+  renderPhotos();
 }
 
 async function uploadToSupabase(file) {
@@ -1033,9 +1114,53 @@ async function uploadToSupabase(file) {
     .from("service-photos")
     .getPublicUrl(path);
 
-  return data.publicUrl;
+  return {
+    url: data.publicUrl,
+    path: path
+  };
 }
 
+function renderPhotos() {
+  const container = document.getElementById("photoPreviewContainer");
+  container.innerHTML = "";
+
+  existingPhotos.forEach((photo, index) => {
+    const div = document.createElement("div");
+    div.style.position = "relative";
+
+    div.innerHTML = `
+      <img src="${photo.url}" 
+        style="width:120px;height:90px;object-fit:cover;border-radius:10px;">
+      
+      <button onclick="removePhoto(${index})"
+        style="
+          position:absolute;
+          top:4px;
+          right:4px;
+          background:red;
+          color:white;
+          border:none;
+          border-radius:50%;
+          width:22px;
+          height:22px;
+          cursor:pointer;
+        ">×</button>
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+function removePhoto(index){
+  const removed = existingPhotos[index];
+
+  if(removed?.path){
+    removedPhotoPaths.push(removed.path);
+  }
+
+  existingPhotos.splice(index, 1);
+  renderPhotos();
+}
 </script>
 
 </body>
