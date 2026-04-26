@@ -8,6 +8,9 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
 <style>
 :root{
   --accent:#38bdf8;
@@ -611,8 +614,11 @@ const API="https://script.google.com/macros/s/AKfycbzv6-zAB61O4n4-4ofGXUXns2lAx8
 /*const email = localStorage.getItem("user_email") || "testbusiness@gotravel.com";*/
 let editingRow = null;
 let email = null;
-let selectedPhotoFile = null;
-let existingPhotoUrl = "";
+let selectedPhotoFiles = [];
+let existingPhotos = [];
+let removedPhotoPaths = [];
+let map;
+let marker;
 
 const photoIndex = {
   transport: 7,
@@ -630,15 +636,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   email = data.user.email;
-  //const first_name = localStorage.getItem("userFName") || "";
-  //const last_name = localStorage.getItem("userLName") || "";
 
   document.getElementById("profileLetter").textContent =
     email.charAt(0).toUpperCase();
 
-  //document.getElementById("profileEmail").textContent = email;
-
-  // load services AFTER email exists
   ["transport","hotel","restaurant","guide"].forEach(loadServices);
 
   document.getElementById("modalOverlay").addEventListener("click", e=>{
@@ -654,26 +655,8 @@ document.addEventListener("click", () => {
 });
 
 });
+document.getElementById("postedServices").innerHTML = "";
 
-/*document.addEventListener("DOMContentLoaded", () => {
-  if(!email) return;
-
-  const letterEl = document.getElementById("profileLetter");
-  const emailEl  = document.getElementById("profileEmail");
-
-  if(letterEl){
-    letterEl.textContent = email.charAt(0).toUpperCase();
-  }
-
-  if(emailEl){
-    emailEl.textContent = email;
-  }
-});
-*/
-//function logout(){
-//  localStorage.clear();
-//  location.href="index.html";
-//}
 async function logout(){
   await supabaseClient.auth.signOut();
   localStorage.removeItem("userFName");
@@ -717,7 +700,7 @@ async function loadServices(type){
 
     box.onclick=()=>{
       editingRow=r.id;
-      openForm(type,Object.values(r));
+      openForm(type,r);
     };
 
     document.getElementById("postedServices").appendChild(box);
@@ -725,14 +708,14 @@ async function loadServices(type){
   });
 }
 function openForm(type, data = null){
-  editingRow = null;
-  if (data) {
-    editingRow = data[data.length - 1];
-  }
+  editingRow = data ? data.id : null;
+  existingPhotos = (data?.photo_urls || []).map((url, i) => ({
+    url: url,
+    path: data?.photo_paths?.[i]
+  }));
 
-  existingPhotoUrl = data?.[14] || '';
-  selectedPhotoFile = null;
-
+  selectedPhotoFiles = [];
+  removedPhotoPaths = [];
 
   if(window.innerWidth <= 768){
     document.querySelector(".sidebar").classList.remove("active");
@@ -741,8 +724,6 @@ function openForm(type, data = null){
   const menu = document.getElementById("addServicesMenu");
   if(menu) menu.classList.add("hidden");
 
-  //const f = document.getElementById("formCard");
-  //f.classList.remove("hidden");
   const modal = document.getElementById("modalOverlay");
   const f = document.getElementById("modalContent");
   modal.classList.remove("hidden");
@@ -750,34 +731,25 @@ function openForm(type, data = null){
   const common = `
   <div>
     <label>Service Name</label>
-    <input name="service_name" value="${data?.[3] || ''}" required>
+    <input name="service_name" value="${data?.service_name || ''}" required>
   </div>
 
   <div>
     <label>Contact</label>
-    <input name="contact" value="${data?.[4] || ''}">
+    <input name="contact" value="${data?.contact || ''}">
   </div>
 
   <div style="grid-column:1/-1">
     <label>Description</label>
-    <textarea name="description">${data?.[13] || ''}</textarea>
+    <textarea name="description">${data?.description || ''}</textarea>
   </div>
 
   <div style="grid-column:1/-1">
   <label>Photo</label>
+  <div id="photoPreviewContainer"
+    style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;"></div>
 
-  <img id="photoPreview"
-       src="${data?.[14] || ''}"
-       style="
-         width:100%;
-         max-height:220px;
-         object-fit:cover;
-         border-radius:14px;
-         margin-bottom:10px;
-         display:${data && data?.[14] ? 'block' : 'none'};
-       ">
-
-  <input type="file" accept="image/*" onchange="handlePhoto(event)">
+  <input type="file" accept="image/*" multiple onchange="handlePhoto(event)">
 </div>
 
 `;
@@ -788,20 +760,20 @@ function openForm(type, data = null){
   extra = `
     <div>
       <label>Address</label>
-      <input name="address" value="${data?.[6] || ''}">
+      <input name="address" value="${data?.address || ''}">
     </div>
 
     <div>
       <label>Transport Type</label>
       <select name="transport_type">
-        <option ${data?.[8]==="Public"?"selected":""}>Public</option>
-        <option ${data?.[8]==="Private"?"selected":""}>Private</option>
+        <option ${data?.transport_type ==="Public"?"selected":""}>Public</option>
+        <option ${data?.transport_type==="Private"?"selected":""}>Private</option>
       </select>
     </div>
 
     <div>
       <label>Price per KM</label>
-      <input name="price" value="${data?.[7] || ''}">
+      <input name="price" value="${data?.price || ''}">
     </div>
   `;
 }
@@ -810,18 +782,26 @@ function openForm(type, data = null){
   extra = `
     <div>
       <label>City</label>
-      <input name="city" value="${data?.[5] || ''}">
+      <input name="city" value="${data?.city || ''}">
     </div>
 
     <div>
       <label>Address</label>
-      <input name="address" value="${data?.[6] || ''}">
+      <input name="address" value="${data?.address || ''}">
     </div>
 
     <div>
       <label>Price</label>
-      <input name="price" value="${data?.[7] || ''}">
+      <input name="price" value="${data?.price || ''}">
     </div>
+
+    <div style="grid-column:1/-1">
+      <label>Select Location</label>
+      <div id="map" style="height:300px;border-radius:12px;"></div>
+    </div>
+
+    <input type="hidden" name="latitude">
+    <input type="hidden" name="longitude">
   `;
 }
 
@@ -829,42 +809,50 @@ function openForm(type, data = null){
   extra = `
     <div>
       <label>City</label>
-      <input name="city" value="${data?.[5] || ''}">
+      <input name="city" value="${data?.city || ''}">
     </div>
 
     <div>
       <label>Address</label>
-      <input name="address" value="${data?.[6] || ''}">
+      <input name="address" value="${data?.address || ''}">
     </div>
 
     <div>
       <label>Average Price</label>
-      <input name="price" value="${data?.[7] || ''}">
+      <input name="price" value="${data?.price || ''}">
     </div>
 
     <div>
       <label>Breakfast</label>
       <select name="breakfast">
-        <option ${data?.[10]==="YES"?"selected":""}>YES</option>
-        <option ${data?.[10]==="NO"?"selected":""}>NO</option>
+        <option ${data?.breakfast==="YES"?"selected":""}>YES</option>
+        <option ${data?.breakfast==="NO"?"selected":""}>NO</option>
       </select>
     </div>
 
     <div>
       <label>Lunch</label>
       <select name="lunch">
-        <option ${data?.[11]==="YES"?"selected":""}>YES</option>
-        <option ${data?.[11]==="NO"?"selected":""}>NO</option>
+        <option ${data?.lunch==="YES"?"selected":""}>YES</option>
+        <option ${data?.lunch==="NO"?"selected":""}>NO</option>
       </select>
     </div>
 
     <div>
       <label>Dinner</label>
       <select name="dinner">
-        <option ${data?.[12]==="YES"?"selected":""}>YES</option>
-        <option ${data?.[12]==="NO"?"selected":""}>NO</option>
+        <option ${data?.dinner==="YES"?"selected":""}>YES</option>
+        <option ${data?.dinner==="NO"?"selected":""}>NO</option>
       </select>
     </div>
+
+    <div style="grid-column:1/-1">
+      <label>Select Location</label>
+      <div id="map" style="height:300px;border-radius:12px;"></div>
+    </div>
+
+    <input type="hidden" name="latitude">
+    <input type="hidden" name="longitude">
   `;
 }
 
@@ -872,12 +860,12 @@ function openForm(type, data = null){
   extra = `
     <div>
       <label>Location</label>
-      <input name="city" value="${data?.[5] || ''}">
+      <input name="city" value="${data?.city || ''}">
     </div>
 
     <div>
       <label>Languages</label>
-      <input name="languages" value="${data?.[9] || ''}">
+      <input name="languages" value="${data?.languages || ''}">
     </div>
   `;
 }
@@ -893,7 +881,7 @@ f.innerHTML = `
 
     <div class="form-actions" style="gap:12px">
       ${data ? `
-    <button type="button" onclick="deleteService('${type}')"
+    <button type="button" onclick="deleteService()"
       style="background:#ef4444">
       Delete Service
     </button>
@@ -906,24 +894,12 @@ f.innerHTML = `
 document
   .getElementById("serviceForm")
   .addEventListener("submit", e => save(e, type));
+renderPhotos();
+if(type === "hotel" || type === "restaurant"){
+  setTimeout(() => initMap(data), 200);
 }
-/*function save(e, type){
-  e.preventDefault();
+}
 
-  const fd = new FormData(e.target);
-  fd.append("type", type);
-  fd.append("email", email);
-
-  if (editingRow !== null) {
-    fd.append("row", editingRow);
-  }
-
-  fetch(API, {
-    method: "POST",
-    body: fd,
-    mode: "no-cors"
-  }).then(() => location.reload());
-}*/
 
 async function save(e,type){
 
@@ -931,16 +907,34 @@ async function save(e,type){
 
   const fd = new FormData(e.target);
   const data = Object.fromEntries(fd.entries());
+  let photoUrls = existingPhotos
+    .filter(p => p.path)
+    .map(p => p.url);
 
-  let photoUrl = existingPhotoUrl;
+  let photoPaths = existingPhotos
+    .filter(p => p.path)
+    .map(p => p.path);
 
-  if(selectedPhotoFile){
-    photoUrl = await uploadToSupabase(selectedPhotoFile);
+  // upload new photos
+  for (let file of selectedPhotoFiles) {
+    const upload = await uploadToSupabase(file);
+
+    photoUrls.push(upload.url);
+    photoPaths.push(upload.path);
   }
 
+  // delete removed photos from storage
+  for (let path of removedPhotoPaths) {
+    await supabaseClient
+      .storage
+      .from("service-photos")
+      .remove([path]);
+  }
+
+  data.photo_urls = photoUrls;
+  data.photo_paths = photoPaths;
   data.email = email;
   data.service_type = type;
-  data.photo_url = photoUrl;
 
   if(editingRow){
 
@@ -976,6 +970,34 @@ async function deleteService(){
 
   if(!confirm("Delete this service?")) return;
 
+  // 1. Get photo_path
+  const { data: service, error: fetchError } = await supabaseClient
+    .from("services")
+    .select("photo_paths")
+    //.select("photo_path")
+    .eq("id", editingRow)
+    .single();
+
+  if(fetchError){
+    console.error(fetchError);
+    alert("Failed to fetch service");
+    return;
+  }
+
+  // 2. Delete photo from storage
+  if(service?.photo_paths && service.photo_paths.length){
+    console.log("Deleting paths:", service.photo_paths);
+    const { error: storageError } = await supabaseClient
+      .storage
+      .from("service-photos")
+      .remove(service.photo_paths);
+
+    if(storageError){
+      console.error("Storage delete error:", storageError);
+    }
+  }
+
+  // 3. Delete DB row
   const { error } = await supabaseClient
     .from("services")
     .delete()
@@ -1046,15 +1068,24 @@ function closeSidebar(){
   document.querySelector(".sidebar").classList.remove("active");
 }
 
+
 function handlePhoto(e){
-  const file = e.target.files[0];
-  if (!file) return;
+  const files = Array.from(e.target.files);
 
-  selectedPhotoFile = file;
+  files.forEach(file => {
 
-  const preview = document.getElementById("photoPreview");
-  preview.src = URL.createObjectURL(file);
-  preview.style.display = "block";
+    selectedPhotoFiles.push(file);
+
+    const previewUrl = URL.createObjectURL(file);
+
+    existingPhotos.push({
+      url: previewUrl,
+      path: null
+    });
+
+  });
+
+  renderPhotos();
 }
 
 async function uploadToSupabase(file) {
@@ -1076,9 +1107,92 @@ async function uploadToSupabase(file) {
     .from("service-photos")
     .getPublicUrl(path);
 
-  return data.publicUrl;
+  return {
+    url: data.publicUrl,
+    path: path
+  };
 }
 
+function renderPhotos() {
+  const container = document.getElementById("photoPreviewContainer");
+  container.innerHTML = "";
+
+  existingPhotos.forEach((photo, index) => {
+    const div = document.createElement("div");
+    div.style.position = "relative";
+
+    div.innerHTML = `
+      <img src="${photo.url}" 
+        style="width:120px;height:90px;object-fit:cover;border-radius:10px;">
+      
+      <button onclick="removePhoto(${index})"
+        style="
+          position:absolute;
+          top:4px;
+          right:4px;
+          background:red;
+          color:white;
+          border:none;
+          border-radius:50%;
+          width:22px;
+          height:22px;
+          cursor:pointer;
+        ">×</button>
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+function removePhoto(index){
+  const removed = existingPhotos[index];
+
+  if(removed?.path){
+    removedPhotoPaths.push(removed.path);
+  }
+
+  existingPhotos.splice(index, 1);
+  renderPhotos();
+}
+
+function initMap(data){
+
+  const defaultLat = 7.8731;
+  const defaultLng = 80.7718;
+
+  const lat = data?.latitude || defaultLat;
+  const lng = data?.longitude || defaultLng;
+
+  if(map){
+    map.remove();
+  }
+
+  map = L.map('map').setView([lat, lng], 8);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
+
+  marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+  document.querySelector('[name="latitude"]').value = lat;
+  document.querySelector('[name="longitude"]').value = lng;
+
+  map.on('click', function(e){
+    const { lat, lng } = e.latlng;
+    marker.setLatLng([lat, lng]);
+
+    document.querySelector('[name="latitude"]').value = lat;
+    document.querySelector('[name="longitude"]').value = lng;
+  });
+
+  marker.on('dragend', function(){
+    const pos = marker.getLatLng();
+
+    document.querySelector('[name="latitude"]').value = pos.lat;
+    document.querySelector('[name="longitude"]').value = pos.lng;
+  });
+}
 </script>
 
 </body>
