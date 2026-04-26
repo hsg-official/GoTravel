@@ -8,6 +8,9 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
 <style>
 :root{
   --accent:#38bdf8;
@@ -614,6 +617,8 @@ let email = null;
 let selectedPhotoFiles = [];
 let existingPhotos = [];
 let removedPhotoPaths = [];
+let map;
+let marker;
 
 const photoIndex = {
   transport: 7,
@@ -704,9 +709,6 @@ async function loadServices(type){
 }
 function openForm(type, data = null){
   editingRow = data ? data.id : null;
-  //existingPhotoUrl = data?.photo_url || '';
-  //existingPhotoPath = data?.photo_path || '';
-  //selectedPhotoFile = null;
   existingPhotos = (data?.photo_urls || []).map((url, i) => ({
     url: url,
     path: data?.photo_paths?.[i]
@@ -722,8 +724,6 @@ function openForm(type, data = null){
   const menu = document.getElementById("addServicesMenu");
   if(menu) menu.classList.add("hidden");
 
-  //const f = document.getElementById("formCard");
-  //f.classList.remove("hidden");
   const modal = document.getElementById("modalOverlay");
   const f = document.getElementById("modalContent");
   modal.classList.remove("hidden");
@@ -794,6 +794,14 @@ function openForm(type, data = null){
       <label>Price</label>
       <input name="price" value="${data?.price || ''}">
     </div>
+
+    <div style="grid-column:1/-1">
+      <label>Select Location</label>
+      <div id="map" style="height:300px;border-radius:12px;"></div>
+    </div>
+
+    <input type="hidden" name="latitude">
+    <input type="hidden" name="longitude">
   `;
 }
 
@@ -837,6 +845,14 @@ function openForm(type, data = null){
         <option ${data?.dinner==="NO"?"selected":""}>NO</option>
       </select>
     </div>
+
+    <div style="grid-column:1/-1">
+      <label>Select Location</label>
+      <div id="map" style="height:300px;border-radius:12px;"></div>
+    </div>
+
+    <input type="hidden" name="latitude">
+    <input type="hidden" name="longitude">
   `;
 }
 
@@ -879,6 +895,9 @@ document
   .getElementById("serviceForm")
   .addEventListener("submit", e => save(e, type));
 renderPhotos();
+if(type === "hotel" || type === "restaurant"){
+  setTimeout(() => initMap(data), 200);
+}
 }
 
 
@@ -914,20 +933,8 @@ async function save(e,type){
 
   data.photo_urls = photoUrls;
   data.photo_paths = photoPaths;
-/*
-  let photoUrl = existingPhotoUrl;
-  let photoPath = existingPhotoPath || "";
-
-  if(selectedPhotoFile){
-    const upload = await uploadToSupabase(selectedPhotoFile);
-    photoUrl = upload.url;
-    photoPath = upload.path;
-  }
-*/
   data.email = email;
   data.service_type = type;
-  //data.photo_url = photoUrl;
-  //data.photo_path = photoPath;
 
   if(editingRow){
 
@@ -978,12 +985,8 @@ async function deleteService(){
   }
 
   // 2. Delete photo from storage
-  if(service?.photo_path && service.photo_paths.length){
+  if(service?.photo_paths && service.photo_paths.length){
     console.log("Deleting paths:", service.photo_paths);
-    //const { error: storageError } = await supabaseClient
-    //  .storage
-    //  .from("service-photos")
-    //  .remove([service.photo_path]);
     const { error: storageError } = await supabaseClient
       .storage
       .from("service-photos")
@@ -1065,17 +1068,7 @@ function closeSidebar(){
   document.querySelector(".sidebar").classList.remove("active");
 }
 
-/*function handlePhoto(e){
-  const file = e.target.files[0];
-  if (!file) return;
 
-  selectedPhotoFile = file;
-
-  const preview = document.getElementById("photoPreview");
-  preview.src = URL.createObjectURL(file);
-  preview.style.display = "block";
-}
-*/
 function handlePhoto(e){
   const files = Array.from(e.target.files);
 
@@ -1160,6 +1153,45 @@ function removePhoto(index){
 
   existingPhotos.splice(index, 1);
   renderPhotos();
+}
+
+function initMap(data){
+
+  const defaultLat = 7.8731;
+  const defaultLng = 80.7718;
+
+  const lat = data?.latitude || defaultLat;
+  const lng = data?.longitude || defaultLng;
+
+  if(map){
+    map.remove();
+  }
+
+  map = L.map('map').setView([lat, lng], 8);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
+
+  marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+  document.querySelector('[name="latitude"]').value = lat;
+  document.querySelector('[name="longitude"]').value = lng;
+
+  map.on('click', function(e){
+    const { lat, lng } = e.latlng;
+    marker.setLatLng([lat, lng]);
+
+    document.querySelector('[name="latitude"]').value = lat;
+    document.querySelector('[name="longitude"]').value = lng;
+  });
+
+  marker.on('dragend', function(){
+    const pos = marker.getLatLng();
+
+    document.querySelector('[name="latitude"]').value = pos.lat;
+    document.querySelector('[name="longitude"]').value = pos.lng;
+  });
 }
 </script>
 
