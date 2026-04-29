@@ -21,7 +21,7 @@ const cities = [
     'Colombo', 'Kandy', 'Galle', 'Jaffna', 'Negombo', 'Matara',
     'Anuradhapura', 'Polonnaruwa', 'Batticaloa', 'Trincomalee',
     'Badulla', 'Ratnapura', 'Kurunegala', 'Nuwara Eliya', 'Hambantota',
-    'Vavuniya', 'Mannar', 'Puttalam', 'Kegalle', 'Ampara'
+    'Vavuniya', 'Mannar', 'Puttalam', 'Ampara'
 ];
 
 // ---- Mock Bus Data (used until DB is ready) ----
