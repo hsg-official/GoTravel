@@ -57,6 +57,41 @@
                 </div>
             </div>
         </section>
+        <section class="container" id="hotelGrid">
+            <h2 class="section-title">Popular <span class="neon-text">Hotels</span></h2>
+            <div class="hotel-grid" id="hotelCardsContainer"></div>
+        </section>
+
+        <div id="detailsModal" class="details-modal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeDetails()">&times;</span>
+        
+                <div id="modalBody">
+                    <h2 id="modalHotelName" class="neon-text gallery-title"></h2>
+            
+                    <div id="modalGallery" class="modal-gallery"></div>
+            
+                    <div id="modalInfoContainer"></div> </div>
+            </div>
+        </div>
+
+        <div id="fullGalleryModal" class="full-gallery-modal">
+            <div class="full-gallery-content">
+                <span class="full-gallery-close" onclick="closeFullGallery()">&times;</span>
+                <h2 id="fullGalleryTitle" class="neon-text" style="text-align:center;">All Photos</h2>
+                <div id="fullGalleryGrid" class="full-gallery-grid">
+                    </div>
+            </div>
+        </div>
+
+        <!-- Custom Alert Modal -->
+        <div id="searchAlertModal" class="details-modal">
+            <div class="modal-content" style="text-align: center; max-width: 400px;">
+                <h2 class="neon-text">Not Found</h2>
+                <p style="margin: 20px 0;">Sorry, that hotel is not available.</p>
+                <button class="btn-explore" onclick="closeSearchAlert()">OK</button>
+            </div>
+        </div>
     </main>
     <script src="../backend/hotels_script.js"></script>
 </body>
