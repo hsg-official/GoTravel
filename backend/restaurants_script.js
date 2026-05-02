@@ -39,11 +39,11 @@ function displayRestaurants(list) {
                          : 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg';
 
         const card = document.createElement('div');
-        card.className = 'hotel-card';
+        card.className = 'restaurant-card';
 
         card.innerHTML = `
-            <img src="${imageUrl}" class="hotel-img" alt="${item.service_name}">
-            <div class="hotel-info">
+            <img src="${imageUrl}" class="restaurant-img" alt="${item.service_name}">
+            <div class="restaurant-info">
                 <h3>${item.service_name}</h3>
                 <p style="opacity: 0.7; font-size: 0.9rem;">${item.city || 'Sri Lanka'}</p>
                 <button class="btn-explore" onclick="visitRestaurant('${item.id}')">View Details</button>
@@ -63,7 +63,7 @@ async function visitRestaurant(Id) {
     // Define the elements we will need
     const modal = document.getElementById('detailsModal');
     const modalRestaurantName = document.getElementById('modalRestaurantName');
-    const modalGallery = document.getElementById('modalGallery'); // Ensure this ID exists in hotels.html
+    const modalGallery = document.getElementById('modalGallery'); // Ensure this ID exists in restaurants.html
     const modalInfoContainer = document.getElementById('modalInfoContainer'); // Ensure this ID exists
 
     // 1. Set the Modal Title
@@ -96,7 +96,7 @@ async function visitRestaurant(Id) {
                 `;
                 modalGallery.appendChild(seeMoreContainer);
             } 
-            // Normal Case: Photo items 1, 2, 3 (or standard photos for hotels with < 5 images)
+            // Normal Case: Photo items 1, 2, 3 (or standard photos for restauraants with < 5 images)
             else {
                 const img = document.createElement('img');
                 img.src = url;
@@ -117,7 +117,7 @@ async function visitRestaurant(Id) {
         </div>
         <div class="modal-info-item">
             <b>Location & Address</b>
-            <p>${restaurant.address || 'Address not listed'}, ${hotel.city}</p>
+            <p>${restaurant.address || 'Address not listed'}, ${restaurant.city}</p>
         </div>
         <div class="modal-info-item">
             <b>Contact Number</b>
@@ -133,7 +133,7 @@ async function visitRestaurant(Id) {
     modal.style.display = "block";
 }
 
-// Add this to hotels_script.js
+// Add this to restaurants_script.js
 document.getElementById('restaurantSearch').addEventListener('input', (e) => {
     const searchTerm = e.target.value.toLowerCase();
     const filtered = restaurants.filter(h => 
@@ -191,23 +191,23 @@ searchInput.addEventListener('keypress', function (e) {
     if (e.key === 'Enter') {
         const searchTerm = searchInput.value.toLowerCase().trim();
         
-        // 3. Filter the global hotels array
+        // 3. Filter the global restaurants array
         const filteredrestaurants = restaurants.filter(restaurant => 
             restaurant.service_name.toLowerCase().includes(searchTerm)
         );
 
         // 4. Check if results were found
         if (filteredRestaurants.length > 0) {
-            // Display only the matching hotels
+            // Display only the matching restaurants
             displayRestaurants(filteredRestaurants);
             
             // Optional: Smoothly scroll to the results section
             document.getElementById('restaurantGrid').scrollIntoView({ behavior: 'smooth' });
         } else {
-            // Show the popup if no hotel exists
+            // Show the popup if no restaurant exists
             document.getElementById('searchAlertModal').style.display = "block";
             
-            // Reset to show all hotels again
+            // Reset to show all restaurants again
             displayRestaurants(restaurants);
         }
     }
