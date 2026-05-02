@@ -65,6 +65,13 @@ function displayHotels(hotelList) {
     });
 }
 
+function selectHotel(hotelName) {
+    // Save the selection
+    localStorage.setItem('selectedHotelName', hotelName);
+    // Go back to dashboard
+    window.location.href = 'personal.html';
+}
+
 // =========================================
 // 3. Details Modal Logic (CRITICAL REWRITE)
 // =========================================
@@ -139,6 +146,13 @@ async function visitHotel(hotelId) {
             <b>Price Range</b>
             <p>LKR ${hotel.price || 'N/A'}</p>
         </div>
+    `;
+
+    modalInfoContainer.innerHTML += `
+        <button class="btn-glow" style="width:100%; margin-top:20px;" 
+                onclick="selectHotel('${hotel.service_name}')">
+            Book This Hotel
+        </button>
     `;
 
     // 4. Open the primary modal
