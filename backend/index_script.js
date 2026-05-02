@@ -65,18 +65,6 @@ window.addEventListener('load', () => {
             requestAnimationFrame(() => drawWeather(type));
         }
 
-        window.onload = async function() {
-    const { data: { user }, error } = await _supabase.auth.getUser();
-    if (user) {
-        const fName = user.user_metadata.first_name || "Traveler";
-        const lName = user.user_metadata.last_name || "";
-        const email = user.email;
-        updateProfileAvatar(fName, lName, email);
-    } else {
-        window.location.href = 'auth.html'; 
-    }
-}
-
         async function initWeather() {
             initCanvas();
             if ("geolocation" in navigator) {
