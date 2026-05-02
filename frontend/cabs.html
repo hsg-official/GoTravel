@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoTravel | Cabs & Transport</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/cabs_style.css">
+</head>
+<body>
+
+    <div class="gradient-bg"></div>
+    <div class="overlay"></div>
+
+    <header>
+        <div class="info-panel">
+            <div class="time-text" id="time">12:00</div>
+            <span class="date-text" id="date">Today</span>
+        </div>
+        <a href="../index.html" class="back-btn">
+            <i class="fas fa-arrow-left"></i> BACK
+        </a>
+    </header>
+
+    <div class="page-title-section">
+        <h1 class="page-title">CABS & TRANSPORT</h1>
+        <p class="page-subtitle">Find your ride across Sri Lanka</p>
+    </div>
+
+    <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterCabs('all', this)">All</button>
+        <button class="filter-btn" onclick="filterCabs('Private', this)">Private</button>
+        <button class="filter-btn" onclick="filterCabs('Public', this)">Public</button>
+        <select class="filter-select" onchange="sortCabs(this.value)">
+            <option value="default">Sort by</option>
+            <option value="price_asc">Price: Low to High</option>
+            <option value="price_desc">Price: High to Low</option>
+            <option value="name_asc">Name: A to Z</option>
+        </select>
+    </div>
+
+    <div class="results-count" id="resultsCount"></div>
+
+    <div class="loader" id="loader">
+        <i class="fas fa-taxi"></i>
+        <p>Finding available rides...</p>
+    </div>
+
+    <div class="cabs-grid" id="cabsGrid"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../backend/cabs_script.js"></script>
+</body>
+</html>
