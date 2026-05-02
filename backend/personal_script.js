@@ -2,9 +2,27 @@ const SUPABASE_URL = 'https://cdcolkoavowjjymzdzud.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_aXQLF_zuk6pGmo4v0E1LPg_-TzUnQ0_';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Global state for date mode
+// Global state
 let currentDateMode = 'single';
 let tripIdToDelete = null;
+
+// --- 1. HELPER FUNCTION TO ADD A DESTINATION ROW ---
+// This centralizes row creation so we can use it for both the "+" button and page reloads
+function addDestinationRow(value = '', imageUrl = '') {
+    const list = document.getElementById('destinations-list');
+    const newRow = document.createElement('div');
+    newRow.className = 'destination-row';
+    
+    newRow.innerHTML = `
+        <input type="text" class="glass-input trip-destination" 
+               placeholder="Select destination..." 
+               value="${value}" 
+               data-img="${imageUrl}" readonly>
+        <button type="button" class="glass-btn search-dest-btn" onclick="goToPlaces(this)">
+            <i class="fas fa-location-dot"></i> </button>
+    `;
+    list.appendChild(newRow);
+}
 
 function toggleMenu(menuId) {
     const menu = document.getElementById(menuId);
@@ -81,49 +99,60 @@ function showTripDetails(title, dest, date, currency, amount, days, guideName) {
     document.getElementById('detailsModal').style.display = 'flex';
 }
 
-function goToPlaces() {
-    // Save current form drafts so they aren't lost on reload
+// --- 2. MODIFIED GOTOPLACES ---
+function goToPlaces(btnElement) { 
+    const rows = Array.from(document.querySelectorAll('.destination-row'));
+    const index = rows.indexOf(btnElement.parentElement);
+    
+    localStorage.setItem('editingRowIndex', index);
+    
+    // SAVE ALL DESTINATIONS AS A LIST
+    const destinationsData = rows.map(row => {
+        const input = row.querySelector('.trip-destination');
+        return {
+            val: input.value,
+            img: input.dataset.img || ''
+        };
+    });
+
     const draftData = {
         title: document.getElementById('trip-title').value,
         budget: document.getElementById('trip-budget-amount').value,
         days: document.getElementById('trip-days').value,
         currency: document.getElementById('trip-currency').value,
-        dest: document.getElementById('trip-destination').value,
-        destImg: document.getElementById('trip-destination').dataset.img || '',
-        
-        // Save the Dates
+        // Save the full list of destinations
+        destinations: destinationsData,
         dateMode: currentDateMode,
         dateSingle: document.getElementById('trip-date').value,
         dateStart: document.getElementById('trip-date-start').value,
         dateEnd: document.getElementById('trip-date-end').value
     };
-    localStorage.setItem('tripDraft', JSON.stringify(draftData));
     
+    localStorage.setItem('tripDraft', JSON.stringify(draftData));
     localStorage.setItem('isSelectingDestination', 'true');
     window.location.href = 'places.html';
-} 
+}
 
 function goToGuides() {
-    const destInput = document.getElementById('trip-destination');
-    
-    // Save current form drafts so they aren't lost
+    // Similar to goToPlaces, save draft before leaving
+    const rows = Array.from(document.querySelectorAll('.destination-row'));
+    const destinationsData = rows.map(row => {
+        const input = row.querySelector('.trip-destination');
+        return { val: input.value, img: input.dataset.img || '' };
+    });
+
     const draftData = {
         title: document.getElementById('trip-title').value,
         budget: document.getElementById('trip-budget-amount').value,
         days: document.getElementById('trip-days').value,
         currency: document.getElementById('trip-currency').value,
-        dest: document.getElementById('trip-destination').value,
-        destImg: document.getElementById('trip-destination').dataset.img || '',
-        
-        // Save the Dates
+        destinations: destinationsData,
         dateMode: currentDateMode,
         dateSingle: document.getElementById('trip-date').value,
         dateStart: document.getElementById('trip-date-start').value,
         dateEnd: document.getElementById('trip-date-end').value
     };
     localStorage.setItem('tripDraft', JSON.stringify(draftData));
-    
-    // Turn on planning mode and redirect
     localStorage.setItem('isSelectingGuide', 'true');
     window.location.href = 'guides.html';
 }
@@ -132,26 +161,18 @@ function closeTripDetails() {
     document.getElementById('detailsModal').style.display = 'none';
 }
 
-// --- CUSTOM DELETE TRIP LOGIC ---
 async function deleteTripFromDB(event, tripId) {
     event.stopPropagation();
-    tripIdToDelete = tripId; // Store the ID
+    tripIdToDelete = tripId;
     document.getElementById('confirmModal').style.display = 'flex';
 }
 
 document.getElementById('confirmOk').onclick = async function() {
     if (tripIdToDelete) {
-        const { error } = await _supabase
-            .from('trips')
-            .delete()
-            .eq('id', tripIdToDelete);
-
-        if (!error) {
-            fetchUserTrips(); // Refresh the UI
-        }
-        
-        tripIdToDelete = null; // Reset
-        document.getElementById('confirmModal').style.display = 'none'; // Hide modal
+        const { error } = await _supabase.from('trips').delete().eq('id', tripIdToDelete);
+        if (!error) fetchUserTrips();
+        tripIdToDelete = null;
+        document.getElementById('confirmModal').style.display = 'none';
     }
 };
 
@@ -163,48 +184,51 @@ document.getElementById('confirmCancel').onclick = function() {
 function updatePlaceholders() {
     const activeContainer = document.getElementById('saved-trips-container');
     const historyContainer = document.getElementById('history-trips-container');
-    
     document.getElementById('ongoing-placeholder').style.display = activeContainer.children.length === 0 ? 'block' : 'none';
     document.getElementById('past-placeholder').style.display = historyContainer.children.length === 0 ? 'block' : 'none';
 }
 
 async function saveTrip() {
     try {
-        // Safely check if the user is actually logged in
         const { data: { user }, error: authError } = await _supabase.auth.getUser();
-        
         if (authError || !user) {
-            alert("Session error: You must be logged in to save a trip.");
+            alert("Session error: You must be logged in.");
             window.location.href = 'auth.html';
             return;
         }
 
-        // 1. FETCH THE ACTUAL NAME FROM YOUR USERS TABLE
-        const { data: userData, error: userError } = await _supabase
-            .from('users')
-            .select('first_name, last_name')
-            .eq('id', user.id)
-            .single();
+        const { data: userData } = await _supabase
+            .from('users').select('first_name, last_name').eq('id', user.id).single();
 
-        // Use the DB name if found, otherwise fallback to metadata, otherwise "A Traveler"
-        const travelerName = userData 
-            ? `${userData.first_name} ${userData.last_name}`.trim() 
-            : (user.user_metadata.first_name || "A Traveler");
+        const travelerName = userData ? `${userData.first_name} ${userData.last_name}`.trim() : (user.user_metadata.first_name || "A Traveler");
             
-        // Get values from inputs safely
         const title = document.getElementById('trip-title').value;
-        const dest = document.getElementById('trip-destination').value;
-        const amount = document.getElementById('trip-budget-amount').value;
         const currency = document.getElementById('trip-currency').value;
         const days = document.getElementById('trip-days').value;
-        const destImage = document.getElementById('trip-destination').dataset.img || '';
+        const amount = document.getElementById('trip-budget-amount').value;
 
-        if(!title || !dest) {
-            alert("Please provide a Title and Destination!");
+        const destInputs = document.querySelectorAll('.trip-destination');
+        const destinationsArray = [];
+        
+        const imagesArray = []; // Create an array for all images
+        destInputs.forEach((input) => {
+            if (input.value.trim() !== "") {
+                destinationsArray.push(input.value.trim());
+                // Add the image to our array, or a placeholder if empty
+                imagesArray.push(input.dataset.img || 'default-placeholder.jpg');
+    }
+});
+
+        // Convert the array of images into a single string separated by commas
+        const allImagesString = imagesArray.join(',');
+
+        if(!title || destinationsArray.length === 0) {
+            alert("Please provide a Title and at least one Destination!");
             return;
         }
 
-        // Handle dates safely
+        const finalDestString = destinationsArray.join(', ');
+
         let date;
         if (currentDateMode === 'range') {
             const start = document.getElementById('trip-date-start').value;
@@ -214,144 +238,105 @@ async function saveTrip() {
             date = document.getElementById('trip-date').value || 'TBD';
         }
 
-        // Convert empty blanks to null to prevent Database crashes
         const safeAmount = amount ? parseFloat(amount) : null;
         const safeDays = days ? parseInt(days) : null;
 
-        // Check if a guide was selected
         const guideBtn = document.getElementById('guide-booking-btn');
         const guideNameStr = guideBtn && guideBtn.dataset.guide ? guideBtn.dataset.guide : null;
         const guideEmailStr = guideBtn && guideBtn.dataset.email ? guideBtn.dataset.email : null; 
 
-        // Send to Supabase
-        const { error: dbError } = await _supabase
-            .from('trips')
-            .insert([{
-                user_id: user.id,
-                title: title,
-                destination: dest,
-                image_url: destImage,
-                travel_date: date,           
-                budget_amount: safeAmount,  
-                currency: currency,
-                duration_days: safeDays,    
-                guide_name: guideNameStr,
-                status: 'Planned'
-            }]);
+        const { error: dbError } = await _supabase.from('trips').insert([{
+            user_id: user.id,
+            title: title,
+            destination: finalDestString,
+            image_url: allImagesString,
+            travel_date: date,           
+            budget_amount: safeAmount,  
+            currency: currency,
+            duration_days: safeDays,    
+            guide_name: guideNameStr,
+            status: 'Planned'
+        }]);
 
-        // Handle Database Result
         if (dbError) {
             alert("Database Error: " + dbError.message);
-            console.error("Supabase Error Details:", dbError);
         } else {
-            
-            // --- UPDATED EMAIL NOTIFICATION ---
-        if (guideNameStr && guideEmailStr) {
-            try {
-                const travelerName = user.user_metadata.first_name || "A Traveler";
-                
-                // Define the parameters exactly as named in your new template
-                const emailParams = {
-                    to_name: guideNameStr,
-                    to_email: guideEmailStr,
-                    traveler_name: travelerName,
-                    destination_name: dest,
-                    travel_date: date,
-                    trip_title: title
-                };
-                
-                // REPLACE "template_new_id" with your actual new Template ID from EmailJS
-                await emailjs.send("service_kix8fen", "template_wugveyi", emailParams);
-                console.log("Guide notification sent successfully.");
-            } catch (emailErr) {
-                console.error("Email notification failed:", emailErr);
+            if (guideNameStr && guideEmailStr) {
+                try {
+                    const emailParams = {
+                        to_name: guideNameStr,
+                        to_email: guideEmailStr,
+                        traveler_name: travelerName,
+                        destination_name: finalDestString,
+                        travel_date: date,
+                        trip_title: title
+                    };
+                    await emailjs.send("service_kix8fen", "template_wugveyi", emailParams);
+                } catch (emailErr) { console.error("Email failed:", emailErr); }
             }
-        }
-
-            // Success!
             document.getElementById('successModal').style.display = 'flex';
             clearPlannerForm();
             fetchUserTrips(); 
             showSection('trips-section');
         }
-
-    } catch (err) {
-        // THIS CATCHES SILENT CRASHES
-        alert("A system error stopped the save: " + err.message);
-        console.error("Critical Save Error:", err);
-    }
-}     
+    } catch (err) { alert("Error: " + err.message); }
+}
 
 async function logoutUser() {
     const { error } = await _supabase.auth.signOut();
-    if (!error) {
-        window.location.href = '../index.html';
-    } else {
-        alert("Error logging out: " + error.message);
-    }
+    if (!error) window.location.href = '../index.html';
 }
 
 async function fetchUserTrips() {
     const activeContainer = document.getElementById('saved-trips-container');
     const historyContainer = document.getElementById('history-trips-container');
-
-    // Clear current UI to prevent duplicates
     activeContainer.innerHTML = '';
     historyContainer.innerHTML = '';
 
-    const { data: trips, error } = await _supabase
-        .from('trips')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-    if (error) {
-        console.error("Error fetching trips:", error);
-        return;
-    }
+    const { data: trips, error } = await _supabase.from('trips').select('*').order('created_at', { ascending: false });
+    if (error) return;
 
     trips.forEach(trip => {
         const card = document.createElement('div');
         card.className = 'trip-card';
         card.onclick = () => showTripDetails(trip.title, trip.destination, trip.travel_date, trip.currency, trip.budget_amount, trip.duration_days, trip.guide_name);
-
         const isHistory = trip.status === 'Visited';
         const tagClass = isHistory ? 'trip-tag history' : 'trip-tag';
-        
-        card.innerHTML = `
-    <div style="display: flex; gap: 15px; align-items: center;">
-        <img src="${trip.image_url || 'default-placeholder.jpg'}" 
-             style="width: 80px; height: 60px; border-radius: 12px; object-fit: cover;">
-        <div class="trip-card-info">
-            <h3>${trip.title}</h3>
-            <p>
-                <span><i class="fas fa-map-marker-alt"></i> ${trip.destination}</span>
-                <span><i class="fas fa-calendar"></i> ${trip.start_date || trip.travel_date}</span>
-            </p>
-        </div>
-    </div>
-    <div class="trip-actions">
-        <i class="fas fa-trash delete-trip-btn" onclick="deleteTripFromDB(event, '${trip.id}')"></i>
-        <div class="${tagClass}">${trip.status}</div>
-    </div>
-    `;
+        // Split the saved string back into an array
+        const images = trip.image_url ? trip.image_url.split(',') : ['default-placeholder.jpg'];
 
+        // Create the HTML for all images
+        const imagesHTML = images.map(img => `
+            <img src="${img}" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid var(--glass-border);">
+        `).join('');
+
+        card.innerHTML = `
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <div style="display: flex; gap: 5px; flex-wrap: wrap; width: 90px;">
+                    ${imagesHTML} 
+                </div>
+                <div class="trip-card-info">
+                    <h3>${trip.title}</h3>
+                    <p><span><i class="fas fa-map-marker-alt"></i> ${trip.destination}</span></p>
+                </div>
+            </div>
+            <div class="trip-actions">
+                <i class="fas fa-trash delete-trip-btn" onclick="deleteTripFromDB(event, '${trip.id}')"></i>
+                <div class="${tagClass}">${trip.status}</div>
+            </div>`;
         if (isHistory) historyContainer.appendChild(card);
         else activeContainer.appendChild(card);
     });
-
     updatePlaceholders();
 }
 
 function clearPlannerForm() {
-    // Clear text and number inputs
     document.getElementById('trip-title').value = '';
-    document.getElementById('trip-destination').value = '';
+    document.getElementById('destinations-list').innerHTML = '';
+    addDestinationRow(); // Reset to one empty row
     document.getElementById('trip-budget-amount').value = '';
     document.getElementById('trip-days').value = '';
-
     localStorage.removeItem('tripDraft');
-    
-    // Reset the guide button
     const guideBtnText = document.getElementById('guide-btn-text');
     const guideBtn = document.getElementById('guide-booking-btn');
     if (guideBtnText && guideBtn) {
@@ -359,66 +344,31 @@ function clearPlannerForm() {
         delete guideBtn.dataset.guide;
         delete guideBtn.dataset.email;
     }
-    
-    // Clear date inputs
     document.getElementById('trip-date').value = '';
     document.getElementById('trip-date-start').value = '';
     document.getElementById('trip-date-end').value = '';
-
-    // Reset the currency dropdown to the first option (LKR)
     document.getElementById('trip-currency').selectedIndex = 0;
-
-    // Reset the Date Mode back to 'single' for a fresh start
     setDateMode('single');
-    
-    // Hide transport options if they were left open
-    document.getElementById('transportOptions').classList.remove('show');
 }
 
 function updateProfileAvatar(firstName, lastName, email) {
-    const fullName = `${firstName} ${lastName}`.trim();
-    const firstInitial = firstName ? firstName.charAt(0).toUpperCase() : "";
-    const lastInitial = lastName ? lastName.charAt(0).toUpperCase() : "";
-    const combinedInitials = firstInitial + lastInitial;
-    
     const avatarImg = document.getElementById('userAvatar');
-    const popupInitial = document.getElementById('popupInitial');
-    const popupName = document.getElementById('popupName');
-    const popupEmail = document.getElementById('popupEmail');
-    const profilePopup = document.getElementById('profilePopup');
-    
     avatarImg.src = `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=7000ff&color=fff`;
-    
-    popupInitial.innerText = combinedInitials;
-    popupName.innerText = fullName; 
-    popupEmail.innerText = email;
-    
-    avatarImg.onclick = function(e) {
-        e.stopPropagation();
-        profilePopup.classList.toggle('show');
-    };
-
-    document.addEventListener('click', function() {
-        profilePopup.classList.remove('show');
-    });
-    profilePopup.onclick = function(e) { e.stopPropagation(); };
+    document.getElementById('popupInitial').innerText = (firstName ? firstName[0] : "") + (lastName ? lastName[0] : "");
+    document.getElementById('popupName').innerText = `${firstName} ${lastName}`;
+    document.getElementById('popupEmail').innerText = email;
+    avatarImg.onclick = (e) => { e.stopPropagation(); document.getElementById('profilePopup').classList.toggle('show'); };
 }
 
+// --- 3. MODIFIED WINDOW.ONLOAD ---
 window.onload = async function() {
-    const { data: { user }, error } = await _supabase.auth.getUser();
-
+    const { data: { user } } = await _supabase.auth.getUser();
     if (user) {
-        const fName = user.user_metadata.first_name || "Traveler";
-        const lName = user.user_metadata.last_name || "";
-        const email = user.email;
-
-        updateProfileAvatar(fName, lName, email);
+        updateProfileAvatar(user.user_metadata.first_name, user.user_metadata.last_name, user.email);
         fetchUserTrips();
-    } else {
-        window.location.href = 'auth.html'; 
-    }
+    } else { window.location.href = 'auth.html'; }
 
-    // --- RESTORE DRAFT DATA ---
+    // RESTORE DRAFT DATA
     const draft = localStorage.getItem('tripDraft');
     if (draft) {
         const data = JSON.parse(draft);
@@ -427,49 +377,53 @@ window.onload = async function() {
         document.getElementById('trip-days').value = data.days || '';
         document.getElementById('trip-currency').value = data.currency || 'LKR';
         
-        if (data.dest) {
-            const destInput = document.getElementById('trip-destination');
-            destInput.value = data.dest;
-            destInput.dataset.img = data.destImg || '';
+        // RECONSTRUCT MULTIPLE DESTINATION ROWS
+        if (data.destinations && data.destinations.length > 0) {
+            document.getElementById('destinations-list').innerHTML = ''; // Clear defaults
+            data.destinations.forEach(d => addDestinationRow(d.val, d.img));
         }
 
-        // Restore the Dates
         if (data.dateMode) {
             setDateMode(data.dateMode);
             document.getElementById('trip-date').value = data.dateSingle || '';
             document.getElementById('trip-date-start').value = data.dateStart || '';
             document.getElementById('trip-date-end').value = data.dateEnd || '';
         }
-        
         localStorage.removeItem('tripDraft');
     }
 
-    // --- CATCH RETURNING GUIDE ---
-    const pickedGuide = localStorage.getItem('selectedGuideName');
-    const pickedGuideEmail = localStorage.getItem('selectedGuideEmail');
+    // CATCH RETURNING DESTINATION
+    const pickedDest = localStorage.getItem('selectedDestination');
+    const pickedImage = localStorage.getItem('selectedDestImage');
+    const editingIndex = localStorage.getItem('editingRowIndex');
 
+    if (pickedDest && editingIndex !== null) {
+        const rows = document.querySelectorAll('.destination-row');
+        if (rows[editingIndex]) {
+            const input = rows[editingIndex].querySelector('.trip-destination');
+            input.value = pickedDest;
+            input.dataset.img = pickedImage;
+        }
+        showSection('planner-section');
+        localStorage.removeItem('selectedDestination');
+        localStorage.removeItem('selectedDestImage');
+        localStorage.removeItem('editingRowIndex');
+    }
+
+    // CATCH RETURNING GUIDE
+    const pickedGuide = localStorage.getItem('selectedGuideName');
     if (pickedGuide) {
         const guideBtnText = document.getElementById('guide-btn-text');
-        const guideBtn = document.getElementById('guide-booking-btn');
-        
-        if (guideBtnText && guideBtn) {
-            guideBtnText.innerHTML = `Guide:<br><span style="color:var(--neon-primary); font-size:0.8rem;">${pickedGuide}</span>`;
-            guideBtn.dataset.guide = pickedGuide;
-            if (pickedGuideEmail) guideBtn.dataset.email = pickedGuideEmail; // Secretly store email
-        }
+        guideBtnText.innerHTML = `Guide:<br><span style="color:var(--neon-primary); font-size:0.8rem;">${pickedGuide}</span>`;
+        document.getElementById('guide-booking-btn').dataset.guide = pickedGuide;
+        document.getElementById('guide-booking-btn').dataset.email = localStorage.getItem('selectedGuideEmail');
         showSection('planner-section');
         localStorage.removeItem('selectedGuideName');
         localStorage.removeItem('selectedGuideEmail');
     }
-
-    // --- CATCH RETURNING DESTINATION ---
-    const pickedDest = localStorage.getItem('selectedDestination');
-    const pickedImage = localStorage.getItem('selectedDestImage');
-    if (pickedDest) {
-        document.getElementById('trip-destination').value = pickedDest;
-        document.getElementById('trip-destination').dataset.img = pickedImage;
-        showSection('planner-section');
-        localStorage.removeItem('selectedDestination');
-        localStorage.removeItem('selectedDestImage');
-    }
 };
+
+// ADD BUTTON EVENT LISTENER
+document.getElementById('add-destination-btn').addEventListener('click', function() {
+    addDestinationRow();
+});
