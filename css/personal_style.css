@@ -475,3 +475,84 @@ h1 {
     color: white;
     box-shadow: 0 0 10px rgba(112, 0, 255, 0.4);
 }
+
+/* Container for multiple destinations */
+#destinations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.destination-row {
+    display: flex;
+    gap: 10px;
+    animation: popIn 0.3s ease-out;
+}
+
+/* Styling the + Add Button */
+.add-mini-btn {
+    background: transparent;
+    border: 1px dashed var(--neon-primary);
+    color: var(--neon-primary);
+    padding: 8px;
+    border-radius: 8px;
+    margin-top: 10px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: 0.3s;
+}
+
+.add-mini-btn:hover {
+    background: rgba(0, 242, 255, 0.1);
+    box-shadow: var(--accent-glow);
+}
+
+/* --- ENHANCED SEARCH BUTTON --- */
+.search-dest-btn {
+    background: var(--neon-secondary) !important; /* Vibrant purple background */
+    border: none !important;
+    width: 45px;
+    height: 45px;
+    border-radius: 12px; /* Matches the input rounding */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 10px rgba(112, 0, 255, 0.4); /* Soft purple glow */
+}
+
+.search-dest-btn i {
+    color: white;
+    font-size: 1.1rem;
+}
+
+/* Hover Effects */
+.search-dest-btn:hover {
+    transform: scale(1.1); /* Pop out effect */
+    background: var(--neon-primary) !important; /* Changes to Cyan on hover */
+    box-shadow: var(--accent-glow); /* Bright Cyan glow */
+}
+
+.search-dest-btn:active {
+    transform: scale(0.95); /* Squish effect when clicked */
+}
+
+/* Add this to personal_style.css */
+.trip-card .image-stack {
+    display: flex;
+    align-items: center;
+}
+
+.trip-card .image-stack img {
+    margin-left: -15px; /* Overlap effect */
+    transition: 0.3s;
+}
+
+.trip-card .image-stack img:first-child {
+    margin-left: 0;
+}
+
+.trip-card:hover .image-stack img {
+    margin-left: 5px; /* Spread out on hover */
+}

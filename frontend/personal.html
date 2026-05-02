@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/personal_style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript"> (function() { emailjs.init("0snPOI_S_7ftRX9BK"); })(); </script>
@@ -174,14 +174,19 @@
                             
                         </div>
                         <div class="input-group">
-                            <label>Destination</label>
-                            <div style="display: flex; gap: 10px;">
-                                <input type="text" id="trip-destination" class="glass-input" placeholder="Select from destinations..." readonly>
-                                <button type="button" class="glass-btn" onclick="goToPlaces()" style="padding: 0 15px; background: var(--neon-secondary); border: none; border-radius: 12px; color: white; cursor: pointer;">
-                                    <i class="fas fa-search-location"></i>
-                                </button>
+                            <label>Destinations</label>
+                            <div id="destinations-list">
+                                <div class="destination-row">
+                                    <input type="text" class="glass-input trip-destination" placeholder="Select destination..." readonly>
+                                    <button type="button" class="glass-btn search-dest-btn" onclick="goToPlaces(this)">
+                                        <i class="fas fa-location-dot"></i> </button>
+                                </div>
                             </div>
+                            <button type="button" id="add-destination-btn" class="add-mini-btn">
+                                <i class="fas fa-plus-circle"></i> Add Another Stop
+                            </button>
                         </div>
+
                         <div class="input-group">
                             <label>Target Date</label>
                             <div class="date-type-tabs">
