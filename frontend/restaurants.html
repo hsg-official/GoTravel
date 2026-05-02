@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoTravel | Restaurants</title>
+    <link rel="stylesheet" href="../css/hotels_style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-overlay"></div>
+
+    <header>
+        <nav class="glass-nav">
+            <div class="logo-container">
+                <div class="logo-circle">
+                    <img src="../src/images/GoTravels.png" alt="GoTravel Logo" class="logo-img">
+                </div>
+                <span class="logo-text">Go<span>Travel</span></span>
+            </div>
+
+            <div class="search-box">
+                <ion-icon name="search-outline"></ion-icon>
+                <input type="text" id="hotelSearch" placeholder="Search">
+            </div>
+            <ul class="nav-links">
+                <li><a href="places.html">Destinations</a></li>
+                <li class="dropdown" style="position: relative;"> <a href="javascript:void(0)" id="transportBtn">Transport</a>
+                    <div class="dropdown-content" id="transportMenu">
+                        <a href="buses.html" class="dropdown-item">
+                            <ion-icon name="bus-outline"></ion-icon>
+                            <span>Buses</span>
+                        </a>
+                        <a href="cabs.html" class="dropdown-item">
+                            <ion-icon name="car-outline"></ion-icon>
+                            <span>Cabs</span>
+                        </a>
+                    </div>
+                </li>
+                <li><a href="../index.html">Home</a></li>
+            </ul>
+            
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Find Amazing Places to Eat</h1>
+                <p class="subtitle">Discover top-rated restaurants across Sri Lanka</p>
+                <p class="tagline">Have an unforgettable meal!</p>
+                
+                <div class="hero-btns">
+                    <a href="#hotelGrid" class="btn-glow">DISCOVER RESTAURANTS NEAR YOU</a>
+                </div>
+            </div>
+        </section>
+        <section class="container" id="hotelGrid">
+            <h2 class="section-title">Popular <span class="neon-text">Restaurants</span></h2>
+            <div class="hotel-grid" id="hotelCardsContainer"></div>
+        </section>
+
+        <div id="detailsModal" class="details-modal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeDetails()">&times;</span>
+        
+                <div id="modalBody">
+                    <h2 id="modalHotelName" class="neon-text gallery-title"></h2>
+            
+                    <div id="modalGallery" class="modal-gallery"></div>
+            
+                    <div id="modalInfoContainer"></div> </div>
+            </div>
+        </div>
+
+        <div id="fullGalleryModal" class="full-gallery-modal">
+            <div class="full-gallery-content">
+                <span class="full-gallery-close" onclick="closeFullGallery()">&times;</span>
+                <h2 id="fullGalleryTitle" class="neon-text" style="text-align:center;">All Photos</h2>
+                <div id="fullGalleryGrid" class="full-gallery-grid">
+                    </div>
+            </div>
+        </div>
+
+        <!-- Custom Alert Modal -->
+        <div id="searchAlertModal" class="details-modal">
+            <div class="modal-content" style="text-align: center; max-width: 400px;">
+                <h2 class="neon-text">Not Found</h2>
+                <p style="margin: 20px 0;">Sorry, that restaurant is not available.</p>
+                <button class="btn-explore" onclick="closeSearchAlert()">OK</button>
+            </div>
+        </div>
+    </main>
+    <script src="../backend/restaurants_script.js"></script>
+</body>
+</html>
