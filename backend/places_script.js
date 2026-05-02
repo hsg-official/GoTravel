@@ -224,7 +224,7 @@ async function loadDestination(destination) {
 
     const bg = document.getElementById('destImageBg');
     bg.style.backgroundImage = aiData.imageUrl ? `url(${aiData.imageUrl})` : 'none';
-
+    document.querySelector('.gradient-bg').style.backgroundImage = aiData.imageUrl ? `url(${aiData.imageUrl})` : 'none';
     updateSelectButton();
 
     document.getElementById('loader').style.display = 'none';
