@@ -58,7 +58,7 @@ function displayRestaurants(list) {
 // =========================================
 async function visitRestaurant(Id) {
     const restaurant = restaurants.find(h => String(h.id) == String(Id));
-    if (!restautant) { console.error("Restaurant not found!"); return; }
+    if (!restaurant) { console.error("Restaurant not found!"); return; }
 
     // Define the elements we will need
     const modal = document.getElementById('detailsModal');
