@@ -24,6 +24,34 @@ function addDestinationRow(value = '', imageUrl = '') {
     list.appendChild(newRow);
 }
 
+function goToHotels() {
+    // 1. Collect current form data
+    const rows = Array.from(document.querySelectorAll('.destination-row'));
+    const destinationsData = rows.map(row => {
+        const input = row.querySelector('.trip-destination');
+        return { val: input.value, img: input.dataset.img || '' };
+    });
+
+    const draftData = {
+        title: document.getElementById('trip-title').value,
+        budget: document.getElementById('trip-budget-amount').value,
+        days: document.getElementById('trip-days').value,
+        currency: document.getElementById('trip-currency').value,
+        destinations: destinationsData,
+        dateMode: currentDateMode,
+        dateSingle: document.getElementById('trip-date').value,
+        dateStart: document.getElementById('trip-date-start').value,
+        dateEnd: document.getElementById('trip-date-end').value
+    };
+
+    // 2. Save to localStorage
+    localStorage.setItem('tripDraft', JSON.stringify(draftData));
+    localStorage.setItem('isSelectingHotel', 'true'); // Flag to return to planner
+    
+    // 3. Redirect
+    window.location.href = 'hotels.html';
+}
+
 function toggleMenu(menuId) {
     const menu = document.getElementById(menuId);
     menu.classList.toggle('show');
@@ -241,6 +269,9 @@ async function saveTrip() {
         const safeAmount = amount ? parseFloat(amount) : null;
         const safeDays = days ? parseInt(days) : null;
 
+        const hotelBtn = document.getElementById('hotel-booking-btn');
+        const hotelNameStr = hotelBtn && hotelBtn.dataset.hotel ? hotelBtn.dataset.hotel : null;
+
         const guideBtn = document.getElementById('guide-booking-btn');
         const guideNameStr = guideBtn && guideBtn.dataset.guide ? guideBtn.dataset.guide : null;
         const guideEmailStr = guideBtn && guideBtn.dataset.email ? guideBtn.dataset.email : null; 
@@ -255,6 +286,7 @@ async function saveTrip() {
             currency: currency,
             duration_days: safeDays,    
             guide_name: guideNameStr,
+            hotel_name: hotelNameStr,
             status: 'Planned'
         }]);
 
@@ -408,6 +440,21 @@ window.onload = async function() {
         localStorage.removeItem('selectedDestination');
         localStorage.removeItem('selectedDestImage');
         localStorage.removeItem('editingRowIndex');
+    }
+
+    // ... existing code for restoring draft and guides ...
+
+    // CATCH RETURNING HOTEL
+    const pickedHotel = localStorage.getItem('selectedHotelName');
+    if (pickedHotel) {
+        const hotelBtnText = document.getElementById('hotel-btn-text');
+        if (hotelBtnText) {
+            hotelBtnText.innerHTML = `Hotel:<br><span style="color:var(--neon-primary); font-size:0.8rem;">${pickedHotel}</span>`;
+            // Save the name into a dataset so the saveTrip() function can see it
+            document.getElementById('hotel-booking-btn').dataset.hotel = pickedHotel;
+    }
+        showSection('planner-section'); // Ensure they go back to the form
+        localStorage.removeItem('selectedHotelName'); // Clean up
     }
 
     // CATCH RETURNING GUIDE
