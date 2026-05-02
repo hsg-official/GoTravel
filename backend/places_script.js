@@ -1,4 +1,4 @@
-// ⚠️ IMPORTANT: Replace this with YOUR Google Apps Script URL
+
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwHltBHkWqBNrk67zieDRl9xr1hscq3ZlnJu7aHv6njFxhL0vt6tyWg0hJYeTxLz5liPA/exec';
 
 // Store selected destinations
