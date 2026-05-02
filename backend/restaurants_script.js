@@ -192,7 +192,7 @@ searchInput.addEventListener('keypress', function (e) {
         const searchTerm = searchInput.value.toLowerCase().trim();
         
         // 3. Filter the global restaurants array
-        const filteredrestaurants = restaurants.filter(restaurant => 
+        const filteredRestaurants = restaurants.filter(restaurant => 
             restaurant.service_name.toLowerCase().includes(searchTerm)
         );
 
