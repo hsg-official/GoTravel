@@ -13,6 +13,8 @@
     <div class="gradient-bg"></div>
     <div class="overlay"></div>
 
+    <div id="toast-container"></div>
+
     <header>
         <div class="info-panel">
             <div class="time-text" id="time">12:00</div>
@@ -48,6 +50,26 @@
     </div>
 
     <div class="cabs-grid" id="cabsGrid"></div>
+
+    <!-- BOOKING MODAL -->
+    <div class="modal-overlay" id="bookingModal">
+        <div class="modal-content">
+            <i class="fas fa-times close-modal" onclick="closeModal()"></i>
+            <h2 class="modal-title">Add Cab to Trip</h2>
+            <p class="modal-subtitle" id="modalCabName">Cab: ---</p>
+
+            <div class="input-group">
+                <label>Select Your Planned Trip</label>
+                <select id="tripSelect" class="modal-select" required>
+                    <option value="">Loading trips...</option>
+                </select>
+            </div>
+
+            <button id="confirmBtn" class="confirm-btn" onclick="confirmBooking()">
+                <i class="fas fa-plus"></i> ADD TO MY TRIP
+            </button>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../backend/cabs_script.js"></script>

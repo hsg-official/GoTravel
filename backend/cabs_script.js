@@ -5,6 +5,18 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let allCabs = [];
 let currentFilter = 'all';
 let currentSort = 'default';
+let currentUser = null;
+let selectedCab = null;
+
+// ---- TOAST ----
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> <span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => { if (toast.parentElement) toast.remove(); }, 3000);
+}
 
 // ---- CLOCK ----
 function updateClock() {
@@ -84,9 +96,9 @@ function renderCabs(cabs) {
                     </div>
                 </div>
                 <div class="cab-price">${price}</div>
-                <a href="tel:${contact}" class="contact-btn">
-                    <i class="fas fa-phone"></i> Contact Now
-                </a>
+                <button class="contact-btn" onclick="openBookingModal('${cab.service_name}', '${contact}')">
+                    <i class="fas fa-plus"></i> Add to My Trip
+                </button>
             </div>
         `;
 
@@ -105,14 +117,89 @@ function showEmpty(message) {
     `;
 }
 
+// ---- OPEN BOOKING MODAL ----
+async function openBookingModal(cabName, cabContact) {
+    selectedCab = { name: cabName, contact: cabContact };
+
+    document.getElementById('modalCabName').innerText = `Cab: ${cabName}`;
+    document.getElementById('bookingModal').style.display = 'flex';
+
+    const selectBox = document.getElementById('tripSelect');
+    const confirmBtn = document.getElementById('confirmBtn');
+    selectBox.innerHTML = '<option value="">Loading your trips...</option>';
+    confirmBtn.disabled = true;
+
+    if (!currentUser) {
+        showToast('Please log in to book a cab.', 'error');
+        document.getElementById('bookingModal').style.display = 'none';
+        setTimeout(() => window.location.href = 'auth.html', 2000);
+        return;
+    }
+
+    const { data: trips, error } = await _supabase
+        .from('trips')
+        .select('id, title, travel_date')
+        .eq('user_id', currentUser.id);
+
+    if (error || !trips || trips.length === 0) {
+        selectBox.innerHTML = '<option value="">No planned trips found. Create one first!</option>';
+        return;
+    }
+
+    selectBox.innerHTML = '<option value="">-- Choose a trip --</option>';
+    trips.forEach(trip => {
+        selectBox.innerHTML += `<option value="${trip.id}">${trip.title} (${trip.travel_date || 'TBD'})</option>`;
+    });
+
+    confirmBtn.disabled = false;
+}
+
+// ---- CLOSE MODAL ----
+function closeModal() {
+    document.getElementById('bookingModal').style.display = 'none';
+    selectedCab = null;
+}
+
+// ---- CONFIRM BOOKING ----
+async function confirmBooking() {
+    const tripId = document.getElementById('tripSelect').value;
+    const confirmBtn = document.getElementById('confirmBtn');
+
+    if (!tripId) {
+        showToast('Please select a trip.', 'error');
+        return;
+    }
+
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+    const { error } = await _supabase
+        .from('trips')
+        .update({
+            cab_name: selectedCab.name,
+            cab_contact: selectedCab.contact
+        })
+        .eq('id', tripId);
+
+    if (error) {
+        showToast('Failed to update trip: ' + error.message, 'error');
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = '<i class="fas fa-plus"></i> ADD TO MY TRIP';
+        return;
+    }
+
+    showToast('Cab added to your trip!', 'success');
+    setTimeout(() => {
+        closeModal();
+        window.location.href = 'personal.html';
+    }, 1500);
+}
+
 // ---- FILTER ----
 function filterCabs(type, btn) {
     currentFilter = type;
-
-    // Update active button
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-
     applyFilterAndSort();
 }
 
@@ -126,12 +213,10 @@ function sortCabs(value) {
 function applyFilterAndSort() {
     let result = [...allCabs];
 
-    // Filter
     if (currentFilter !== 'all') {
         result = result.filter(c => c.transport_type === currentFilter);
     }
 
-    // Sort
     if (currentSort === 'price_asc') {
         result.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
     } else if (currentSort === 'price_desc') {
@@ -144,8 +229,15 @@ function applyFilterAndSort() {
 }
 
 // ---- ON PAGE LOAD ----
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     setInterval(updateClock, 1000);
     updateClock();
+
+    // Get current user
+    const { data: { user } } = await _supabase.auth.getUser();
+    if (user) {
+        currentUser = user;
+    }
+
     loadCabs();
 });
