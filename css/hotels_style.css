@@ -305,3 +305,195 @@ body {
     transform: translateY(-3px); /* Lifts up slightly on hover */
     background: white;
 }
+
+/* Dark Modal Background */
+.details-modal {
+    display: none; 
+    position: fixed;
+    z-index: 1000;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+}
+
+/* The Box in the Middle */
+.modal-content {
+    background: #0a0b10;
+    margin: 5% auto;
+    padding: 30px;
+    border: 1px solid var(--neon-cyan);
+    width: 80%;
+    max-width: 600px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px var(--neon-cyan);
+    color: white;
+    position: relative;
+}
+
+.close-btn {
+    position: absolute;
+    right: 20px; top: 10px;
+    font-size: 30px;
+    cursor: pointer;
+    color: var(--neon-cyan);
+}
+
+.modal-info-item {
+    margin-bottom: 15px;
+}
+
+.modal-info-item b {
+    color: var(--neon-cyan);
+    display: block;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+/* Styling for the new Modal Gallery */
+.modal-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Mini-thumbnails */
+    gap: 15px;
+    margin-bottom: 25px; /* Space before description */
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.2); /* Subtle divider */
+}
+
+.gallery-image {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.gallery-image:hover {
+    transform: scale(1.1);
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 10px var(--neon-cyan);
+}
+
+/* =========================================
+   1. The Teaser Gallery (In Details Modal)
+   ========================================= */
+.modal-teaser-gallery {
+    display: flex; /* Horizontally aligned images */
+    gap: 10px;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+}
+
+.teaser-item {
+    flex: 1; /* Stretch to fill space evenly */
+    height: 150px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.teaser-item:hover {
+    transform: translateY(-5px);
+    border-color: var(--neon-cyan);
+}
+
+/* The special 4th item (See More Button) */
+.see-more-container {
+    flex: 1; /* Same size as others */
+    position: relative;
+    height: 150px;
+    cursor: pointer;
+}
+
+.see-more-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+    filter: blur(2px) brightness(40%); /* Blur the background image */
+    border: 2px solid rgba(0, 255, 255, 0.5);
+}
+
+.see-more-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+    background: rgba(0, 0, 0, 0.5); /* Darken further */
+    border-radius: 8px;
+}
+
+.plus-sign {
+    font-size: 2rem;
+    color: var(--neon-cyan);
+}
+
+/* =========================================
+   2. Full Gallery Viewer Modal (The 2nd Modal)
+   ========================================= */
+.full-gallery-modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 2000; /* Must be higher than the first modal! */
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(15px);
+    overflow-y: auto; /* Allow scrolling inside the gallery */
+}
+
+.full-gallery-content {
+    background: #06070a;
+    margin: 3% auto;
+    padding: 30px;
+    border: 1px solid var(--neon-cyan);
+    width: 90%;
+    max-width: 1000px;
+    border-radius: 15px;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+    color: white;
+    position: relative;
+}
+
+.full-gallery-close {
+    position: absolute;
+    right: 20px; top: 10px;
+    font-size: 35px;
+    cursor: pointer;
+    color: var(--neon-cyan);
+}
+
+/* The grid view for ALL photos */
+.full-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 25px;
+}
+
+.full-gallery-img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 3px solid transparent;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+    cursor: pointer;
+}
+
+.full-gallery-img:hover {
+    transform: scale(1.05);
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 15px var(--neon-cyan);
+}

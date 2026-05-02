@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GoTravel | Hotels</title>
+    <title>GoTravel | Restaurants</title>
     <link rel="stylesheet" href="../css/hotels_style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
@@ -48,17 +48,17 @@
     <main>
         <section class="hero">
             <div class="hero-content">
-                <h1>Find Your Perfect Escape</h1>
-                <p class="subtitle">Discover top-rated hotels across Sri Lanka</p>
-                <p class="tagline">Have an unforgettable journey!</p>
+                <h1>Find Amazing Places to Eat</h1>
+                <p class="subtitle">Discover top-rated restaurants across Sri Lanka</p>
+                <p class="tagline">Have an unforgettable meal!</p>
                 
                 <div class="hero-btns">
-                    <a href="#hotelGrid" class="btn-glow">DISCOVER POPULAR HOTELS</a>
+                    <a href="#hotelGrid" class="btn-glow">DISCOVER RESTAURANTS NEAR YOU</a>
                 </div>
             </div>
         </section>
         <section class="container" id="hotelGrid">
-            <h2 class="section-title">Popular <span class="neon-text">Hotels</span></h2>
+            <h2 class="section-title">Popular <span class="neon-text">Restaurants</span></h2>
             <div class="hotel-grid" id="hotelCardsContainer"></div>
         </section>
 
@@ -88,11 +88,11 @@
         <div id="searchAlertModal" class="details-modal">
             <div class="modal-content" style="text-align: center; max-width: 400px;">
                 <h2 class="neon-text">Not Found</h2>
-                <p style="margin: 20px 0;">Sorry, that hotel is not available.</p>
+                <p style="margin: 20px 0;">Sorry, that restaurant is not available.</p>
                 <button class="btn-explore" onclick="closeSearchAlert()">OK</button>
             </div>
         </div>
     </main>
-    <script src="../backend/hotels_script.js"></script>
+    <script src="../backend/restaurants_script.js"></script>
 </body>
 </html>
