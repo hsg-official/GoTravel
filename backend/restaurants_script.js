@@ -28,7 +28,7 @@ async function fetchrestaurants() {
 }
 
 function displayRestaurants(list) {
-    const container = document.getElementById('hotelCardsContainer');
+    const container = document.getElementById('restaurantCardsContainer');
     if (!container) return; // Prevent error if elements don't exist yet
     container.innerHTML = ""; 
 
@@ -62,12 +62,12 @@ async function visitRestaurant(Id) {
 
     // Define the elements we will need
     const modal = document.getElementById('detailsModal');
-    const modalHotelName = document.getElementById('modalHotelName');
+    const modalRestaurantName = document.getElementById('modalRestaurantName');
     const modalGallery = document.getElementById('modalGallery'); // Ensure this ID exists in hotels.html
     const modalInfoContainer = document.getElementById('modalInfoContainer'); // Ensure this ID exists
 
     // 1. Set the Modal Title
-    modalHotelName.innerText = restaurant.service_name;
+    modalRestaurantName.innerText = restaurant.service_name;
 
     // 2. Teaser Gallery Logic
     modalGallery.innerHTML = ''; // Always clear first
@@ -199,7 +199,7 @@ searchInput.addEventListener('keypress', function (e) {
         // 4. Check if results were found
         if (filteredRestaurants.length > 0) {
             // Display only the matching hotels
-            displayHotels(filteredRestaurants);
+            displayRestaurants(filteredRestaurants);
             
             // Optional: Smoothly scroll to the results section
             document.getElementById('restaurantGrid').scrollIntoView({ behavior: 'smooth' });

@@ -23,7 +23,7 @@
 
             <div class="search-box">
                 <ion-icon name="search-outline"></ion-icon>
-                <input type="text" id="hotelSearch" placeholder="Search">
+                <input type="text" id="restaurantSearch" placeholder="Search">
             </div>
             <ul class="nav-links">
                 <li><a href="places.html">Destinations</a></li>
@@ -53,13 +53,13 @@
                 <p class="tagline">Have an unforgettable meal!</p>
                 
                 <div class="hero-btns">
-                    <a href="#hotelGrid" class="btn-glow">DISCOVER RESTAURANTS NEAR YOU</a>
+                    <a href="#restaurantGrid" class="btn-glow">DISCOVER RESTAURANTS NEAR YOU</a>
                 </div>
             </div>
         </section>
-        <section class="container" id="hotelGrid">
+        <section class="container" id="restaurantGrid">
             <h2 class="section-title">Popular <span class="neon-text">Restaurants</span></h2>
-            <div class="hotel-grid" id="hotelCardsContainer"></div>
+            <div class="hotel-grid" id="restaurantCardsContainer"></div>
         </section>
 
         <div id="detailsModal" class="details-modal">
@@ -67,7 +67,7 @@
                 <span class="close-btn" onclick="closeDetails()">&times;</span>
         
                 <div id="modalBody">
-                    <h2 id="modalHotelName" class="neon-text gallery-title"></h2>
+                    <h2 id="modalRestaurantName" class="neon-text gallery-title"></h2>
             
                     <div id="modalGallery" class="modal-gallery"></div>
             
