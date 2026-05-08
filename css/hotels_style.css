@@ -315,6 +315,7 @@ body {
     width: 100%; height: 100%;
     background-color: rgba(0, 0, 0, 0.85);
     backdrop-filter: blur(8px);
+    overflow-y: auto;
 }
 
 /* The Box in the Middle */
@@ -329,6 +330,7 @@ body {
     box-shadow: 0 0 20px var(--neon-cyan);
     color: white;
     position: relative;
+    max-height: 85vh;   
 }
 
 .close-btn {
@@ -377,7 +379,7 @@ body {
 }
 
 /* =========================================
-   1. The Teaser Gallery (In Details Modal)
+   1. The Teaser Gallery 
    ========================================= */
 .modal-teaser-gallery {
     display: flex; /* Horizontally aligned images */
@@ -402,7 +404,7 @@ body {
     border-color: var(--neon-cyan);
 }
 
-/* The special 4th item (See More Button) */
+/* The special 4th item  */
 .see-more-container {
     flex: 1; /* Same size as others */
     position: relative;
@@ -440,7 +442,7 @@ body {
 }
 
 /* =========================================
-   2. Full Gallery Viewer Modal (The 2nd Modal)
+   2. Full Gallery Viewer Modal 
    ========================================= */
 .full-gallery-modal {
     display: none; /* Hidden by default */
