@@ -1,5 +1,5 @@
 // =========================================
-// 1. Supabase Connection Setup (Existing)
+// 1. Supabase Connection Setup 
 // =========================================
 const supabaseUrl = 'https://cdcolkoavowjjymzdzud.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkY29sa29hdm93amp5bXpkenVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MDI2NjQsImV4cCI6MjA4Mzk3ODY2NH0.JPzj9fI1pKpPbPxyGqsemjcwpKiu0h046H7aBSURnpM';
@@ -9,7 +9,7 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 let hotels = [];
 
 // =========================================
-// 2. Fetch & Display Logic (Existing/Updated)
+// 2. Fetch & Display Logic 
 // =========================================
 async function fetchHotels() {
     const { data, error } = await supabaseClient
@@ -73,7 +73,7 @@ function selectHotel(hotelName) {
 }
 
 // =========================================
-// 3. Details Modal Logic (CRITICAL REWRITE)
+// 3. Details Modal Logic 
 // =========================================
 async function visitHotel(hotelId) {
     const hotel = hotels.find(h => String(h.id) == String(hotelId));
@@ -115,7 +115,7 @@ async function visitHotel(hotelId) {
                 `;
                 modalGallery.appendChild(seeMoreContainer);
             } 
-            // Normal Case: Photo items 1, 2, 3 (or standard photos for hotels with < 5 images)
+            // Normal Case: Photo items 1, 2, 3 
             else {
                 const img = document.createElement('img');
                 img.src = url;
@@ -175,7 +175,7 @@ window.closeDetails = function() {
 }
 
 // =========================================
-// 4. Full Gallery Modal Logic (The 2nd Modal)
+// 4. Full Gallery Modal Logic 
 // =========================================
 function openFullGallery(hotelId) {
     const hotel = hotels.find(h => h.id == hotelId);
