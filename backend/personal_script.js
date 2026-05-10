@@ -25,6 +25,7 @@ function addDestinationRow(value = '', imageUrl = '') {
 }
 
 function goToHotels() {
+
     // 1. Collect current form data
     const rows = Array.from(document.querySelectorAll('.destination-row'));
     const destinationsData = rows.map(row => {
@@ -32,6 +33,8 @@ function goToHotels() {
         return { val: input.value, img: input.dataset.img || '' };
     });
 
+    const hotelBtn = document.getElementById('hotel-booking-btn');
+    const guideBtn = document.getElementById('guide-booking-btn');
     const draftData = {
         title: document.getElementById('trip-title').value,
         budget: document.getElementById('trip-budget-amount').value,
@@ -41,7 +44,10 @@ function goToHotels() {
         dateMode: currentDateMode,
         dateSingle: document.getElementById('trip-date').value,
         dateStart: document.getElementById('trip-date-start').value,
-        dateEnd: document.getElementById('trip-date-end').value
+        dateEnd: document.getElementById('trip-date-end').value,
+        existingHotel: hotelBtn.dataset.hotel || null,
+        existingGuide: guideBtn.dataset.guide || null,
+        existingGuideEmail: guideBtn.dataset.email || null
     };
 
     // 2. Save to localStorage
@@ -88,6 +94,20 @@ function setDateMode(mode) {
         singleInput.style.display = 'none';
         rangeInput.style.display = 'flex';
     }
+
+    updateDaysFromDates();
+}
+
+function isDateInvalid(dateString) {
+    if (!dateString) return false; 
+    
+    const selectedDate = new Date(dateString);
+    const today = new Date();
+    
+    // Reset "today" to midnight so we can still book trips for today
+    today.setHours(0, 0, 0, 0);
+    
+    return selectedDate < today;
 }
 
 function showSection(sectionId) {
@@ -117,13 +137,14 @@ function openTab(evt, tabName) {
     evt.currentTarget.classList.add("active");
 }
 
-function showTripDetails(title, dest, date, currency, amount, days, guideName) {
+function showTripDetails(title, dest, date, currency, amount, days, guideName,hotelName ) {
     document.getElementById('modalTitle').innerText = title;
     document.getElementById('det-dest').innerText = dest;
     document.getElementById('det-date').innerText = date || "Not set";
     document.getElementById('det-budget').innerText = amount ? `${currency} ${amount}` : "Not specified";
     document.getElementById('det-days').innerText = days ? days + " Days" : "Not specified";
     document.getElementById('det-guide').innerText = guideName || "No Guide Booked";
+    document.getElementById('det-hotel').innerText = hotelName || "No Hotel Booked";
     document.getElementById('detailsModal').style.display = 'flex';
 }
 
@@ -169,6 +190,9 @@ function goToGuides() {
         return { val: input.value, img: input.dataset.img || '' };
     });
 
+    const hotelBtn = document.getElementById('hotel-booking-btn');
+    const guideBtn = document.getElementById('guide-booking-btn');
+
     const draftData = {
         title: document.getElementById('trip-title').value,
         budget: document.getElementById('trip-budget-amount').value,
@@ -178,7 +202,10 @@ function goToGuides() {
         dateMode: currentDateMode,
         dateSingle: document.getElementById('trip-date').value,
         dateStart: document.getElementById('trip-date-start').value,
-        dateEnd: document.getElementById('trip-date-end').value
+        dateEnd: document.getElementById('trip-date-end').value,
+        existingHotel: hotelBtn.dataset.hotel || null,
+        existingGuide: guideBtn.dataset.guide || null,
+        existingGuideEmail: guideBtn.dataset.email || null
     };
     localStorage.setItem('tripDraft', JSON.stringify(draftData));
     localStorage.setItem('isSelectingGuide', 'true');
@@ -214,6 +241,33 @@ function updatePlaceholders() {
     const historyContainer = document.getElementById('history-trips-container');
     document.getElementById('ongoing-placeholder').style.display = activeContainer.children.length === 0 ? 'block' : 'none';
     document.getElementById('past-placeholder').style.display = historyContainer.children.length === 0 ? 'block' : 'none';
+}
+
+function updateDaysFromDates() {
+    const daysInput = document.getElementById('trip-days');
+    
+    if (currentDateMode === 'single') {
+        const singleDate = document.getElementById('trip-date').value;
+        // If a date is picked, set days to 1, otherwise clear it
+        daysInput.value = singleDate ? 1 : '';
+    } else {
+        const start = document.getElementById('trip-date-start').value;
+        const end = document.getElementById('trip-date-end').value;
+
+        if (start && end) {
+            const startDate = new Date(start);
+            const endDate = new Date(end);
+            
+            // Calculate difference in milliseconds
+            const diffInMs = endDate - startDate;
+            // Convert milliseconds to days
+            const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+
+            // We add 1 because if you stay from the 1st to the 2nd, it's a 2-day trip
+            // Math.max ensures we don't show negative numbers if end is before start
+            daysInput.value = diffInDays >= 0 ? Math.floor(diffInDays) + 1 : '';
+        }
+    }
 }
 
 async function saveTrip() {
@@ -257,13 +311,53 @@ async function saveTrip() {
 
         const finalDestString = destinationsArray.join(', ');
 
+        const errorSpan = document.getElementById('date-error');
+        const startInput = document.getElementById('trip-date-start');
+        const endInput = document.getElementById('trip-date-end');
+        const singleInput = document.getElementById('trip-date');
+
+        // RESET STYLES AT THE START OF EVERY SAVE ATTEMPT
+        [startInput, endInput, singleInput].forEach(el => el.style.borderColor = '');
+        errorSpan.style.display = 'none';
+
         let date;
+        let invalidFound = false;
+        let errorMessage = "";
         if (currentDateMode === 'range') {
             const start = document.getElementById('trip-date-start').value;
             const end = document.getElementById('trip-date-end').value;
+            
+            // 1. Check if either date is in the past
+            if (isDateInvalid(start) || isDateInvalid(end)) {
+                invalidFound = true;
+                errorMessage = "Dates cannot be in the past.";
+            } 
+            // 2. Check if End Date is before Start Date
+            else if (start && end && new Date(end) < new Date(start)) {
+                invalidFound = true;
+                errorMessage = "Departure date cannot be before arrival date.";
+            }
+
             date = (start && end) ? `${start} to ${end}` : (start || end || 'TBD');
         } else {
-            date = document.getElementById('trip-date').value || 'TBD';
+            const singleDate = document.getElementById('trip-date').value;
+            if (isDateInvalid(singleDate)) invalidFound = true;
+            date = singleDate || 'TBD';
+        }
+
+        // IF INVALID, SHOW THE SPECIFIC ERROR
+        if (invalidFound) {
+            errorSpan.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${errorMessage}`;
+            errorSpan.style.display = 'block';
+    
+            // Highlight both boxes in red for range errors
+            if (currentDateMode === 'range') {
+                document.getElementById('trip-date-start').style.borderColor = '#ff4d4d';
+                document.getElementById('trip-date-end').style.borderColor = '#ff4d4d';
+            }
+    
+            errorSpan.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return; // Stop the save process
         }
 
         const safeAmount = amount ? parseFloat(amount) : null;
@@ -331,7 +425,17 @@ async function fetchUserTrips() {
     trips.forEach(trip => {
         const card = document.createElement('div');
         card.className = 'trip-card';
-        card.onclick = () => showTripDetails(trip.title, trip.destination, trip.travel_date, trip.currency, trip.budget_amount, trip.duration_days, trip.guide_name);
+        // Inside fetchUserTrips loop
+    card.onclick = () => showTripDetails(
+       trip.title, 
+       trip.destination, 
+       trip.travel_date, 
+       trip.currency, 
+       trip.budget_amount, 
+       trip.duration_days, 
+       trip.guide_name,
+       trip.hotel_name 
+    );
         const isHistory = trip.status === 'Visited';
         const tagClass = isHistory ? 'trip-tag history' : 'trip-tag';
         // Split the saved string back into an array
@@ -392,7 +496,7 @@ function updateProfileAvatar(firstName, lastName, email) {
     avatarImg.onclick = (e) => { e.stopPropagation(); document.getElementById('profilePopup').classList.toggle('show'); };
 }
 
-// --- 3. MODIFIED WINDOW.ONLOAD ---
+
 window.onload = async function() {
     const { data: { user } } = await _supabase.auth.getUser();
     if (user) {
@@ -421,6 +525,26 @@ window.onload = async function() {
             document.getElementById('trip-date-start').value = data.dateStart || '';
             document.getElementById('trip-date-end').value = data.dateEnd || '';
         }
+        // Restore previously selected Hotel from the draft
+        if (data.existingHotel) {
+            const hotelBtn = document.getElementById('hotel-booking-btn');
+            const hotelBtnText = document.getElementById('hotel-btn-text');
+            if (hotelBtn && hotelBtnText) {
+                hotelBtn.dataset.hotel = data.existingHotel;
+                hotelBtnText.innerHTML = `Hotel:<br><span style="color:var(--neon-primary); font-size:0.8rem;">${data.existingHotel}</span>`;
+            }
+        }
+
+        // Restore previously selected Guide from the draft
+        if (data.existingGuide) {
+            const guideBtn = document.getElementById('guide-booking-btn');
+            const guideBtnText = document.getElementById('guide-btn-text');
+            if (guideBtn && guideBtnText) {
+                guideBtn.dataset.guide = data.existingGuide;
+                guideBtn.dataset.email = data.existingGuideEmail;
+                guideBtnText.innerHTML = `Guide:<br><span style="color:var(--neon-primary); font-size:0.8rem;">${data.existingGuide}</span>`;
+            }
+        }
         localStorage.removeItem('tripDraft');
     }
 
@@ -442,7 +566,41 @@ window.onload = async function() {
         localStorage.removeItem('editingRowIndex');
     }
 
-    // ... existing code for restoring draft and guides ...
+    
+    
+    const dateInputs = ['trip-date', 'trip-date-start', 'trip-date-end'];
+
+    dateInputs.forEach(id => {
+        document.getElementById(id).addEventListener('change', function() {
+            const errorSpan = document.getElementById('date-error');
+            const startInput = document.getElementById('trip-date-start');
+            const endInput = document.getElementById('trip-date-end');
+            const singleInput = document.getElementById('trip-date');
+
+            const startVal = startInput.value;
+            const endVal = endInput.value;
+
+            // 1. ALWAYS RESET EVERYTHING FIRST
+            [startInput, endInput, singleInput].forEach(el => el.style.borderColor = '');
+            errorSpan.style.display = 'none';
+
+            // 2. CHECK FOR INDIVIDUAL DATE ERRORS (PAST DATES)
+            if (isDateInvalid(this.value)) {
+                errorSpan.innerHTML = `<i class="fas fa-exclamation-circle"></i> This date has already passed.`;
+                errorSpan.style.display = 'block';
+                this.style.borderColor = '#ff4d4d';
+            } 
+            // 3. CHECK FOR RANGE LOGIC ERRORS
+            else if (currentDateMode === 'range' && startVal && endVal && new Date(endVal) < new Date(startVal)) {
+                errorSpan.innerHTML = `<i class="fas fa-exclamation-circle"></i> Departure cannot be before arrival.`;
+                errorSpan.style.display = 'block';
+                startInput.style.borderColor = '#ff4d4d';
+                endInput.style.borderColor = '#ff4d4d';
+            }
+        // If it passes both checks, the code above already cleared the borders!
+            updateDaysFromDates();
+    });
+});
 
     // CATCH RETURNING HOTEL
     const pickedHotel = localStorage.getItem('selectedHotelName');
