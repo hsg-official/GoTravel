@@ -53,6 +53,10 @@
                 <span class="detail-label"><i class="fas fa-user-tie"></i> Tour Guide</span>
                 <span id="det-guide" class="detail-val" style="color: var(--neon-primary);"></span>
             </div>
+            <div class="detail-row">
+                <span class="detail-label"><i class="fas fa-hotel"></i> Accommodation</span>
+                <span id="det-hotel" class="detail-val" style="color: var(--neon-primary);"></span>
+            </div>
             <button class="plan-btn" style="margin-top: 30px;" onclick="closeTripDetails()">Close Preview</button>
         </div>
     </div>
@@ -200,6 +204,9 @@
                                 <input type="date" id="trip-date-start" class="glass-input" title="Arrival Date">
                                 <input type="date" id="trip-date-end" class="glass-input" title="Departure Date">
                             </div>
+                            <span id="date-error" style="color: #ff4d4d; font-size: 0.8rem; margin-top: 5px; display: none;">
+                                <i class="fas fa-exclamation-circle"></i> This date has already passed.
+                            </span>
                         </div>
                         
                         <div class="input-group">
