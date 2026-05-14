@@ -355,11 +355,9 @@ body {
 /* Styling for the new Modal Gallery */
 .modal-gallery {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Mini-thumbnails */
-    gap: 15px;
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 10px;
     margin-bottom: 25px; /* Space before description */
-    padding-bottom: 15px;
-    border-bottom: 1px solid rgba(0, 255, 255, 0.2); /* Subtle divider */
 }
 
 .gallery-image {
@@ -389,51 +387,54 @@ body {
     border-bottom: 1px solid rgba(0, 255, 255, 0.1);
 }
 
-.teaser-item {
-    flex: 1; /* Stretch to fill space evenly */
-    height: 150px;
-    border-radius: 8px;
+/* Base style for all teaser images */
+.teaser-item, .see-more-container {
+    width: 100%;
+    height: 120px; /* Adjust height to fit your modal */
+    border-radius: 8px; /* Matches the rounded corners in your image */
     object-fit: cover;
-    border: 2px solid transparent;
-    cursor: pointer;
-    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.teaser-item {
+    object-fit: cover;
 }
 
 .teaser-item:hover {
-    transform: translateY(-5px);
-    border-color: var(--neon-cyan);
+    filter: brightness(1.2);
 }
 
-/* The special 4th item  */
 .see-more-container {
-    flex: 1; /* Same size as others */
     position: relative;
-    height: 150px;
-    cursor: pointer;
 }
 
 .see-more-container img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 8px;
-    filter: blur(2px) brightness(40%); /* Blur the background image */
-    border: 2px solid rgba(0, 255, 255, 0.5);
 }
 
 .see-more-overlay {
     position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6); /* Darkens the image */
     display: flex;
-    flex-direction: column;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
     color: white;
-    text-align: center;
-    font-weight: bold;
-    font-size: 1.1rem;
-    background: rgba(0, 0, 0, 0.5); /* Darken further */
-    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: 0.3s;
+}
+
+.see-more-overlay:hover {
+    background: rgba(0, 0, 0, 0.4); /* Lightens slightly on hover */
+}
+
+.see-more-overlay ion-icon {
+    font-size: 1.2rem;
 }
 
 .plus-sign {
@@ -498,4 +499,93 @@ body {
     transform: scale(1.05);
     border-color: var(--neon-cyan);
     box-shadow: 0 0 15px var(--neon-cyan);
+}
+
+.filter-section {
+    background: var(--dark-bg);
+    padding: 20px 10%;
+    display: flex;
+    justify-content: center;
+}
+
+.filter-container {
+    background: var(--glass-bg);
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    gap: 30px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.filter-group label {
+    font-size: 0.8rem;
+    color: var(--neon-cyan);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.filter-group select, .filter-group input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 8px;
+    border-radius: 5px;
+    outline: none;
+}
+
+.filter-group select option {
+    background: var(--dark-bg);
+}
+
+#priceFilter {
+    cursor: pointer;
+    accent-color: var(--neon-cyan);
+}
+
+/* Wishlist Heart Icon */
+.wishlist-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 1.5rem;
+    color: white;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 5px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.3s;
+    z-index: 10;
+}
+
+.wishlist-btn:hover {
+    transform: scale(1.2);
+}
+
+.wishlist-btn.active {
+    color: #ff4d4d; /* Bright red when favorited */
+    text-shadow: 0 0 10px #ff4d4d;
+}
+
+/* Ensure the card is the reference point for the absolute heart */
+.hotel-card {
+    position: relative;
+}
+
+/* Styling for the active state of the filter button */
+#wishlistFilter.active-filter {
+    background: var(--neon-cyan);
+    color: var(--dark-bg);
+    box-shadow: 0 0 15px var(--neon-cyan);
+    border-color: var(--neon-cyan);
 }
