@@ -57,6 +57,36 @@
                 </div>
             </div>
         </section>
+
+        <section class="filter-section">
+            <div class="filter-container">
+                <div class="filter-group">
+                    <label for="cityFilter">City</label>
+                    <select id="cityFilter">
+                        <option value="all">All Cities</option>
+                        <option value="Colombo">Colombo</option>
+                        <option value="Kandy">Kandy</option>
+                        <option value="Galle">Galle</option>
+                        <option value="Ella">Ella</option>
+                    </select>
+                    <label for="sortFilter">Sort By</label>
+                    <select id="sortFilter">
+                        <option value="default">Recommended</option>
+                        <option value="lowHigh">Price: Low to High</option>
+                        <option value="highLow">Price: High to Low</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="priceFilter">Max Price: <span id="priceValue">LKR 100,000</span></label>
+                    <input type="range" id="priceFilter" min="0" max="100000" step="1000" value="100000">
+                    <label>Favorites</label>
+                    <button id="wishlistFilter" class="btn-outline" style="padding: 8px 20px;">Show Liked</button>
+                </div>
+        
+                <button id="resetFilters" class="btn-outline">Reset</button>
+            </div>
+        </section>
         <section class="container" id="hotelGrid">
             <h2 class="section-title">Popular <span class="neon-text">Hotels</span></h2>
             <div class="hotel-grid" id="hotelCardsContainer"></div>
