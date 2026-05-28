@@ -53,13 +53,23 @@
                 <p class="tagline">Have an unforgettable journey!</p>
                 
                 <div class="hero-btns">
-                    <a href="#hotelGrid" class="btn-glow">DISCOVER POPULAR HOTELS</a>
+                    <a href="#hotelGrid" class="btn-glass-neon">DISCOVER POPULAR HOTELS</a>
                 </div>
             </div>
         </section>
 
-        <section class="filter-section">
-            <div class="filter-container">
+        <div class="main-layout">
+            
+            <button id="mobileFilterToggle" class="btn-outline mobile-only-btn">
+                <ion-icon name="funnel-outline"></ion-icon> Filter & Sort
+            </button>
+
+            <aside class="sidebar-filter" id="sidebarFilter">
+                <div class="sidebar-mobile-header">
+                    <h3>Filters</h3>
+                    <span class="close-sidebar-btn" id="closeSidebar">&times;</span>
+                </div>
+
                 <div class="filter-group">
                     <label for="cityFilter">City</label>
                     <select id="cityFilter">
@@ -69,6 +79,9 @@
                         <option value="Galle">Galle</option>
                         <option value="Ella">Ella</option>
                     </select>
+                </div>
+
+                <div class="filter-group">
                     <label for="sortFilter">Sort By</label>
                     <select id="sortFilter">
                         <option value="default">Recommended</option>
@@ -80,17 +93,24 @@
                 <div class="filter-group">
                     <label for="priceFilter">Max Price: <span id="priceValue">LKR 100,000</span></label>
                     <input type="range" id="priceFilter" min="0" max="100000" step="1000" value="100000">
+                </div>
+
+                <div class="filter-group">
                     <label>Favorites</label>
-                    <button id="wishlistFilter" class="btn-outline" style="padding: 8px 20px;">Show Liked</button>
+                    <button id="wishlistFilter" class="btn-outline">Show Liked</button>
                 </div>
         
-                <button id="resetFilters" class="btn-outline">Reset</button>
-            </div>
-        </section>
-        <section class="container" id="hotelGrid">
-            <h2 class="section-title">Popular <span class="neon-text">Hotels</span></h2>
-            <div class="hotel-grid" id="hotelCardsContainer"></div>
-        </section>
+                <button id="resetFilters" class="btn-outline reset-btn">Reset Filters</button>
+            </aside>
+
+            <section class="hotel-results-section" id="hotelGrid">
+                <h2 class="section-title" style="text-align: left; margin-bottom: 30px;">
+                    Popular <span class="neon-text">Hotels</span>
+                </h2>
+                <div class="hotel-grid" id="hotelCardsContainer"></div>
+            </section>
+
+        </div>
 
         <div id="detailsModal" class="details-modal">
             <div class="modal-content">
