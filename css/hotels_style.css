@@ -17,6 +17,8 @@ body {
     background-color: var(--dark-bg);
     color: white;
     overflow-x: hidden;
+    margin: 0;              /* Ensures no default browser margins push things down */
+    padding: 0;
 }
 
 .background-overlay {
@@ -120,12 +122,21 @@ body {
 
 /* Hero Section */
 .hero {
-    height: 85vh;
+    height: 100vh;          /* Force the hero to occupy 100% of the screen height */
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding-top: 80px;
+    box-sizing: border-box;
+    padding-top: 80px;      /* Prevents the navigation bar from blocking content */
+}
+
+.filter-section {
+    background: var(--dark-bg);
+    padding: 40px 10%;      /* Increased padding to give it a clean separation */
+    display: flex;
+    justify-content: center;
+    margin-top: 0;          /* Ensures it starts exactly where the hero ends */
 }
 
 .hero-content h1 {
@@ -162,6 +173,42 @@ body {
 }
 
 .btn-outline:hover { background: white; color: black; }
+
+/* =========================================
+   Custom Glass Neon Hero Button
+   ========================================= */
+.btn-glass-neon {
+    background: rgba(255, 255, 255, 0.05);       /* Subtle glass transparency */
+    backdrop-filter: blur(8px);                  /* Frosty blur effect behind the button */
+    -webkit-backdrop-filter: blur(8px);          /* Safari support */
+    color: #ffffff;                              /* Pure white text */
+    padding: 15px 40px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 2px;                         /* Spreads out text for a premium look */
+    text-decoration: none;
+    text-transform: uppercase;
+    border-radius: 30px;                         /* Keeps the pill shape */
+    border: 2px solid var(--neon-cyan);          /* Crisp neon border line */
+    display: inline-block;
+    transition: all 0.4s ease-in-out;            /* Smooth transition animation for hover states */
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.2), 
+                inset 0 0 10px rgba(0, 243, 255, 0.1); /* Soft initial neon aura */
+}
+
+/* Hover Effects */
+.btn-glass-neon:hover {
+    background: var(--neon-cyan);                /* Fills up with the glowing theme color */
+    color: var(--dark-bg);                       /* Flips text color to dark for high contrast */
+    transform: translateY(-4px);                 /* Micro-interaction: lifts button up slightly */
+    box-shadow: 0 0 25px var(--neon-cyan),       /* Intense outer glow */
+                0 0 50px rgba(0, 243, 255, 0.4); /* Faded deeper secondary aura */
+}
+
+/* Active Click Effect */
+.btn-glass-neon:active {
+    transform: translateY(-1px);                 /* Lowers slightly when physically clicked */
+}
 
 /* Hotel Grid */
 .container { padding: 80px 10%; background: var(--dark-bg); }
@@ -354,10 +401,13 @@ body {
 
 /* Styling for the new Modal Gallery */
 .modal-gallery {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr); 
-    gap: 10px;
-    margin-bottom: 25px; /* Space before description */
+    display: flex;             
+    justify-content: center;   /* Automatically centers items horizontally */
+    align-items: center;       /* Aligns items vertically */
+    flex-wrap: wrap;           /* Allows items to wrap nicely if needed */
+    gap: 15px;                 
+    margin-bottom: 25px; 
+    width: 100%;               /* Ensures it uses the full width of the modal */
 }
 
 .gallery-image {
@@ -389,10 +439,11 @@ body {
 
 /* Base style for all teaser images */
 .teaser-item, .see-more-container {
-    width: 100%;
-    height: 120px; /* Adjust height to fit your modal */
-    border-radius: 8px; /* Matches the rounded corners in your image */
+    width: 120px;               /* Set a fixed square base width */
+    height: 120px;              /* Set a fixed square base height */
+    border-radius: 8px; 
     object-fit: cover;
+    flex-shrink: 0;             /* Prevents the browser from squeezing the photos */
 }
 
 .teaser-item {
@@ -479,15 +530,19 @@ body {
 
 /* The grid view for ALL photos */
 .full-gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    display: flex;          
+    flex-wrap: wrap;        /* Allows items to move to the next row if space runs out */
     gap: 20px;
     margin-top: 25px;
 }
 
 .full-gallery-img {
-    width: 100%;
-    height: 180px;
+    /* flex: grow shrink basis */
+    /* 1 means items grow equally; 280px is the ideal minimum base width before wrapping */
+    flex: 1 1 280px;        
+    
+    height: 200px;          /* Slightly adjusted height for a better widescreen landscape ratio */
+    max-width: calc(33.333% - 14px); /* Fallback to guarantee a clean maximum of 3 items per row on large displays */
     object-fit: cover;
     border-radius: 10px;
     border: 3px solid transparent;
@@ -499,6 +554,13 @@ body {
     transform: scale(1.05);
     border-color: var(--neon-cyan);
     box-shadow: 0 0 15px var(--neon-cyan);
+}
+
+/* On smaller screens, allow images to take up half the row or full width */
+@media (max-width: 768px) {
+    .full-gallery-img {
+        max-width: 100%; /* Allows it to fluidly drop down to 2 or 1 per row */
+    }
 }
 
 .filter-section {
@@ -588,4 +650,195 @@ body {
     color: var(--dark-bg);
     box-shadow: 0 0 15px var(--neon-cyan);
     border-color: var(--neon-cyan);
+}
+
+/* The base animation that creates the shifting light/grey pulse effect */
+@keyframes skeleton-glow {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.skeleton-card {
+    background: var(--glass-bg);
+    border-radius: 15px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    pointer-events: none; /* Prevents users from clicking on a loading card */
+}
+
+/* Base style for every animated placeholder element inside the card */
+.skeleton-box {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.05) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-glow 1.5s infinite linear;
+    border-radius: 4px;
+}
+
+/* Match the exact size of hotel images */
+.skeleton-img {
+    width: 100%;
+    height: 220px;
+    border-radius: 15px 15px 0 0;
+}
+
+/* Padding container matching .hotel-info layout */
+.skeleton-info {
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Title placeholder */
+.skeleton-title {
+    width: 70%;
+    height: 20px;
+}
+
+/* City/Subtitle placeholder */
+.skeleton-text {
+    width: 40%;
+    height: 14px;
+}
+
+/* Button placeholder */
+.skeleton-btn {
+    width: 100%;
+    height: 45px;
+    margin-top: 15px;
+    border-radius: 4px;
+}
+
+/* =========================================
+   6. Sidebar Grid Layout Configuration 
+   ========================================= */
+
+/* The main layout splitting sidebar (280px) and grid contents */
+.main-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 40px;
+    padding: 60px 10%;
+    background: var(--dark-bg);
+    align-items: start;
+}
+
+/* Redefining your main grid section context padding */
+.hotel-results-section {
+    width: 100%;
+}
+
+/* Glassmorphism Sidebar Panel */
+.sidebar-filter {
+    background: var(--glass-bg);
+    padding: 30px 25px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    
+    /* Keeps the sidebar fixed vertically when scrolling down */
+    position: sticky;
+    top: 110px; 
+    z-index: 10;
+}
+
+/* Forcing all sidebar components to adapt smoothly */
+.sidebar-filter .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.sidebar-filter select, 
+.sidebar-filter input, 
+.sidebar-filter button {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.sidebar-filter .reset-btn {
+    margin-top: 10px;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Hide mobile interfaces by default on computers */
+.mobile-only-btn, .sidebar-mobile-header {
+    display: none;
+}
+
+@media (max-width: 992px) {
+    /* Break down layout back into a single standard column */
+    .main-layout {
+        grid-template-columns: 1fr;
+        padding: 30px 5%;
+    }
+
+    /* Expose mobile trigger elements */
+    .mobile-only-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        padding: 14px;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--neon-cyan);
+        border-color: var(--neon-cyan);
+        font-weight: 600;
+        text-transform: uppercase;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    /* Morph standard panel into hidden side drawer */
+    .sidebar-filter {
+        position: fixed;
+        top: 0;
+        left: -320px; /* Completely hides sidebar off-screen left */
+        width: 280px;
+        height: 100vh;
+        background: #0d0e15; /* Opaque background over content */
+        border-radius: 0;
+        border-right: 1px solid var(--neon-cyan);
+        box-shadow: 0 0 30px rgba(0, 243, 255, 0.15);
+        z-index: 2000; /* Forces drawer above nav-bar and details modal */
+        transition: left 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        overflow-y: auto;
+    }
+
+    /* Dynamic selector to slide drawer forward */
+    .sidebar-filter.open {
+        left: 0;
+    }
+
+    .sidebar-mobile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 15px;
+        margin-bottom: 10px;
+    }
+
+    .sidebar-mobile-header h3 {
+        color: var(--neon-cyan);
+    }
+
+    .close-sidebar-btn {
+        font-size: 2rem;
+        color: white;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .close-sidebar-btn:hover {
+        color: var(--neon-cyan);
+    }
 }
