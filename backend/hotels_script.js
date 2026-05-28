@@ -1,382 +1,148 @@
-// =========================================
-// 1. Supabase Connection Setup 
-// =========================================
-const supabaseUrl = 'https://cdcolkoavowjjymzdzud.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkY29sa29hdm93amp5bXpkenVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MDI2NjQsImV4cCI6MjA4Mzk3ODY2NH0.JPzj9fI1pKpPbPxyGqsemjcwpKiu0h046H7aBSURnpM';
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-const cityFilter = document.getElementById('cityFilter');
-const priceFilter = document.getElementById('priceFilter');
-const priceValueLabel = document.getElementById('priceValue');
-const resetBtn = document.getElementById('resetFilters');
-const sortFilter = document.getElementById('sortFilter');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoTravel | Hotels</title>
+    <link rel="stylesheet" href="../css/hotels_style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-overlay"></div>
 
-// Global variable to hold our data
-let hotels = [];
-let favoritesOnly = false; 
-const wishlistBtn = document.getElementById('wishlistFilter');
-
-// =========================================
-// 2. Fetch & Display Logic 
-// =========================================
-async function fetchHotels() {
-    const { data, error } = await supabaseClient
-        .from('services')
-        .select('*')
-        .eq('service_type', 'hotel');
-
-    if (error) {
-        console.error('Error fetching hotels:', error);
-        return;
-    }
-    
-    // Save the data to our global list
-    hotels = data; 
-    displayHotels(data);
-}
-
-function applyFilters() {
-    const selectedCity = cityFilter.value;
-    const maxPrice = parseInt(priceFilter.value);
-    
-    // Get the current wishlist IDs from localStorage
-    const wishlist = JSON.parse(localStorage.getItem('hotelWishlist')) || [];
-
-    // Update the label text
-    priceValueLabel.innerText = `LKR ${maxPrice.toLocaleString()}`;
-
-    let filtered = hotels.filter(hotel => {
-        const matchesCity = (selectedCity === 'all' || hotel.city === selectedCity);
-        const hotelPrice = parseInt(hotel.price) || 0;
-        const matchesPrice = hotelPrice <= maxPrice;
-        
-        
-        const matchesWishlist = favoritesOnly ? wishlist.includes(String(hotel.id)) : true;
-
-        return matchesCity && matchesPrice && matchesWishlist;
-    });
-
-    const sortedAndFiltered = sortHotels(filtered);
-    displayHotels(sortedAndFiltered);
-}
-function sortHotels(hotelList) {
-    const sortValue = sortFilter.value;
-
-    if (sortValue === 'lowHigh') {
-        return hotelList.sort((a, b) => (parseInt(a.price) || 0) - (parseInt(b.price) || 0));
-    } else if (sortValue === 'highLow') {
-        return hotelList.sort((a, b) => (parseInt(b.price) || 0) - (parseInt(a.price) || 0));
-    }
-
-    return hotelList; // Return as is if "default" is selected
-}
-
-window.onload = async function() {
-    const { data: { user }, error } = await _supabase.auth.getUser();
-    if (user) {
-        const fName = user.user_metadata.first_name || "Traveler";
-        const lName = user.user_metadata.last_name || "";
-        const email = user.email;
-        updateProfileAvatar(fName, lName, email);
-    } else {
-        window.location.href = 'auth.html'; 
-    }
-}
-
-function displayHotels(hotelList) {
-    const container = document.getElementById('hotelCardsContainer');
-    if (!container) return;
-    container.innerHTML = ""; 
-
-    // Get current wishlist from localStorage to check status
-    const wishlist = JSON.parse(localStorage.getItem('hotelWishlist')) || [];
-
-    hotelList.forEach(hotel => {
-        const imageUrl = (hotel.photo_urls && hotel.photo_urls.length > 0) 
-                         ? hotel.photo_urls[0] 
-                         : 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg';
-
-        // Check if this specific hotel ID is in our wishlist
-        const isFavorited = wishlist.includes(String(hotel.id));
-
-        const card = document.createElement('div');
-        card.className = 'hotel-card';
-
-        card.innerHTML = `
-            <div class="wishlist-btn ${isFavorited ? 'active' : ''}" onclick="toggleWishlist(event, '${hotel.id}')">
-                <ion-icon name="${isFavorited ? 'heart' : 'heart-outline'}"></ion-icon>
-            </div>
-            <img src="${imageUrl}" class="hotel-img" alt="${hotel.service_name}">
-            <div class="hotel-info">
-                <h3>${hotel.service_name}</h3>
-                <p style="opacity: 0.7; font-size: 0.9rem;">${hotel.city || 'Sri Lanka'}</p>
-                <button class="btn-explore" onclick="visitHotel('${hotel.id}')">View Details</button>
-            </div>
-        `;
-        container.appendChild(card);
-    });
-}
-
-function toggleWishlist(event, hotelId) {
-    // Prevent the click from opening the modal (since the button is inside the card)
-    event.stopPropagation();
-
-    // 1. Get existing wishlist or empty array
-    let wishlist = JSON.parse(localStorage.getItem('hotelWishlist')) || [];
-
-    // 2. Add or Remove the ID
-    const index = wishlist.indexOf(String(hotelId));
-    if (index === -1) {
-        wishlist.push(String(hotelId)); // Save it
-    } else {
-        wishlist.splice(index, 1); // Remove it
-    }
-
-    // 3. Save back to localStorage
-    localStorage.setItem('hotelWishlist', JSON.stringify(wishlist));
-
-    // 4. Update the UI visually without refreshing the whole grid
-    const btn = event.currentTarget;
-    const icon = btn.querySelector('ion-icon');
-    
-    if (wishlist.includes(String(hotelId))) {
-        btn.classList.add('active');
-        icon.setAttribute('name', 'heart');
-    } else {
-        btn.classList.remove('active');
-        icon.setAttribute('name', 'heart-outline');
-    }
-}
-
-function selectHotel(hotelName) {
-    // Save the selection
-    localStorage.setItem('selectedHotelName', hotelName);
-    // Go back to dashboard
-    window.location.href = 'personal.html';
-}
-
-// =========================================
-// 3. Details Modal Logic 
-// =========================================
-async function visitHotel(hotelId) {
-    const hotel = hotels.find(h => String(h.id) == String(hotelId));
-    if (!hotel) { console.error("Hotel not found!"); return; }
-
-    // Define the elements we will need
-    const modal = document.getElementById('detailsModal');
-    const modalHotelName = document.getElementById('modalHotelName');
-    const modalGallery = document.getElementById('modalGallery'); // Ensure this ID exists in hotels.html
-    const modalInfoContainer = document.getElementById('modalInfoContainer'); // Ensure this ID exists
-
-    // 1. Set the Modal Title
-    modalHotelName.innerText = hotel.service_name;
-
-    // 2. Teaser Gallery Logic
-modalGallery.innerHTML = ''; 
-
-const photos = hotel.photo_urls || [];
-const numPhotos = photos.length;
-
-if (numPhotos > 0) {
-    // Take the first 4 photos to show in the preview
-    const teaserPhotos = photos.slice(0, 4); 
-
-    teaserPhotos.forEach((url, index) => {
-        // If there are more than 4 photos total, and we are on the 4th photo (index 3)
-        if (numPhotos > 4 && index === 3) {
-            const seeMoreContainer = document.createElement('div');
-            seeMoreContainer.className = 'see-more-container';
-            seeMoreContainer.onclick = () => openFullGallery(hotelId); 
-
-            seeMoreContainer.innerHTML = `
-                <img src="${url}" alt="More Photos">
-                <div class="see-more-overlay">
-                    <span class="plus-sign">+${numPhotos - 3}</span>
+    <header>
+        <nav class="glass-nav">
+            <div class="logo-container">
+                <div class="logo-circle">
+                    <img src="../src/images/GoTravels.png" alt="GoTravel Logo" class="logo-img">
                 </div>
-            `;
-            modalGallery.appendChild(seeMoreContainer);
-        } 
-        else {
-            // Normal Case: Display the image
-            const img = document.createElement('img');
-            img.src = url;
-            img.alt = `${hotel.service_name} teaser`;
-            img.className = 'teaser-item';
-            modalGallery.appendChild(img);
-        }
-    });
-} else {
-    modalGallery.innerHTML = '<p style="opacity:0.6;">No photos available.</p>';
-}
-    
-    // 3. Set Text Info
-    modalInfoContainer.innerHTML = `
-        <div class="modal-info-item">
-            <b>Description</b>
-            <p>${hotel.description || 'No description provided.'}</p>
-        </div>
-        <div class="modal-info-item">
-            <b>Location & Address</b>
-            <p>${hotel.address || 'Address not listed'}, ${hotel.city}</p>
-        </div>
-        <div class="modal-info-item">
-            <b>Contact Number</b>
-            <p>${hotel.contact || 'Not available'}</p>
-        </div>
-        <div class="modal-info-item">
-            <b>Price Range</b>
-            <p>LKR ${hotel.price || 'N/A'}</p>
-        </div>
-    `;
+                <span class="logo-text">Go<span>Travel</span></span>
+            </div>
 
-    modalInfoContainer.innerHTML += `
-        <button class="btn-glow" style="width:100%; margin-top:20px;" 
-                onclick="selectHotel('${hotel.service_name}')">
-            Book This Hotel
-        </button>
-    `;
+            <div class="search-box">
+                <ion-icon name="search-outline"></ion-icon>
+                <input type="text" id="hotelSearch" placeholder="Search">
+            </div>
+            <ul class="nav-links">
+                <li><a href="places.html">Destinations</a></li>
+                <li class="dropdown" style="position: relative;"> <a href="javascript:void(0)" id="transportBtn">Transport</a>
+                    <div class="dropdown-content" id="transportMenu">
+                        <a href="buses.html" class="dropdown-item">
+                            <ion-icon name="bus-outline"></ion-icon>
+                            <span>Buses</span>
+                        </a>
+                        <a href="cabs.html" class="dropdown-item">
+                            <ion-icon name="car-outline"></ion-icon>
+                            <span>Cabs</span>
+                        </a>
+                    </div>
+                </li>
+                <li><a href="../index.html">Home</a></li>
+            </ul>
+            
+        </nav>
+    </header>
 
-    // 4. Open the primary modal
-    modal.style.display = "block";
-}
+    <main>
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Find Your Perfect Escape</h1>
+                <p class="subtitle">Discover top-rated hotels across Sri Lanka</p>
+                <p class="tagline">Have an unforgettable journey!</p>
+                
+                <div class="hero-btns">
+                    <a href="#hotelGrid" class="btn-glass-neon">DISCOVER POPULAR HOTELS</a>
+                </div>
+            </div>
+        </section>
 
-// Add this to hotels_script.js
-document.getElementById('hotelSearch').addEventListener('input', (e) => {
-    const searchTerm = e.target.value.toLowerCase();
-    const filtered = hotels.filter(h => 
-        h.service_name.toLowerCase().includes(searchTerm) || 
-        h.city.toLowerCase().includes(searchTerm)
-    );
-    displayHotels(filtered);
-});
+        <div class="main-layout">
+            
+            <button id="mobileFilterToggle" class="btn-outline mobile-only-btn">
+                <ion-icon name="funnel-outline"></ion-icon> Filter & Sort
+            </button>
 
-// Function to close the main details modal
-window.closeDetails = function() {
-    document.getElementById('detailsModal').style.display = "none";
-}
+            <aside class="sidebar-filter" id="sidebarFilter">
+                <div class="sidebar-mobile-header">
+                    <h3>Filters</h3>
+                    <span class="close-sidebar-btn" id="closeSidebar">&times;</span>
+                </div>
 
-// =========================================
-// 4. Full Gallery Modal Logic 
-// =========================================
-function openFullGallery(hotelId) {
-    const hotel = hotels.find(h => h.id == hotelId);
-    if (!hotel) return;
+                <div class="filter-group">
+                    <label for="cityFilter">City</label>
+                    <select id="cityFilter">
+                        <option value="all">All Cities</option>
+                        <option value="Colombo">Colombo</option>
+                        <option value="Kandy">Kandy</option>
+                        <option value="Galle">Galle</option>
+                        <option value="Ella">Ella</option>
+                    </select>
+                </div>
 
-    const fullModal = document.getElementById('fullGalleryModal');
-    const fullGrid = document.getElementById('fullGalleryGrid');
-    const fullTitle = document.getElementById('fullGalleryTitle');
+                <div class="filter-group">
+                    <label for="sortFilter">Sort By</label>
+                    <select id="sortFilter">
+                        <option value="default">Recommended</option>
+                        <option value="lowHigh">Price: Low to High</option>
+                        <option value="highLow">Price: High to Low</option>
+                    </select>
+                </div>
 
-    // 1. Set Title
-    fullTitle.innerText = `${hotel.service_name} - All Photos`;
+                <div class="filter-group">
+                    <label for="priceFilter">Max Price: <span id="priceValue">LKR 100,000</span></label>
+                    <input type="range" id="priceFilter" min="0" max="100000" step="1000" value="100000">
+                </div>
 
-    // 2. Clear old grid and populate with ALL photos
-    fullGrid.innerHTML = '';
-    
-    if (hotel.photo_urls && hotel.photo_urls.length > 0) {
-        hotel.photo_urls.forEach((url) => {
-            const img = document.createElement('img');
-            img.src = url;
-            img.alt = "Hotel Photo Full View";
-            img.className = 'full-gallery-img';
-            fullGrid.appendChild(img);
-        });
-    }
-
-    // 3. Open the second modal
-    fullModal.style.display = "block";
-}
-
-function closeFullGallery() {
-    document.getElementById('fullGalleryModal').style.display = "none";
-}
-
-// 1. Get the search input element
-const searchInput = document.getElementById('hotelSearch');
-
-// 2. Listen for the 'Enter' key to trigger the search
-searchInput.addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-        const searchTerm = searchInput.value.toLowerCase().trim();
+                <div class="filter-group">
+                    <label>Favorites</label>
+                    <button id="wishlistFilter" class="btn-outline">Show Liked</button>
+                </div>
         
-        // 3. Filter the global hotels array
-        const filteredHotels = hotels.filter(hotel => 
-            hotel.service_name.toLowerCase().includes(searchTerm)
-        );
+                <button id="resetFilters" class="btn-outline reset-btn">Reset Filters</button>
+            </aside>
 
-        // 4. Check if results were found
-        if (filteredHotels.length > 0) {
-            // Display only the matching hotels
-            displayHotels(filteredHotels);
+            <section class="hotel-results-section" id="hotelGrid">
+                <h2 class="section-title" style="text-align: left; margin-bottom: 30px;">
+                    Popular <span class="neon-text">Hotels</span>
+                </h2>
+                <div class="hotel-grid" id="hotelCardsContainer"></div>
+            </section>
+
+        </div>
+
+        <div id="detailsModal" class="details-modal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeDetails()">&times;</span>
+        
+                <div id="modalBody">
+                    <h2 id="modalHotelName" class="neon-text gallery-title"></h2>
             
-            // Optional: Smoothly scroll to the results section
-            document.getElementById('hotelGrid').scrollIntoView({ behavior: 'smooth' });
-        } else {
-            // Show the popup if no hotel exists
-            document.getElementById('searchAlertModal').style.display = "block";
+                    <div id="modalGallery" class="modal-gallery"></div>
             
-            // Reset to show all hotels again
-            displayHotels(hotels);
-        }
-    }
-});
+                    <div id="modalInfoContainer"></div> </div>
+            </div>
+        </div>
 
-searchInput.addEventListener('input', function () {
-    if (searchInput.value === "") {
-        displayHotels(hotels); // Show everything again if the box is empty
-    }
-});
+        <div id="fullGalleryModal" class="full-gallery-modal">
+            <div class="full-gallery-content">
+                <span class="full-gallery-close" onclick="closeFullGallery()">&times;</span>
+                <h2 id="fullGalleryTitle" class="neon-text" style="text-align:center;">All Photos</h2>
+                <div id="fullGalleryGrid" class="full-gallery-grid">
+                    </div>
+            </div>
+        </div>
 
-function closeSearchAlert() {
-    document.getElementById('searchAlertModal').style.display = "none";
-}
-
-// =========================================
-// 5. Global Cleanup and Initialization
-// =========================================
-window.onclick = function(event) {
-    const detailsModal = document.getElementById('detailsModal');
-    const galleryModal = document.getElementById('fullGalleryModal');
-    
-    if (event.target == detailsModal) {
-        detailsModal.style.display = "none";
-    }
-    
-    if (event.target == galleryModal) {
-        galleryModal.style.display = "none";
-    }
-}
-
-document.addEventListener('DOMContentLoaded', fetchHotels);
-
-// Listen for changes
-cityFilter.addEventListener('change', applyFilters);
-priceFilter.addEventListener('input', applyFilters);
-sortFilter.addEventListener('change', applyFilters);
-
-wishlistBtn.addEventListener('click', () => {
-    // Toggle the state
-    favoritesOnly = !favoritesOnly;
-
-    // Update button appearance
-    if (favoritesOnly) {
-        wishlistBtn.classList.add('active-filter');
-        wishlistBtn.innerText = "Showing Liked";
-    } else {
-        wishlistBtn.classList.remove('active-filter');
-        wishlistBtn.innerText = "Show Liked";
-    }
-
-    // Run the filters again
-    applyFilters();
-});
-
-// Update the Reset button logic to also turn off favorites
-resetBtn.addEventListener('click', () => {
-    cityFilter.value = 'all';
-    priceFilter.value = 100000;
-    sortFilter.value = 'default';
-    favoritesOnly = false; // Reset the favorite state
-    wishlistBtn.classList.remove('active-filter');
-    wishlistBtn.innerText = "Show Liked";
-    applyFilters();
-});
-
+        <!-- Custom Alert Modal -->
+        <div id="searchAlertModal" class="details-modal">
+            <div class="modal-content" style="text-align: center; max-width: 400px;">
+                <h2 class="neon-text">Not Found</h2>
+                <p style="margin: 20px 0;">Sorry, that hotel is not available.</p>
+                <button class="btn-explore" onclick="closeSearchAlert()">OK</button>
+            </div>
+        </div>
+    </main>
+    <script src="../backend/hotels_script.js"></script>
+</body>
+</html>
