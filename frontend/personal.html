@@ -181,9 +181,15 @@
                             <label>Destinations</label>
                             <div id="destinations-list">
                                 <div class="destination-row">
+                                    <button type="button" class="drag-handle" draggable="true" title="Drag to reorder">
+                                        <i class="fas fa-grip-vertical"></i>
+                                    </button>
+
                                     <input type="text" class="glass-input trip-destination" placeholder="Select destination..." readonly>
+
                                     <button type="button" class="glass-btn search-dest-btn" onclick="goToPlaces(this)">
-                                        <i class="fas fa-location-dot"></i> </button>
+                                        <i class="fas fa-location-dot"></i>
+                                    </button>
                                 </div>
                             </div>
                             <button type="button" id="add-destination-btn" class="add-mini-btn">
