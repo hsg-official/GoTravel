@@ -12,16 +12,85 @@ function addDestinationRow(value = '', imageUrl = '') {
     const list = document.getElementById('destinations-list');
     const newRow = document.createElement('div');
     newRow.className = 'destination-row';
-    
+
     newRow.innerHTML = `
+        <button type="button" class="drag-handle" draggable="true" title="Drag to reorder">
+            <i class="fas fa-grip-vertical"></i>
+        </button>
+
         <input type="text" class="glass-input trip-destination" 
                placeholder="Select destination..." 
                value="${value}" 
                data-img="${imageUrl}" readonly>
+
         <button type="button" class="glass-btn search-dest-btn" onclick="goToPlaces(this)">
-            <i class="fas fa-location-dot"></i> </button>
+            <i class="fas fa-location-dot"></i>
+        </button>
     `;
+
     list.appendChild(newRow);
+    initializeDestinationRowDrag(newRow);
+}
+
+let draggedDestinationRow = null;
+
+function initializeDestinationRowDrag(row) {
+    const handle = row.querySelector('.drag-handle');
+
+    handle.addEventListener('dragstart', function () {
+        draggedDestinationRow = row;
+        row.classList.add('dragging');
+    });
+
+    handle.addEventListener('dragend', function () {
+        row.classList.remove('dragging');
+        draggedDestinationRow = null;
+        updateDestinationStopNumbers();
+    });
+}
+
+function setupDestinationDropArea() {
+    const list = document.getElementById('destinations-list');
+
+    list.addEventListener('dragover', function (event) {
+        event.preventDefault();
+
+        const rowAfterCursor = getRowAfterCursor(list, event.clientY);
+
+        if (!draggedDestinationRow) return;
+
+        if (rowAfterCursor == null) {
+            list.appendChild(draggedDestinationRow);
+        } else {
+            list.insertBefore(draggedDestinationRow, rowAfterCursor);
+        }
+    });
+}
+
+function getRowAfterCursor(list, mouseY) {
+    const rows = [...list.querySelectorAll('.destination-row:not(.dragging)')];
+
+    return rows.reduce((closest, row) => {
+        const box = row.getBoundingClientRect();
+        const offset = mouseY - box.top - box.height / 2;
+
+        if (offset < 0 && offset > closest.offset) {
+            return {
+                offset: offset,
+                element: row
+            };
+        }
+
+        return closest;
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+function updateDestinationStopNumbers() {
+    const rows = document.querySelectorAll('.destination-row');
+
+    rows.forEach((row, index) => {
+        row.dataset.stopNumber = index + 1;
+    });
 }
 
 function goToHotels() {
@@ -627,6 +696,15 @@ window.onload = async function() {
         localStorage.removeItem('selectedGuideEmail');
     }
 };
+
+// SETUP DRAG-AND-DROP FOR DESTINATION ORDERING
+setupDestinationDropArea();
+
+document.querySelectorAll('.destination-row').forEach(row => {
+    initializeDestinationRowDrag(row);
+});
+
+updateDestinationStopNumbers();
 
 // ADD BUTTON EVENT LISTENER
 document.getElementById('add-destination-btn').addEventListener('click', function() {
