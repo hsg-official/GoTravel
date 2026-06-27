@@ -26,10 +26,31 @@ function addDestinationRow(value = '', imageUrl = '') {
         <button type="button" class="glass-btn search-dest-btn" onclick="goToPlaces(this)">
             <i class="fas fa-location-dot"></i>
         </button>
+
+        <button type="button" class="glass-btn remove-stop-btn" onclick="removeDestinationRow(this)" title="Remove this stop">
+            <i class="fas fa-trash"></i>
+        </button>
     `;
 
     list.appendChild(newRow);
     initializeDestinationRowDrag(newRow);
+}
+
+// Function to discard a target stop and recalculate indexes
+function removeDestinationRow(btnElement) {
+    // Select the parent .destination-row container block
+    const rowToDelete = btnElement.parentElement;
+    rowToDelete.remove();
+    
+    // Safety fallback check: verify if any inputs remain
+    const remainingRows = document.querySelectorAll('.destination-row');
+    if (remainingRows.length === 0) {
+        addDestinationRow(); // Resets to one clean blank row instantly
+    }
+    
+    // Re-index layout orders and duration properties
+    updateDestinationStopNumbers();
+    updateDaysFromDates();
 }
 
 let draggedDestinationRow = null;
@@ -377,6 +398,8 @@ async function saveTrip() {
             alert("Please provide a Title and at least one Destination!");
             return;
         }
+
+        
 
         const finalDestString = destinationsArray.join(', ');
 
