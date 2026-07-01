@@ -136,6 +136,19 @@
             </div>
 
             <div id="trips-section">
+                <section class="welcome-card">
+                    <div>
+                        <p id="dashboardGreeting" class="welcome-greeting">Good day, Traveler.</p>
+                        <h2 id="dashboardUserName">Welcome back</h2>
+                        <p id="dashboardNextTrip" class="welcome-next-trip">Your next trip details will appear here.</p>
+                    </div>
+
+                    <div class="welcome-stat">
+                        <span id="dashboardTripCount">0</span>
+                        <p>Upcoming Trips</p>
+                    </div>
+                 </section>
+
                 <div class="trip-tabs">
                     <button class="tab-btn active" onclick="openTab(event, 'ongoing')">Active Explorations</button>
                     <button class="tab-btn" onclick="openTab(event, 'past')">Travel History</button>
@@ -171,70 +184,74 @@
                     <h2 style="color: var(--neon-primary); margin-bottom: 10px;"><i class="fas fa-compass"></i> Plan Your Next Adventure</h2>
                     <p style="color: var(--text-muted); margin-bottom: 20px;">Fill in the details to blueprint your future journey.</p>
                     
-                    <div class="planner-grid">
-                        <div class="input-group">
-                            <label>Adventure Title</label>
-                            <input type="text" id="trip-title"  class="glass-input" placeholder="e.g. Summer Vacation 2026" autocomplete="off" >
-                            
-                        </div>
-                        <div class="input-group">
-                            <label>Destinations</label>
-                            <div id="destinations-list">
-                                <div class="destination-row">
-                                    <button type="button" class="drag-handle" draggable="true" title="Drag to reorder">
-                                        <i class="fas fa-grip-vertical"></i>
-                                    </button>
+            <div class="planner-grid">
+                <div class="input-group planner-field-title">
+                    <label>Adventure Title</label>
+                    <input type="text" id="trip-title" class="glass-input" placeholder="e.g. Summer Vacation 2026" autocomplete="off">
+                </div>
 
-                                    <input type="text" class="glass-input trip-destination" placeholder="Select destination..." readonly>
+                <div class="input-group planner-field-destinations">
+                    <label>Destinations</label>
 
-                                    <button type="button" class="glass-btn search-dest-btn" onclick="goToPlaces(this)">
-                                        <i class="fas fa-location-dot"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <button type="button" id="add-destination-btn" class="add-mini-btn">
-                                <i class="fas fa-plus-circle"></i> Add Another Stop
+                    <div id="destinations-list">
+                        <div class="destination-row">
+                            <button type="button" class="drag-handle" draggable="true" title="Drag to reorder">
+                                <i class="fas fa-grip-vertical"></i>
+                            </button>
+
+                            <input type="text" class="glass-input trip-destination" placeholder="Select destination..." readonly>
+
+                            <button type="button" class="glass-btn search-dest-btn" onclick="goToPlaces(this)">
+                                <i class="fas fa-location-dot"></i>
+                            </button>
+
+                            <button type="button" class="glass-btn remove-stop-btn" onclick="removeDestinationRow(this)" title="Remove this stop">
+                                <i class="fas fa-trash"></i>
                             </button>
                         </div>
+                    </div>
 
-                        <div class="input-group">
-                            <label>Target Date</label>
-                            <div class="date-type-tabs">
-                                <div id="tab-single" class="date-tab active" onclick="setDateMode('single')">Specific Date</div>
-                                <div id="tab-range" class="date-tab" onclick="setDateMode('range')">Flexible Range</div>
-                            </div>
-                            <div id="input-single">
-                                <input type="date" id="trip-date" class="glass-input">
-                            </div>
-                            <div id="input-range" style="display: none; gap: 10px;">
-                                <input type="date" id="trip-date-start" class="glass-input" title="Arrival Date">
-                                <input type="date" id="trip-date-end" class="glass-input" title="Departure Date">
-                            </div>
-                            <span id="date-error" style="color: #ff4d4d; font-size: 0.8rem; margin-top: 5px; display: none;">
-                                <i class="fas fa-exclamation-circle"></i> This date has already passed.
-                            </span>
-                        </div>
-                        
-                        <div class="input-group">
-                            <label>Estimated Budget</label>
-                            <div style="display: flex; gap: 10px;">
-                                <select id="trip-currency" class="glass-select" style="width: 80px; flex-shrink: 0;">
-                                    <option value="LKR">LKR</option>
-                                    <option value="USD">USD</option>
-                                    <option value="EUR">EUR</option>
-                                    <option value="GBP">GBP</option>
-                                </select>
-                                <input type="number" id="trip-budget-amount" class="glass-input" style="flex: 1; min-width: 0;" placeholder="Amount" autocomplete="off" >
-                               
-                            </div>
-                        </div>
+                    <button type="button" id="add-destination-btn" class="add-mini-btn">
+                        <i class="fas fa-plus-circle"></i> Add Another Stop
+                    </button>
+                </div>
 
-                        <div class="input-group">
-                            <label>Number of Days</label>
-                            <input type="number" id="trip-days" class="glass-input" placeholder="e.g. 5"  autocomplete="off">
-                            
+                <div class="input-group planner-field-date">
+                    <label>Target Date</label>
+                    <div class="date-type-tabs">
+                        <div id="tab-single" class="date-tab active" onclick="setDateMode('single')">Specific Date</div>
+                        <div id="tab-range" class="date-tab" onclick="setDateMode('range')">Flexible Range</div>
+                    </div>
+                    <div id="input-single">
+                        <input type="date" id="trip-date" class="glass-input">
+                    </div>
+                    <div id="input-range" style="display: none; gap: 10px;">
+                        <input type="date" id="trip-date-start" class="glass-input" title="Arrival Date">
+                        <input type="date" id="trip-date-end" class="glass-input" title="Departure Date">
+                    </div>
+                    <span id="date-error" style="color: #ff4d4d; font-size: 0.8rem; margin-top: 5px; display: none;">
+                        <i class="fas fa-exclamation-circle"></i> This date has already passed.
+                    </span>
+                </div>
+
+                <div class="input-group planner-field-budget">
+                    <label>Estimated Budget</label>
+                    <div class="budget-row">
+                            <select id="trip-currency" class="glass-select">
+                                <option value="LKR">LKR</option>
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                            </select>
+                            <input type="number" id="trip-budget-amount" class="glass-input" placeholder="Amount" autocomplete="off">
                         </div>
                     </div>
+
+    <div class="input-group planner-field-days">
+        <label>Number of Days</label>
+        <input type="number" id="trip-days" class="glass-input" placeholder="e.g. 5" autocomplete="off">
+    </div>
+</div>
 
                     <div class="booking-section">
                         <h3 style="color: var(--neon-primary); margin-bottom: 20px; font-size: 1.1rem;"><i class="fas fa-concierge-bell"></i> Quick Bookings</h3>
