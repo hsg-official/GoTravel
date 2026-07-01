@@ -5,6 +5,7 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Global state
 let currentDateMode = 'single';
 let tripIdToDelete = null;
+let currentUserProfile = null;
 
 // --- 1. HELPER FUNCTION TO ADD A DESTINATION ROW ---
 // This centralizes row creation so we can use it for both the "+" button and page reloads
@@ -508,11 +509,18 @@ async function logoutUser() {
 async function fetchUserTrips() {
     const activeContainer = document.getElementById('saved-trips-container');
     const historyContainer = document.getElementById('history-trips-container');
+
     activeContainer.innerHTML = '';
     historyContainer.innerHTML = '';
 
-    const { data: trips, error } = await _supabase.from('trips').select('*').order('created_at', { ascending: false });
+    const { data: trips, error } = await _supabase
+    .from('trips')
+    .select('*')
+    .eq('user_id', currentUserProfile.id)
+    .order('created_at', { ascending: false });
+
     if (error) return;
+    updateWelcomeSection(currentUserProfile, trips || []);
 
     trips.forEach(trip => {
         const card = document.createElement('div');
@@ -579,6 +587,57 @@ function clearPlannerForm() {
     setDateMode('single');
 }
 
+function getTimeGreeting() {
+    const hour = new Date().getHours();
+
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+}
+
+function getTripStartDate(travelDate) {
+    if (!travelDate || travelDate === 'TBD') return null;
+
+    const firstDate = travelDate.split(' to ')[0];
+    const parsedDate = new Date(firstDate);
+
+    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+}
+
+function updateWelcomeSection(userProfile, trips) {
+    const firstName = userProfile?.firstName || 'Traveler';
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const upcomingTrips = trips
+        .filter(trip => trip.status !== 'Visited')
+        .map(trip => ({
+            ...trip,
+            startDate: getTripStartDate(trip.travel_date)
+        }))
+        .filter(trip => trip.startDate && trip.startDate >= today)
+        .sort((a, b) => a.startDate - b.startDate);
+
+    document.getElementById('dashboardGreeting').innerText = `${getTimeGreeting()}, ${firstName}.`;
+    document.getElementById('dashboardUserName').innerText = 'Welcome back to GoTravel';
+    document.getElementById('dashboardTripCount').innerText = upcomingTrips.length;
+
+    if (upcomingTrips.length === 0) {
+        document.getElementById('dashboardNextTrip').innerText = 'You do not have any upcoming trips yet. Start planning your next journey.';
+        return;
+    }
+
+    const nextTrip = upcomingTrips[0];
+    const daysUntilTrip = Math.ceil((nextTrip.startDate - today) / (1000 * 60 * 60 * 24));
+
+    const countdownText = daysUntilTrip === 0
+        ? 'today'
+        : `in ${daysUntilTrip} day${daysUntilTrip === 1 ? '' : 's'}`;
+
+    document.getElementById('dashboardNextTrip').innerText =
+        `Your next trip to ${nextTrip.destination} is ${countdownText}.`;
+}
+
 function updateProfileAvatar(firstName, lastName, email) {
     const avatarImg = document.getElementById('userAvatar');
     avatarImg.src = `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=7000ff&color=fff`;
@@ -592,9 +651,24 @@ function updateProfileAvatar(firstName, lastName, email) {
 window.onload = async function() {
     const { data: { user } } = await _supabase.auth.getUser();
     if (user) {
-        updateProfileAvatar(user.user_metadata.first_name, user.user_metadata.last_name, user.email);
-        fetchUserTrips();
-    } else { window.location.href = 'auth.html'; }
+    currentUserProfile = {
+        id: user.id,
+        firstName: user.user_metadata.first_name || 'Traveler',
+        lastName: user.user_metadata.last_name || '',
+        email: user.email
+    };
+
+    updateProfileAvatar(
+        currentUserProfile.firstName,
+        currentUserProfile.lastName,
+        currentUserProfile.email
+    );
+
+    updateWelcomeSection(currentUserProfile, []);
+    fetchUserTrips();
+} else { 
+    window.location.href = 'auth.html'; 
+}
 
     // RESTORE DRAFT DATA
     const draft = localStorage.getItem('tripDraft');
