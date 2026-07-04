@@ -57,7 +57,11 @@
                 <span class="detail-label"><i class="fas fa-hotel"></i> Accommodation</span>
                 <span id="det-hotel" class="detail-val" style="color: var(--neon-primary);"></span>
             </div>
-            <button class="plan-btn" style="margin-top: 30px;" onclick="closeTripDetails()">Close Preview</button>
+            <!-- REMOVE THE OLD BUTTON AND PASTE THIS ENTIRE FLEX ROW HERE -->
+            <div style="display: flex; gap: 15px; margin-top: 30px;">
+                <button id="modalEditBtn" class="plan-btn" style="margin-top: 0; background: var(--neon-secondary);">Edit Journey</button>
+                <button class="plan-btn" style="margin-top: 0;" onclick="closeTripDetails()">Close Preview</button>
+            </div>
         </div>
     </div>
 
