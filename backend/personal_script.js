@@ -6,6 +6,8 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let currentDateMode = 'single';
 let tripIdToDelete = null;
 let currentUserProfile = null;
+let editingTripId = null;
+
 
 // --- 1. HELPER FUNCTION TO ADD A DESTINATION ROW ---
 // This centralizes row creation so we can use it for both the "+" button and page reloads
@@ -127,6 +129,7 @@ function goToHotels() {
     const hotelBtn = document.getElementById('hotel-booking-btn');
     const guideBtn = document.getElementById('guide-booking-btn');
     const draftData = {
+        editingTripId: editingTripId,
         title: document.getElementById('trip-title').value,
         budget: document.getElementById('trip-budget-amount').value,
         days: document.getElementById('trip-days').value,
@@ -228,7 +231,7 @@ function openTab(evt, tabName) {
     evt.currentTarget.classList.add("active");
 }
 
-function showTripDetails(title, dest, date, currency, amount, days, guideName,hotelName ) {
+function showTripDetails(id, title, dest, date, currency, amount, days, guideName, hotelName, imageUrls) {
     document.getElementById('modalTitle').innerText = title;
     document.getElementById('det-dest').innerText = dest;
     document.getElementById('det-date').innerText = date || "Not set";
@@ -236,10 +239,16 @@ function showTripDetails(title, dest, date, currency, amount, days, guideName,ho
     document.getElementById('det-days').innerText = days ? days + " Days" : "Not specified";
     document.getElementById('det-guide').innerText = guideName || "No Guide Booked";
     document.getElementById('det-hotel').innerText = hotelName || "No Hotel Booked";
+    
+    // Bind the edit behavior 
+    document.getElementById('modalEditBtn').onclick = function() {
+        closeTripDetails();
+        prepareEditForm(id, title, dest, date, currency, amount, days, guideName, hotelName, imageUrls);
+    };
+
     document.getElementById('detailsModal').style.display = 'flex';
 }
 
-// --- 2. MODIFIED GOTOPLACES ---
 function goToPlaces(btnElement) { 
     const rows = Array.from(document.querySelectorAll('.destination-row'));
     const index = rows.indexOf(btnElement.parentElement);
@@ -255,24 +264,31 @@ function goToPlaces(btnElement) {
         };
     });
 
+    // --- GET THE CURRENT BOOKED TARGET DATA FROM BUTTON DATASETS ---
+    const hotelBtn = document.getElementById('hotel-booking-btn');
+    const guideBtn = document.getElementById('guide-booking-btn');
+
     const draftData = {
+        editingTripId: editingTripId, 
         title: document.getElementById('trip-title').value,
         budget: document.getElementById('trip-budget-amount').value,
         days: document.getElementById('trip-days').value,
         currency: document.getElementById('trip-currency').value,
-        // Save the full list of destinations
         destinations: destinationsData,
         dateMode: currentDateMode,
         dateSingle: document.getElementById('trip-date').value,
         dateStart: document.getElementById('trip-date-start').value,
-        dateEnd: document.getElementById('trip-date-end').value
+        dateEnd: document.getElementById('trip-date-end').value,
+        
+        existingHotel: hotelBtn ? (hotelBtn.dataset.hotel || null) : null,
+        existingGuide: guideBtn ? (guideBtn.dataset.guide || null) : null,
+        existingGuideEmail: guideBtn ? (guideBtn.dataset.email || null) : null
     };
     
     localStorage.setItem('tripDraft', JSON.stringify(draftData));
     localStorage.setItem('isSelectingDestination', 'true');
     window.location.href = 'places.html';
 }
-
 function goToGuides() {
     // Similar to goToPlaces, save draft before leaving
     const rows = Array.from(document.querySelectorAll('.destination-row'));
@@ -285,6 +301,7 @@ function goToGuides() {
     const guideBtn = document.getElementById('guide-booking-btn');
 
     const draftData = {
+        editingTripId: editingTripId,
         title: document.getElementById('trip-title').value,
         budget: document.getElementById('trip-budget-amount').value,
         days: document.getElementById('trip-days').value,
@@ -382,25 +399,21 @@ async function saveTrip() {
 
         const destInputs = document.querySelectorAll('.trip-destination');
         const destinationsArray = [];
+        const imagesArray = []; 
         
-        const imagesArray = []; // Create an array for all images
         destInputs.forEach((input) => {
             if (input.value.trim() !== "") {
                 destinationsArray.push(input.value.trim());
-                // Add the image to our array, or a placeholder if empty
                 imagesArray.push(input.dataset.img || 'default-placeholder.jpg');
-    }
-});
+            }
+        });
 
-        // Convert the array of images into a single string separated by commas
         const allImagesString = imagesArray.join(',');
 
         if(!title || destinationsArray.length === 0) {
             alert("Please provide a Title and at least one Destination!");
             return;
         }
-
-        
 
         const finalDestString = destinationsArray.join(', ');
 
@@ -409,7 +422,6 @@ async function saveTrip() {
         const endInput = document.getElementById('trip-date-end');
         const singleInput = document.getElementById('trip-date');
 
-        // RESET STYLES AT THE START OF EVERY SAVE ATTEMPT
         [startInput, endInput, singleInput].forEach(el => el.style.borderColor = '');
         errorSpan.style.display = 'none';
 
@@ -420,12 +432,10 @@ async function saveTrip() {
             const start = document.getElementById('trip-date-start').value;
             const end = document.getElementById('trip-date-end').value;
             
-            // 1. Check if either date is in the past
             if (isDateInvalid(start) || isDateInvalid(end)) {
                 invalidFound = true;
                 errorMessage = "Dates cannot be in the past.";
             } 
-            // 2. Check if End Date is before Start Date
             else if (start && end && new Date(end) < new Date(start)) {
                 invalidFound = true;
                 errorMessage = "Departure date cannot be before arrival date.";
@@ -438,19 +448,17 @@ async function saveTrip() {
             date = singleDate || 'TBD';
         }
 
-        // IF INVALID, SHOW THE SPECIFIC ERROR
         if (invalidFound) {
             errorSpan.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${errorMessage}`;
             errorSpan.style.display = 'block';
     
-            // Highlight both boxes in red for range errors
             if (currentDateMode === 'range') {
                 document.getElementById('trip-date-start').style.borderColor = '#ff4d4d';
                 document.getElementById('trip-date-end').style.borderColor = '#ff4d4d';
             }
     
             errorSpan.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return; // Stop the save process
+            return; 
         }
 
         const safeAmount = amount ? parseFloat(amount) : null;
@@ -463,7 +471,9 @@ async function saveTrip() {
         const guideNameStr = guideBtn && guideBtn.dataset.guide ? guideBtn.dataset.guide : null;
         const guideEmailStr = guideBtn && guideBtn.dataset.email ? guideBtn.dataset.email : null; 
 
-        const { error: dbError } = await _supabase.from('trips').insert([{
+        // --- NEW DUAL ROUTING LOGIC (UPDATE VS INSERT) ---
+        let result;
+        const tripPayload = {
             user_id: user.id,
             title: title,
             destination: finalDestString,
@@ -475,7 +485,18 @@ async function saveTrip() {
             guide_name: guideNameStr,
             hotel_name: hotelNameStr,
             status: 'Planned'
-        }]);
+        };
+
+        if (editingTripId) {
+            // Update the existing trip record matching our global state ID hook
+            result = await _supabase.from('trips').update(tripPayload).eq('id', editingTripId);
+        } else {
+            // Otherwise create a completely new trip entry blueprint
+            result = await _supabase.from('trips').insert([tripPayload]);
+        }
+
+        const dbError = result.error;
+        // --------------------------------------------------
 
         if (dbError) {
             alert("Database Error: " + dbError.message);
@@ -527,6 +548,7 @@ async function fetchUserTrips() {
         card.className = 'trip-card';
         // Inside fetchUserTrips loop
     card.onclick = () => showTripDetails(
+       trip.id,
        trip.title, 
        trip.destination, 
        trip.travel_date, 
@@ -534,7 +556,8 @@ async function fetchUserTrips() {
        trip.budget_amount, 
        trip.duration_days, 
        trip.guide_name,
-       trip.hotel_name 
+       trip.hotel_name,
+       trip.image_url
     );
         const isHistory = trip.status === 'Visited';
         const tagClass = isHistory ? 'trip-tag history' : 'trip-tag';
@@ -566,7 +589,80 @@ async function fetchUserTrips() {
     updatePlaceholders();
 }
 
+function prepareEditForm(id, title, dest, date, currency, amount, days, guideName, hotelName, imageUrls) {
+    editingTripId = id; // Lock global editing state
+    
+    // Switch main panel view
+    showSection('planner-section');
+    
+    // Populate simple inputs
+    document.getElementById('trip-title').value = title || '';
+    document.getElementById('trip-budget-amount').value = amount || '';
+    document.getElementById('trip-days').value = days || '';
+    document.getElementById('trip-currency').value = currency || 'LKR';
+    
+    // Reconstruct Multiple Destinations Rows
+    const destList = document.getElementById('destinations-list');
+    destList.innerHTML = ''; // Clear default rows
+    
+    const individualDestinations = dest ? dest.split(', ') : [];
+    const individualImages = imageUrls ? imageUrls.split(',') : [];
+    
+    if (individualDestinations.length > 0) {
+        individualDestinations.forEach((dName, idx) => {
+            const imgUrl = individualImages[idx] || '';
+            addDestinationRow(dName, imgUrl);
+        });
+    } else {
+        addDestinationRow();
+    }
+    
+    // Parse Date configuration
+    if (date && date !== 'TBD') {
+        if (date.includes(' to ')) {
+            setDateMode('range');
+            const parts = date.split(' to ');
+            document.getElementById('trip-date-start').value = parts[0] || '';
+            document.getElementById('trip-date-end').value = parts[1] || '';
+        } else {
+            setDateMode('single');
+            document.getElementById('trip-date').value = date;
+        }
+    } else {
+        setDateMode('single');
+        document.getElementById('trip-date').value = '';
+    }
+
+    // Restore Booked Services metadata attributes
+    const hotelBtn = document.getElementById('hotel-booking-btn');
+    const hotelBtnText = document.getElementById('hotel-btn-text');
+    if (hotelName) {
+        hotelBtn.dataset.hotel = hotelName;
+        hotelBtnText.innerHTML = `Hotel:<br><span style="color:var(--neon-primary); font-size:0.8rem;">${hotelName}</span>`;
+    } else {
+        delete hotelBtn.dataset.hotel;
+        hotelBtnText.innerText = 'Hotels';
+    }
+
+    const guideBtn = document.getElementById('guide-booking-btn');
+    const guideBtnText = document.getElementById('guide-btn-text');
+    if (guideName) {
+        guideBtn.dataset.guide = guideName;
+        guideBtnText.innerHTML = `Guide:<br><span style="color:var(--neon-primary); font-size:0.8rem;">${guideName}</span>`;
+    } else {
+        delete guideBtn.dataset.guide;
+        guideBtnText.innerText = 'Guides';
+    }
+    
+    // Change submission button title dynamically
+    document.querySelector('.planner-form-container .plan-btn').innerText = "Update Trip Blueprint";
+}
+
 function clearPlannerForm() {
+
+    editingTripId = null; // <-- CLEAR EDITING TARGET LOCK
+    document.querySelector('.planner-form-container .plan-btn').innerText = "Save Trip Blueprint"; // <-- RESET BUTTON TEXT
+    
     document.getElementById('trip-title').value = '';
     document.getElementById('destinations-list').innerHTML = '';
     addDestinationRow(); // Reset to one empty row
@@ -674,6 +770,13 @@ window.onload = async function() {
     const draft = localStorage.getItem('tripDraft');
     if (draft) {
         const data = JSON.parse(draft);
+
+        // RESTORE THE EDITING ID LOCK AND UPDATE BUTTON TEXT IF IT EXISTS
+        if (data.editingTripId) {
+            editingTripId = data.editingTripId;
+            document.querySelector('.planner-form-container .plan-btn').innerText = "Update Trip Blueprint";
+        }
+
         document.getElementById('trip-title').value = data.title || '';
         document.getElementById('trip-budget-amount').value = data.budget || '';
         document.getElementById('trip-days').value = data.days || '';
