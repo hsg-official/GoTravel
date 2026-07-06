@@ -811,3 +811,76 @@ h1 {
     }
 }
 
+@media (max-width: 768px) {
+    /* Change layout behavior from side-by-side to full width */
+    .app-container {
+        flex-direction: column;
+        padding: 10px;
+        gap: 10px;
+    }
+
+    /* Allow the main container to take up all available screen space */
+    .main-container {
+        padding: 20px;
+        height: auto;
+        min-height: calc(100vh - 90px);
+        margin-bottom: 75px; /* Leaves room so bottom nav doesn't block content */
+    }
+
+    /* Transform sidebar into a sleek fixed bottom navigation bar */
+    .sidebar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 70px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-around;
+        padding: 0 10px;
+        border-radius: 20px 20px 0 0; /* Curve only the top edges */
+        border-bottom: none;
+        border-left: none;
+        border-right: none;
+        z-index: 9999;
+    }
+
+    /* Hide the desktop logo area, drop-down menus, and copyright text on mobile */
+    .logo-area, 
+    .expand-section, 
+    .sidebar div[style*="font-size: 0.75rem"] {
+        display: none !important;
+    }
+
+    /* Force navigation container to spread horizontally */
+    .nav-menu {
+        display: flex;
+        width: 100%;
+        justify-content: space-around;
+        align-items: center;
+        margin: 0;
+    }
+
+    /* Refine navigation buttons into clean icon buttons */
+    .nav-item {
+        margin-bottom: 0;
+        padding: 12px;
+        border-radius: 12px;
+        font-size: 0; /* Hides the text node neatly without breaking the layout */
+        justify-content: center;
+        flex: 1;
+        max-width: 70px;
+    }
+
+    /* Ensure icons stay visible and scale beautifully */
+    .nav-item i {
+        font-size: 1.3rem; /* Scales up the icon size for touch targets */
+    }
+
+    /* Reset the slide-in animation transition for horizontal movement */
+    .nav-item.active {
+        transform: translateY(-2px); /* Pop up slightly instead of moving right */
+    }
+    
+}
+
