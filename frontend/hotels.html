@@ -41,7 +41,7 @@
                 </li>
                 <li><a href="../index.html">Home</a></li>
             </ul>
-            
+
         </nav>
     </header>
 
@@ -51,7 +51,7 @@
                 <h1>Find Your Perfect Escape</h1>
                 <p class="subtitle">Discover top-rated hotels across Sri Lanka</p>
                 <p class="tagline">Have an unforgettable journey!</p>
-                
+
                 <div class="hero-btns">
                     <a href="#hotelGrid" class="btn-glass-neon">DISCOVER POPULAR HOTELS</a>
                 </div>
@@ -59,7 +59,7 @@
         </section>
 
         <div class="main-layout">
-            
+
             <button id="mobileFilterToggle" class="btn-outline mobile-only-btn">
                 <ion-icon name="funnel-outline"></ion-icon> Filter & Sort
             </button>
@@ -99,7 +99,7 @@
                     <label>Favorites</label>
                     <button id="wishlistFilter" class="btn-outline">Show Liked</button>
                 </div>
-        
+
                 <button id="resetFilters" class="btn-outline reset-btn">Reset Filters</button>
             </aside>
 
@@ -115,13 +115,21 @@
         <div id="detailsModal" class="details-modal">
             <div class="modal-content">
                 <span class="close-btn" onclick="closeDetails()">&times;</span>
-        
+
                 <div id="modalBody">
                     <h2 id="modalHotelName" class="neon-text gallery-title"></h2>
-            
-                    <div id="modalGallery" class="modal-gallery"></div>
-            
-                    <div id="modalInfoContainer"></div> </div>
+                    <div id="modalBadges" class="badge-row"></div>
+
+                    <div id="modalGallery" class="modal-teaser-gallery"></div>
+
+                    <div class="modal-tabs" id="modalTabs">
+                        <button type="button" class="modal-tab-btn active" data-tab="overview">Overview</button>
+                        <button type="button" class="modal-tab-btn" data-tab="amenities">Amenities</button>
+                        <button type="button" class="modal-tab-btn" data-tab="rooms">Rooms</button>
+                    </div>
+
+                    <div id="modalInfoContainer"></div>
+                </div>
             </div>
         </div>
 
