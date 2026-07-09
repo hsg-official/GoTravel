@@ -7,6 +7,9 @@ const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 let restaurants = [];
+let userLocation = null;
+const NEAR_ME_RADIUS_KM = 10;
+
 
 const DEFAULT_RESTAURANT_IMAGE =
   "https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg";
@@ -189,7 +192,14 @@ function displayRestaurants(list) {
         <p style="opacity:.72;font-size:.88rem;">
           <b>Contact:</b> ${escapeHTML(restaurant.contact || "Not provided")}
         </p>
-
+        ${
+            restaurant.distance_km !== undefined
+                ? `<div class="distance-badge">
+                    <ion-icon name="navigate-outline"></ion-icon>
+                    ${restaurant.distance_km.toFixed(2)} KM away
+                </div>`
+            : ""
+        }
         <button class="btn-explore" type="button">View Details</button>
       </div>
     `;
@@ -629,13 +639,136 @@ function setupModalCloseEvents() {
     }
   });
 }
+function calculateDistanceKm(lat1, lon1, lat2, lon2) {
+  const earthRadiusKm = 6371;
 
+  const dLat = degreesToRadians(lat2 - lat1);
+  const dLon = degreesToRadians(lon2 - lon1);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(degreesToRadians(lat1)) *
+      Math.cos(degreesToRadians(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return earthRadiusKm * c;
+}
+
+function degreesToRadians(degrees) {
+  return degrees * (Math.PI / 180);
+}
+
+function getRestaurantsWithinRadius(userLat, userLng, radiusKm = 10) {
+  return restaurants
+    .filter(restaurant => restaurant.latitude && restaurant.longitude)
+    .map(restaurant => {
+      const distanceKm = calculateDistanceKm(
+        userLat,
+        userLng,
+        Number(restaurant.latitude),
+        Number(restaurant.longitude)
+      );
+
+      return {
+        ...restaurant,
+        distance_km: distanceKm
+      };
+    })
+    .filter(restaurant => restaurant.distance_km <= radiusKm)
+    .sort((a, b) => a.distance_km - b.distance_km);
+}
+
+function findRestaurantsNearMe() {
+  if (!navigator.geolocation) {
+    alert("Location is not supported by this browser.");
+    return;
+  }
+
+  setStatus("Finding restaurants near your location...");
+
+  navigator.geolocation.getCurrentPosition(
+    position => {
+      userLocation = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude
+      };
+
+      const nearbyRestaurants = getRestaurantsWithinRadius(
+        userLocation.latitude,
+        userLocation.longitude,
+        NEAR_ME_RADIUS_KM
+      );
+
+      displayRestaurants(nearbyRestaurants);
+
+      document.getElementById("clearNearMeBtn")?.classList.remove("hidden");
+
+      if (nearbyRestaurants.length) {
+        setStatus(
+          `${nearbyRestaurants.length} restaurant${nearbyRestaurants.length === 1 ? "" : "s"} found within ${NEAR_ME_RADIUS_KM} KM of your location.`
+        );
+      } else {
+        setStatus(`No restaurants found within ${NEAR_ME_RADIUS_KM} KM of your location.`);
+      }
+
+      document.getElementById("restaurantGrid").scrollIntoView({
+        behavior: "smooth"
+      });
+    },
+    error => {
+      console.error(error);
+
+      if (error.code === error.PERMISSION_DENIED) {
+        alert("Please allow location access to use Restaurants Near Me.");
+      } else {
+        alert("Could not get your location. Please try again.");
+      }
+
+      setStatus(`${restaurants.length} restaurant${restaurants.length === 1 ? "" : "s"} found.`);
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
+  );
+}
+
+function clearNearMeFilter() {
+  userLocation = null;
+
+  displayRestaurants(restaurants);
+
+  document.getElementById("clearNearMeBtn")?.classList.add("hidden");
+
+  setStatus(`${restaurants.length} restaurant${restaurants.length === 1 ? "" : "s"} found.`);
+
+  const searchInput = document.getElementById("restaurantSearch");
+  if (searchInput) searchInput.value = "";
+}
+
+function setupNearMeFilter() {
+  const nearMeBtn = document.getElementById("nearMeBtn");
+  const clearNearMeBtn = document.getElementById("clearNearMeBtn");
+
+  if (nearMeBtn) {
+    nearMeBtn.addEventListener("click", findRestaurantsNearMe);
+  }
+
+  if (clearNearMeBtn) {
+    clearNearMeBtn.addEventListener("click", clearNearMeFilter);
+  }
+}
 // =========================================
 // Initialize
 // =========================================
 document.addEventListener("DOMContentLoaded", () => {
   setupDropdown();
   setupSearch();
+  setupNearMeFilter();
   setupModalCloseEvents();
   fetchRestaurants();
 });

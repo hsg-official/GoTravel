@@ -705,3 +705,74 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+.btn-near-me,
+.btn-clear-filter {
+  border: none;
+  padding: 15px 28px;
+  border-radius: 30px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-near-me {
+  background: transparent;
+  color: white;
+  border: 2px solid var(--neon-cyan);
+}
+
+.btn-near-me:hover {
+  background: var(--neon-cyan);
+  color: var(--dark-bg);
+  box-shadow: 0 0 18px var(--neon-cyan);
+  transform: translateY(-3px);
+}
+
+.btn-clear-filter {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.btn-clear-filter:hover {
+  background: white;
+  color: #111827;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.distance-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: rgba(0, 243, 255, 0.12);
+  border: 1px solid rgba(0, 243, 255, 0.28);
+  color: var(--neon-cyan);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .hero-btns {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .btn-near-me,
+  .btn-clear-filter,
+  .btn-glow {
+    width: 100%;
+    max-width: 320px;
+  }
+}
