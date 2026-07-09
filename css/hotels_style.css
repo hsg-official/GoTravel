@@ -28,7 +28,7 @@ body {
     width: 100%;
     height: 100vh;
     /* Darker overlay to match template depth */
-    background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.6)), 
+    background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.6)),
                 url('https://images.pexels.com/photos/751266/pexels-photo-751266.jpeg');
     background-size: cover;
     background-position: center;
@@ -60,7 +60,7 @@ body {
 /* This creates the perfect glowing circle */
 .logo-circle {
     width: 50px;            /* Equal width and height = Square */
-    height: 50px;           
+    height: 50px;
     border-radius: 50%;     /* Makes the square a perfect circle */
     border: 2px solid var(--neon-cyan);
     display: flex;
@@ -73,7 +73,7 @@ body {
 
 /* This controls the logo size inside the circle */
 .logo-img {
-    width: 100%;             
+    width: 100%;
     height: 100%;            /* Force it to fill the circle height */
     object-fit: cover;       /* Ensures it fills the circle without distortion */
     display: block;          /* Removes any weird bottom spacing */
@@ -192,7 +192,7 @@ body {
     border: 2px solid var(--neon-cyan);          /* Crisp neon border line */
     display: inline-block;
     transition: all 0.4s ease-in-out;            /* Smooth transition animation for hover states */
-    box-shadow: 0 0 10px rgba(0, 243, 255, 0.2), 
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.2),
                 inset 0 0 10px rgba(0, 243, 255, 0.1); /* Soft initial neon aura */
 }
 
@@ -272,13 +272,13 @@ body {
 /* Mobile Tweak: Hide search bar on small screens if it gets too crowded */
 @media (max-width: 768px) {
     .search-box {
-        display: none; 
+        display: none;
     }
 }
 
 /* Hide the menu initially */
 .dropdown-content {
-    display: none; 
+    display: none;
     position: absolute;
     top: 100%; /* Places it right under the Transport text */
     left: 0;
@@ -355,7 +355,7 @@ body {
 
 /* Dark Modal Background */
 .details-modal {
-    display: none; 
+    display: none;
     position: fixed;
     z-index: 1000;
     left: 0; top: 0;
@@ -377,7 +377,14 @@ body {
     box-shadow: 0 0 20px var(--neon-cyan);
     color: white;
     position: relative;
-    max-height: 85vh;   
+    max-height: 85vh;
+}
+
+/* Give the hotel-details modal a bit more breathing room for the
+   badges / tabs / info-grid layout below */
+#detailsModal .modal-content {
+    max-width: 760px;
+    overflow-y: auto;
 }
 
 .close-btn {
@@ -401,12 +408,12 @@ body {
 
 /* Styling for the new Modal Gallery */
 .modal-gallery {
-    display: flex;             
+    display: flex;
     justify-content: center;   /* Automatically centers items horizontally */
     align-items: center;       /* Aligns items vertically */
     flex-wrap: wrap;           /* Allows items to wrap nicely if needed */
-    gap: 15px;                 
-    margin-bottom: 25px; 
+    gap: 15px;
+    margin-bottom: 25px;
     width: 100%;               /* Ensures it uses the full width of the modal */
 }
 
@@ -427,7 +434,7 @@ body {
 }
 
 /* =========================================
-   1. The Teaser Gallery 
+   1. The Teaser Gallery
    ========================================= */
 .modal-teaser-gallery {
     display: flex; /* Horizontally aligned images */
@@ -435,27 +442,34 @@ body {
     margin-bottom: 25px;
     padding-bottom: 15px;
     border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+    flex-wrap: wrap;
 }
 
 /* Base style for all teaser images */
 .teaser-item, .see-more-container {
     width: 120px;               /* Set a fixed square base width */
     height: 120px;              /* Set a fixed square base height */
-    border-radius: 8px; 
+    border-radius: 8px;
     object-fit: cover;
     flex-shrink: 0;             /* Prevents the browser from squeezing the photos */
 }
 
 .teaser-item {
     object-fit: cover;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.3s ease, border-color 0.3s ease, filter 0.3s ease;
 }
 
 .teaser-item:hover {
     filter: brightness(1.2);
+    transform: scale(1.05);
+    border-color: var(--neon-cyan);
 }
 
 .see-more-container {
     position: relative;
+    cursor: pointer;
 }
 
 .see-more-container img {
@@ -494,7 +508,7 @@ body {
 }
 
 /* =========================================
-   2. Full Gallery Viewer Modal 
+   2. Full Gallery Viewer Modal
    ========================================= */
 .full-gallery-modal {
     display: none; /* Hidden by default */
@@ -530,7 +544,7 @@ body {
 
 /* The grid view for ALL photos */
 .full-gallery-grid {
-    display: flex;          
+    display: flex;
     flex-wrap: wrap;        /* Allows items to move to the next row if space runs out */
     gap: 20px;
     margin-top: 25px;
@@ -539,8 +553,8 @@ body {
 .full-gallery-img {
     /* flex: grow shrink basis */
     /* 1 means items grow equally; 280px is the ideal minimum base width before wrapping */
-    flex: 1 1 280px;        
-    
+    flex: 1 1 280px;
+
     height: 200px;          /* Slightly adjusted height for a better widescreen landscape ratio */
     max-width: calc(33.333% - 14px); /* Fallback to guarantee a clean maximum of 3 items per row on large displays */
     object-fit: cover;
@@ -714,7 +728,7 @@ body {
 }
 
 /* =========================================
-   6. Sidebar Grid Layout Configuration 
+   6. Sidebar Grid Layout Configuration
    ========================================= */
 
 /* The main layout splitting sidebar (280px) and grid contents */
@@ -741,10 +755,10 @@ body {
     display: flex;
     flex-direction: column;
     gap: 25px;
-    
+
     /* Keeps the sidebar fixed vertically when scrolling down */
     position: sticky;
-    top: 110px; 
+    top: 110px;
     z-index: 10;
 }
 
@@ -756,8 +770,8 @@ body {
     width: 100%;
 }
 
-.sidebar-filter select, 
-.sidebar-filter input, 
+.sidebar-filter select,
+.sidebar-filter input,
 .sidebar-filter button {
     width: 100%;
     box-sizing: border-box;
@@ -841,4 +855,188 @@ body {
     .close-sidebar-btn:hover {
         color: var(--neon-cyan);
     }
+}
+
+/* =========================================
+   7. Interactive Hotel Details Modal
+   (badges, tabs, info grid, chips, room cards)
+   ========================================= */
+
+.badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 10px 0 20px;
+}
+
+.badge {
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.badge-type {
+    background: rgba(0, 243, 255, 0.1);
+    color: var(--neon-cyan);
+    border: 1px solid rgba(0, 243, 255, 0.3);
+}
+
+.badge-rating {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+    border: 1px solid rgba(255, 193, 7, 0.4);
+}
+
+.badge-price {
+    background: rgba(188, 19, 254, 0.12);
+    color: var(--neon-purple);
+    border: 1px solid rgba(188, 19, 254, 0.35);
+}
+
+.modal-tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 20px;
+    overflow-x: auto;
+}
+
+.modal-tab-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.55);
+    padding: 10px 6px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    border-bottom: 2px solid transparent;
+    transition: 0.25s;
+    white-space: nowrap;
+}
+
+.modal-tab-btn:hover {
+    color: white;
+}
+
+.modal-tab-btn.active {
+    color: var(--neon-cyan);
+    border-bottom-color: var(--neon-cyan);
+}
+
+.modal-tab-panel {
+    display: none;
+}
+
+.modal-tab-panel.active {
+    display: block;
+    animation: modalPanelFade 0.25s ease;
+}
+
+@keyframes modalPanelFade {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.info-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 14px;
+    transition: border-color 0.25s ease, transform 0.25s ease;
+}
+
+.info-card:hover {
+    border-color: rgba(0, 243, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+.info-card ion-icon {
+    font-size: 1.3rem;
+    color: var(--neon-cyan);
+    margin-bottom: 6px;
+    display: block;
+}
+
+.info-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 4px;
+}
+
+.info-value {
+    font-size: 0.92rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.chip {
+    background: rgba(0, 243, 255, 0.08);
+    border: 1px solid rgba(0, 243, 255, 0.3);
+    color: var(--neon-cyan);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    transition: 0.25s;
+}
+
+.chip:hover {
+    background: rgba(0, 243, 255, 0.18);
+}
+
+.room-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    transition: border-color 0.25s ease;
+}
+
+.room-card:hover {
+    border-color: rgba(0, 243, 255, 0.4);
+}
+
+.room-card h4 {
+    margin-bottom: 6px;
+    font-size: 1rem;
+}
+
+.room-meta {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 2px;
+}
+
+.room-price-tag {
+    color: var(--neon-cyan);
+    font-weight: 700;
+    font-size: 1.1rem;
+    white-space: nowrap;
 }

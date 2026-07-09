@@ -28,13 +28,11 @@ async function fetchGuides() {
     const loader = document.getElementById('loader');
 
     try {
-        // Fetching directly from the new guide_service table
         const { data: guides, error } = await supabaseClient
             .from('guide_service')
             .select('*'); 
 
         loader.style.display = 'none';
-
         if (error) throw error;
 
         if (!guides || guides.length === 0) {
@@ -43,30 +41,32 @@ async function fetchGuides() {
         }
 
         guides.forEach(guide => {
-            // Extracting data based on your new table structure
             const name = guide.service_name || "Professional Guide";
             const location = guide.address || "Sri Lanka";
             const desc = guide.description || "Expert local guide ready to show you the best spots.";
             const price = guide.pricing_details || "Price strictly negotiable";
             
-            // Handling photo_urls (safely checks if it's an array or a single string)
             let photo = guide.photo_urls;
-            if (Array.isArray(photo) && photo.length > 0) {
-                photo = photo[0];
-            }
+            if (Array.isArray(photo) && photo.length > 0) photo = photo[0];
             photo = photo || "https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=600&auto=format&fit=crop";
             
             const guideEmail = guide.email || "guide@example.com"; 
             const contactNo = guide.contact || "Number not provided";
-
-            // Extracting extra data for the badges
             const experience = guide.years_of_experience ? `${guide.years_of_experience} Yrs Experience` : "New Guide";
             const languages = guide.languages ? guide.languages : "English";
 
+            // --- NEW FIELDS FOR THE MODAL ---
+            const spec = guide.specializations || "General Area Tours & Sightseeing";
+            const fac = guide.facilities || "Standard route planning and local guidance";
+            const pay = guide.payment_methods || "Cash on arrival directly to the guide";
+
             const card = document.createElement('div');
             card.className = 'guide-card';
+            card.style.cursor = 'pointer'; // Shows a pointer finger on hover
             
-            // Building the HTML card structure
+            // Clicking the card opens the details modal
+            card.onclick = () => openGuideDetails(name, location, spec, fac, pay, guideEmail);
+
             card.innerHTML = `
                 <img src="${photo}" alt="${name}" class="guide-photo" onerror="this.src='https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=600&auto=format&fit=crop'">
                 <div class="guide-info">
@@ -100,7 +100,7 @@ async function fetchGuides() {
                         <div><i class="fas fa-star" style="color: #f59e0b;"></i> 4.9</div>
                     </div>
                     
-                    <button class="book-btn" onclick="handleGuideSelection('${name}', '${guideEmail}')">
+                    <button class="book-btn" onclick="event.stopPropagation(); handleGuideSelection('${name}', '${guideEmail}')">
                         Select This Guide
                     </button>
                 </div>
@@ -232,4 +232,26 @@ async function fetchGuides() {
         // If they aren't planning a new trip, open the modal to attach to an old trip
         openBookingModal(guideName, guideEmail);
     }
+}
+
+// --- GUIDE DETAILS MODAL LOGIC ---
+function openGuideDetails(name, location, spec, fac, pay, email) {
+    document.getElementById('detGuideName').innerText = name;
+    document.getElementById('detGuideLocation').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${location}`;
+    document.getElementById('detGuideSpec').innerText = spec;
+    document.getElementById('detGuideFac').innerText = fac;
+    document.getElementById('detGuidePay').innerText = pay;
+
+    // Connect the big Book button inside the details modal to the main booking logic
+    const selectBtn = document.getElementById('modalSelectBtn');
+    selectBtn.onclick = function() {
+        closeGuideDetails();
+        handleGuideSelection(name, email);
+    };
+
+    document.getElementById('guideDetailsModal').classList.add('active');
+}
+
+function closeGuideDetails() {
+    document.getElementById('guideDetailsModal').classList.remove('active');
 }
