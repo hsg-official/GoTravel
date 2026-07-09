@@ -1994,7 +1994,9 @@ document.getElementById("addDriverBtn").addEventListener("click", () => {
 
   <input type="file" name="driverPhotos" multiple accept="image/*" />
 
-  <button type="button" onclick="this.parentElement.remove()">Remove Driver</button>
+  <button type="button" onclick="removeChildCard(this, 'transport_drivers', 'driver-photos', 'driverId')">
+  Remove Driver
+  </button>
   `;
 
   driversContainer.appendChild(driverForm);
@@ -2062,7 +2064,9 @@ document.getElementById("addVehicleBtn").addEventListener("click", () => {
 
     <input type="file" name="vehiclePhotos" multiple accept="image/*" />
 
-    <button type="button" onclick="this.parentElement.remove()">Remove Vehicle</button>
+    <button type="button" onclick="removeChildCard(this, 'transport_vehicles', 'vehicle-photos', 'vehicleId')">
+    Remove Vehicle
+    </button>
   `;
 
   vehiclesContainer.appendChild(vehicleForm);
@@ -2368,7 +2372,9 @@ document.getElementById("addHotelRoomBtn").addEventListener("click", () => {
 
     <input type="file" name="roomPhotos" multiple accept="image/*" />
 
-    <button type="button" onclick="this.parentElement.remove()">Remove Room</button>
+    <button type="button" onclick="removeChildCard(this, 'hotel_rooms', 'room-photos', 'roomId')">
+    Remove Room
+    </button>
   `;
 
   hotelRoomsContainer.appendChild(roomForm);
@@ -3182,6 +3188,7 @@ async function fillTransportForm(service) {
     document.getElementById("addDriverBtn").click();
 
     const form = driversContainer.lastElementChild;
+    form.dataset.driverId = driver.id;
 
     form.querySelector('[name="driverName"]').value = driver.name || "";
     form.querySelector('[name="driverContact"]').value = driver.contact || "";
@@ -3202,6 +3209,7 @@ async function fillTransportForm(service) {
     document.getElementById("addVehicleBtn").click();
 
     const form = vehiclesContainer.lastElementChild;
+    form.dataset.vehicleId = vehicle.id;
 
     form.querySelector('[name="vehicleNumber"]').value = vehicle.vehicle_number || "";
     form.querySelector('[name="category"]').value = vehicle.category || "";
@@ -3272,6 +3280,7 @@ async function fillHotelForm(service) {
     document.getElementById("addHotelRoomBtn").click();
 
     const form = hotelRoomsContainer.lastElementChild;
+    form.dataset.roomId = room.id;
 
     form.querySelector('[name="roomCategoryName"]').value = room.room_category_name || "";
     form.querySelector('[name="bedType"]').value = room.bed_type || "";
@@ -3457,6 +3466,268 @@ async function finishServiceSave(type) {
   await loadAllServices();
 }
 
+async function removeChildCard(button, tableName, bucketName, datasetKey) {
+  const card = button.closest(".driver-form, .vehicle-form, .hotel-room-form");
+
+  if (!card) return;
+
+  const rowId = card.dataset[datasetKey];
+
+  /*
+    If this is a newly added driver / vehicle / room,
+    it has no database ID yet, so just remove it from the form.
+  */
+  if (!rowId || rowId === "undefined" || rowId === "null") {
+    card.remove();
+    return;
+  }
+
+  /*
+    If not in edit mode, it is still only a temporary form card.
+  */
+  if (!editingService) {
+    card.remove();
+    return;
+  }
+
+  const confirmed = confirm(
+    "Are you sure you want to remove this item? This will delete it from the database."
+  );
+
+  if (!confirmed) return;
+
+  try {
+    const { data: existingRow, error: fetchError } = await supabaseClient
+      .from(tableName)
+      .select("id, photo_paths")
+      .eq("id", rowId)
+      .maybeSingle();
+
+    if (fetchError) throw fetchError;
+
+    if (existingRow?.photo_paths) {
+      await safeDeleteStorageFiles(bucketName, existingRow.photo_paths);
+    }
+
+    const { data: deletedRows, error: deleteError } = await supabaseClient
+      .from(tableName)
+      .delete()
+      .eq("id", rowId)
+      .select("id");
+
+    if (deleteError) throw deleteError;
+
+    if (!deletedRows || deletedRows.length === 0) {
+      throw new Error(
+        `${tableName} row was not deleted. Check Supabase RLS delete policy or ID column.`
+      );
+    }
+
+    card.remove();
+
+  } catch (error) {
+    console.error(error);
+    alert(error.message || "Failed to remove item.");
+  }
+}
+
+/* =========================
+   CHILD RECORD UPDATE / DELETE HELPERS
+   Keeps existing driver / vehicle / room IDs instead of recreating them
+========================= */
+
+function getVisibleChildIds(container, datasetKey) {
+  return Array.from(container.children)
+    .map(card => card.dataset[datasetKey])
+    .filter(Boolean);
+}
+
+async function deleteRemovedChildRows(tableName, bucketName, serviceId, visibleIds) {
+  const { data: existingRows, error: fetchError } = await supabaseClient
+    .from(tableName)
+    .select("id, photo_paths")
+    .eq("service_id", serviceId);
+
+  if (fetchError) throw fetchError;
+
+  const removedRows = (existingRows || []).filter(row =>
+    !visibleIds.includes(String(row.id))
+  );
+
+  if (!removedRows.length) return;
+
+  const removedPhotoPaths = removedRows.flatMap(row =>
+    normalizeDeletePaths(row.photo_paths)
+  );
+
+  await safeDeleteStorageFiles(bucketName, removedPhotoPaths);
+
+  const { error: deleteError } = await supabaseClient
+    .from(tableName)
+    .delete()
+    .in("id", removedRows.map(row => row.id))
+    .eq("service_id", serviceId);
+
+  if (deleteError) throw deleteError;
+}
+
+function cleanChildRowId(rowId) {
+  if (!rowId) return "";
+  if (rowId === "undefined") return "";
+  if (rowId === "null") return "";
+  return rowId;
+}
+
+async function insertOrUpdateChildRow(tableName, rowId, serviceId, payload) {
+  const cleanRowId = cleanChildRowId(rowId);
+
+  if (cleanRowId) {
+    /*
+      First try update using both id and service_id.
+      .select("id") is important because it tells us whether a row was really updated.
+    */
+    const { data: updatedRows, error: updateError } = await supabaseClient
+      .from(tableName)
+      .update(payload)
+      .eq("id", cleanRowId)
+      .eq("service_id", serviceId)
+      .select("id");
+
+    if (updateError) throw updateError;
+
+    if (updatedRows && updatedRows.length > 0) {
+      return;
+    }
+
+    /*
+      Fallback: try update by id only.
+      This helps if service_id is stored as a different type in Supabase.
+    */
+    const { data: fallbackRows, error: fallbackError } = await supabaseClient
+      .from(tableName)
+      .update(payload)
+      .eq("id", cleanRowId)
+      .select("id");
+
+    if (fallbackError) throw fallbackError;
+
+    if (!fallbackRows || fallbackRows.length === 0) {
+      throw new Error(
+        `${tableName} row ${cleanRowId} was not updated. Check the child table ID column or Supabase RLS update policy.`
+      );
+    }
+
+    return;
+  }
+
+  /*
+    No row ID means this is a newly added driver / vehicle / room.
+  */
+  const { error: insertError } = await supabaseClient
+    .from(tableName)
+    .insert({
+      service_id: serviceId,
+      ...payload
+    });
+
+  if (insertError) throw insertError;
+}
+
+async function saveTransportChildRecords(serviceId) {
+  const driverForms = Array.from(
+    driversContainer.querySelectorAll(".driver-form")
+  );
+
+  const vehicleForms = Array.from(
+    vehiclesContainer.querySelectorAll(".vehicle-form")
+  );
+
+  for (const driverForm of driverForms) {
+    const driverPhotos = await buildPhotoPayload(
+      driverForm.querySelector('[name="driverPhotos"]'),
+      "driver-photos",
+      `drivers/${serviceId}`
+    );
+
+    await insertOrUpdateChildRow(
+      "transport_drivers",
+      driverForm.dataset.driverId,
+      serviceId,
+      {
+        name: driverForm.querySelector('[name="driverName"]').value,
+        contact: driverForm.querySelector('[name="driverContact"]').value,
+        nic: driverForm.querySelector('[name="driverNic"]').value,
+        joined_date: driverForm.querySelector('[name="joinedDate"]').value || null,
+        license_no: driverForm.querySelector('[name="licenseNo"]').value,
+        issued_date: driverForm.querySelector('[name="issuedDate"]').value || null,
+        expiry_date: driverForm.querySelector('[name="expiryDate"]').value || null,
+        photo_paths: driverPhotos.photo_paths,
+        photo_urls: driverPhotos.photo_urls
+      }
+    );
+  }
+
+  for (const vehicleForm of vehicleForms) {
+    const vehiclePhotos = await buildPhotoPayload(
+      vehicleForm.querySelector('[name="vehiclePhotos"]'),
+      "vehicle-photos",
+      `vehicles/${serviceId}`
+    );
+
+    await insertOrUpdateChildRow(
+      "transport_vehicles",
+      vehicleForm.dataset.vehicleId,
+      serviceId,
+      {
+        vehicle_number: vehicleForm.querySelector('[name="vehicleNumber"]').value,
+        category: vehicleForm.querySelector('[name="category"]').value,
+        seat_count: Number(vehicleForm.querySelector('[name="seatCount"]').value) || null,
+        transmission: vehicleForm.querySelector('[name="transmission"]').value || null,
+        driver_option: vehicleForm.querySelector('[name="driverOption"]').value || null,
+        luggage_capacity: vehicleForm.querySelector('[name="luggageCapacity"]').value,
+        air_condition: vehicleForm.querySelector('[name="airCondition"]').value || null,
+        fuel_type: vehicleForm.querySelector('[name="fuelType"]').value || null,
+        price: Number(vehicleForm.querySelector('[name="price"]').value),
+        price_calculated_per: vehicleForm.querySelector('[name="priceCalculatedPer"]').value,
+        photo_paths: vehiclePhotos.photo_paths,
+        photo_urls: vehiclePhotos.photo_urls
+      }
+    );
+  }
+}
+
+async function saveHotelRoomRecords(serviceId) {
+  const roomForms = Array.from(
+    hotelRoomsContainer.querySelectorAll(".hotel-room-form")
+  );
+
+  for (const roomForm of roomForms) {
+    const roomPhotos = await buildPhotoPayload(
+      roomForm.querySelector('[name="roomPhotos"]'),
+      "room-photos",
+      `rooms/${serviceId}`
+    );
+
+    await insertOrUpdateChildRow(
+      "hotel_rooms",
+      roomForm.dataset.roomId,
+      serviceId,
+      {
+        room_category_name: roomForm.querySelector('[name="roomCategoryName"]').value,
+        bed_type: roomForm.querySelector('[name="bedType"]').value,
+        number_of_beds: Number(roomForm.querySelector('[name="numberOfBeds"]').value),
+        room_size: Number(roomForm.querySelector('[name="roomSize"]').value) || null,
+        room_size_unit: roomForm.querySelector('[name="roomSizeUnit"]').value || null,
+        available_rooms: Number(roomForm.querySelector('[name="availableRooms"]').value),
+        price: Number(roomForm.querySelector('[name="roomPrice"]').value),
+        facilities: getCheckedValuesInside(roomForm, 'input[name="roomFacilities"]'),
+        photo_paths: roomPhotos.photo_paths,
+        photo_urls: roomPhotos.photo_urls
+      }
+    );
+  }
+}
+
 /* Stop your old insert-only submit handlers and use update-aware handlers */
 document.getElementById("transportForm").addEventListener("submit", async event => {
   event.preventDefault();
@@ -3483,7 +3754,7 @@ document.getElementById("transportForm").addEventListener("submit", async event 
     });
 
     if (!serviceId) return;
-
+    /*
     if (editingService && editingService.type === "transport") {
       await supabaseClient.from("transport_drivers").delete().eq("service_id", serviceId);
       await supabaseClient.from("transport_vehicles").delete().eq("service_id", serviceId);
@@ -3537,7 +3808,8 @@ document.getElementById("transportForm").addEventListener("submit", async event 
 
       if (error) throw error;
     }
-
+    */
+    await saveTransportChildRecords(serviceId);
     alert("Transport service saved successfully.");
     await finishServiceSave("transport");
   } catch (error) {
@@ -3588,7 +3860,7 @@ document.getElementById("hotelForm").addEventListener("submit", async event => {
     });
 
     if (!serviceId) return;
-
+    /*
     if (editingService && editingService.type === "hotel") {
       await supabaseClient.from("hotel_rooms").delete().eq("service_id", serviceId);
     }
@@ -3616,7 +3888,8 @@ document.getElementById("hotelForm").addEventListener("submit", async event => {
 
       if (error) throw error;
     }
-
+    */
+    await saveHotelRoomRecords(serviceId);
     alert("Hotel service saved successfully.");
     await finishServiceSave("hotel");
   } catch (error) {
