@@ -68,6 +68,31 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="guideDetailsModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <i class="fas fa-times close-modal" onclick="closeGuideDetails()"></i>
+            <h2 class="modal-title" id="detGuideName">Guide Name</h2>
+            <p class="modal-subtitle" id="detGuideLocation" style="margin-bottom: 20px;"><i class="fas fa-map-marker-alt"></i> Location</p>
+
+            <div style="margin-bottom: 15px; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border);">
+                <h4 style="color: var(--accent); margin-bottom: 5px; font-size: 0.9rem;"><i class="fas fa-star"></i> Specializations</h4>
+                <p id="detGuideSpec" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">...</p>
+            </div>
+
+            <div style="margin-bottom: 15px; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border);">
+                <h4 style="color: var(--accent); margin-bottom: 5px; font-size: 0.9rem;"><i class="fas fa-concierge-bell"></i> Facilities Provided</h4>
+                <p id="detGuideFac" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">...</p>
+            </div>
+
+            <div style="margin-bottom: 25px; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border);">
+                <h4 style="color: var(--accent); margin-bottom: 5px; font-size: 0.9rem;"><i class="fas fa-credit-card"></i> Payment Methods</h4>
+                <p id="detGuidePay" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">...</p>
+            </div>
+
+            <button class="book-btn" id="modalSelectBtn">BOOK THIS GUIDE</button>
+        </div>
+    </div>
+
     <script src="../backend/guides_script.js"></script>
 </body>
 </html>
