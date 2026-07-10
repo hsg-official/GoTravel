@@ -1041,6 +1041,140 @@ select:focus{
   background: rgba(56, 189, 248, 0.22);
 }
 
+/* =====================================================
+   FIELD TITLES ABOVE INPUTS AND SELECT BOXES
+===================================================== */
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin-bottom: 14px;
+}
+
+/* Textareas and file inputs should occupy the full row */
+.form-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-field .field-title {
+  display: block;
+  margin: 0 0 7px;
+  color: #334155;
+  font-size: 0.84rem;
+  font-weight: 700;
+  opacity: 1;
+  line-height: 1.3;
+}
+
+/* Remove the old bottom margin because the wrapper handles spacing */
+.form-field input,
+.form-field textarea,
+.form-field select {
+  margin-bottom: 0;
+}
+
+/* Red star for required fields */
+.required-star {
+  color: #dc2626;
+  font-weight: 800;
+}
+
+/* Keep location search input and button correctly aligned */
+.location-search-row {
+  align-items: flex-end;
+}
+
+.location-search-row .form-field {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+/* Align restaurant operating-hour fields */
+.rest-operating-hour-row {
+  align-items: flex-end;
+}
+
+.rest-operating-hour-row .form-field {
+  margin-bottom: 0;
+}
+
+/* Better file input appearance */
+.form-field input[type="file"] {
+  padding: 11px;
+}
+
+/* Mobile layout */
+@media (max-width: 768px) {
+  .form-field,
+  .form-field.full-width {
+    grid-column: 1 / -1;
+  }
+
+  .location-search-row .form-field {
+    width: 100%;
+  }
+
+  .rest-operating-hour-row .form-field {
+    width: 100%;
+    margin-bottom: 12px;
+  }
+}
+
+/* =====================================================
+   ORGANIZED CHECKBOX SECTIONS
+===================================================== */
+
+.checkbox-section {
+  grid-column: 1 / -1;
+  width: 100%;
+  margin: 8px 0 18px;
+  padding: 17px;
+  border: 1px solid #dbeafe;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.checkbox-section-title {
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  color: #0f172a;
+  font-size: 0.95rem;
+  font-weight: 800;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.checkbox-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+/* Override the old checkbox label spacing inside grouped sections */
+.form-modal .checkbox-options label:has(input[type="checkbox"]) {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
+/* Make room checkbox sections use the entire room card width */
+.hotel-room-form .checkbox-section {
+  grid-column: 1 / -1;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .checkbox-options {
+    grid-template-columns: 1fr;
+  }
+
+  .checkbox-section {
+    padding: 14px;
+  }
+}
 </style>
 </head>
 
@@ -1072,10 +1206,10 @@ select:focus{
     </a>
 
     <div id="addServicesMenu" class="submenu hidden">
-      <button type="button" id="addTransportServiceBtn">Transport</button>
-      <button type="button" id="addHotelServiceBtn">🏨 Hotel</button>
-      <button type="button" id="addRestaurantServiceBtn">🍽 Restaurant</button>
-      <button type="button" id="addGuideServiceBtn">🧭 Guide</button>
+      <button type="button" id="addTransportServiceBtn"><i class="fa-solid fa-car-side"></i> Transport</button>
+      <button type="button" id="addHotelServiceBtn"><i class="fa-solid fa-hotel"></i> Hotel</button>
+      <button type="button" id="addRestaurantServiceBtn"><i class="fa-solid fa-utensils"></i> Restaurant</button>
+      <button type="button" id="addGuideServiceBtn"><i class="fa-solid fa-user-check"></i> Guide</button>
     </div>
   </nav>
 </aside>
@@ -1229,15 +1363,56 @@ select:focus{
 
       <input type="number" id="hotelCleaningFees" placeholder="Cleaning fees" />
 
-      <label><input type="checkbox" name="hotelFacilities" value="Pool" /> Pool</label>
-      <label><input type="checkbox" name="hotelFacilities" value="Gym" /> Gym</label>
-      <label><input type="checkbox" name="hotelFacilities" value="Spa" /> Spa</label>
-      <label><input type="checkbox" name="hotelFacilities" value="Sauna" /> Sauna</label>
-      <label><input type="checkbox" name="hotelFacilities" value="Garden" /> Garden</label>
-      <label><input type="checkbox" name="hotelFacilities" value="Cafe" /> Cafe</label>
-      <label><input type="checkbox" name="hotelFacilities" value="Bar" /> Bar</label>
-      <label><input type="checkbox" name="hotelFacilities" value="Restaurant" /> Restaurant</label>
-      <label><input type="checkbox" name="hotelFacilities" value="Laundry Service" /> Laundry Service</label>
+      <div class="checkbox-section">
+  <h4 class="checkbox-section-title">Hotel Facilities</h4>
+
+  <div class="checkbox-options">
+    <label>
+      <input type="checkbox" name="hotelFacilities" value="Pool" />
+      Pool
+    </label>
+
+    <label>
+      <input type="checkbox" name="hotelFacilities" value="Gym" />
+      Gym
+    </label>
+
+    <label>
+      <input type="checkbox" name="hotelFacilities" value="Spa" />
+      Spa
+    </label>
+
+    <label>
+      <input type="checkbox" name="hotelFacilities" value="Sauna" />
+      Sauna
+    </label>
+
+    <label>
+      <input type="checkbox" name="hotelFacilities" value="Garden" />
+      Garden
+    </label>
+
+    <label>
+      <input type="checkbox" name="hotelFacilities" value="Cafe" />
+      Cafe
+    </label>
+
+    <label>
+      <input type="checkbox" name="hotelFacilities" value="Bar" />
+      Bar
+    </label>
+
+    <label>
+      <input type="checkbox" name="hotelFacilities" value="Restaurant" />
+      Restaurant
+    </label>
+
+    <label>
+      <input type="checkbox" name="hotelFacilities" value="Laundry Service" />
+      Laundry Service
+    </label>
+  </div>
+</div>
 
       <select id="hotelConnectivity">
         <option value="">Connectivity</option>
@@ -1245,10 +1420,27 @@ select:focus{
         <option value="Paid WiFi">Paid WiFi</option>
       </select>
 
-      <label><input type="checkbox" name="hotelParkings" value="Free" /> Free parking</label>
-      <label><input type="checkbox" name="hotelParkings" value="Paid" /> Paid parking</label>
-      <label><input type="checkbox" name="hotelParkings" value="Street Parking" /> Street parking</label>
-      <label><input type="checkbox" name="hotelParkings" value="Vallet Parking" /> Vallet parking</label>
+      <div class="checkbox-section">
+        <h4 class="checkbox-section-title">Parking Options</h4>
+        <div class="checkbox-options">
+          <label>
+            <input type="checkbox" name="hotelParkings" value="Free" />
+            Free parking
+          </label>
+          <label>
+            <input type="checkbox" name="hotelParkings" value="Paid" />
+            Paid parking
+          </label>
+          <label>
+            <input type="checkbox" name="hotelParkings" value="Street Parking" />
+            Street parking
+          </label>
+          <label>
+            <input type="checkbox" name="hotelParkings" value="Vallet Parking" />
+            Vallet parking
+          </label>
+        </div>
+      </div>
 
       <select id="hotelPetsAllowed">
         <option value="">Pets allowed</option>
@@ -1330,11 +1522,31 @@ select:focus{
       <label>Last order time</label>
       <input type="time" id="restLastOrderTime" />
 
-      <label><input type="checkbox" name="restSeatCategories" value="Indoor" /> Indoor</label>
-      <label><input type="checkbox" name="restSeatCategories" value="Outdoors" /> Outdoors</label>
-      <label><input type="checkbox" name="restSeatCategories" value="Roof Top" /> Roof top</label>
-      <label><input type="checkbox" name="restSeatCategories" value="Private Rooms" /> Private rooms</label>
+      <div class="checkbox-section">
+  <h4 class="checkbox-section-title">Seating Categories</h4>
 
+  <div class="checkbox-options">
+    <label>
+      <input type="checkbox" name="restSeatCategories" value="Indoor" />
+      Indoor
+    </label>
+
+    <label>
+      <input type="checkbox" name="restSeatCategories" value="Outdoors" />
+      Outdoors
+    </label>
+
+    <label>
+      <input type="checkbox" name="restSeatCategories" value="Roof Top" />
+      Rooftop
+    </label>
+
+    <label>
+      <input type="checkbox" name="restSeatCategories" value="Private Rooms" />
+      Private Rooms
+    </label>
+  </div>
+</div>
       <textarea id="restSignatureDishes" placeholder="Signature dishes"></textarea>
 
       <select id="restVegetarianOptions">
@@ -1390,20 +1602,60 @@ select:focus{
         <option value="No">No</option>
       </select>
 
-      <label><input type="checkbox" name="restFacilities" value="AC" /> AC</label>
-      <label><input type="checkbox" name="restFacilities" value="WiFi" /> WiFi</label>
-      <label><input type="checkbox" name="restFacilities" value="Free Parking" /> Free parking</label>
-      <label><input type="checkbox" name="restFacilities" value="Valet Parking" /> Valet parking</label>
-      <label><input type="checkbox" name="restFacilities" value="Kids Play Area" /> Kids play area</label>
-      <label><input type="checkbox" name="restFacilities" value="Smoking Area" /> Smoking area</label>
+      <div class="checkbox-section">
+        <h4 class="checkbox-section-title">Facilities</h4>
+        <div class="checkbox-options">
+          <label>
+            <input type="checkbox" name="restFacilities" value="AC" />
+            AC
+          </label>
+          <label>
+            <input type="checkbox" name="restFacilities" value="WiFi" />
+            WiFi
+          </label>
+          <label>
+            <input type="checkbox" name="restFacilities" value="Free Parking" />
+            Free parking
+          </label>
+          <label>
+            <input type="checkbox" name="restFacilities" value="Valet Parking" />
+            Valet parking
+          </label>
+          <label>
+            <input type="checkbox" name="restFacilities" value="Kids Play Area" />
+            Kids play area
+          </label>
+          <label>
+            <input type="checkbox" name="restFacilities" value="Smoking Area" />
+            Smoking area
+          </label>
       <label><input type="checkbox" name="restFacilities" value="TV Screenings" /> TV screenings</label>
       <label><input type="checkbox" name="restFacilities" value="Restrooms" /> Restrooms</label>
       <label><input type="checkbox" name="restFacilities" value="Charging Points" /> Charging points</label>
       <label><input type="checkbox" name="restFacilities" value="Live Music" /> Live music</label>
+      </div>
+      </div>
 
-      <label><input type="checkbox" name="restPaymentMethods" value="Cash" /> Cash</label>
-      <label><input type="checkbox" name="restPaymentMethods" value="Card" /> Card</label>
-      <label><input type="checkbox" name="restPaymentMethods" value="Online Payment" /> Online payment</label>
+      <div class="checkbox-section">
+  <h4 class="checkbox-section-title">Payment Methods</h4>
+
+  <div class="checkbox-options">
+    <label>
+      <input type="checkbox" name="restPaymentMethods" value="Cash" />
+      Cash
+    </label>
+
+    <label>
+      <input type="checkbox" name="restPaymentMethods" value="Card" />
+      Card
+    </label>
+
+    <label>
+      <input type="checkbox" name="restPaymentMethods" value="Online Payment" />
+      Online Payment
+    </label>
+  </div>
+</div>
 
       <input type="file" id="restPhotos" multiple accept="image/*" />
     </section>
@@ -2362,13 +2614,46 @@ document.getElementById("addHotelRoomBtn").addEventListener("click", () => {
     <input type="number" name="availableRooms" placeholder="Available rooms" required />
     <input type="number" name="roomPrice" placeholder="Price" required />
 
-    <label><input type="checkbox" name="roomFacilities" value="AC" /> AC</label>
-    <label><input type="checkbox" name="roomFacilities" value="Private Bathroom" /> Private bathroom</label>
-    <label><input type="checkbox" name="roomFacilities" value="Hot Water" /> Hot water</label>
-    <label><input type="checkbox" name="roomFacilities" value="Balcony" /> Balcony</label>
-    <label><input type="checkbox" name="roomFacilities" value="TV" /> TV</label>
-    <label><input type="checkbox" name="roomFacilities" value="Minibar" /> Minibar</label>
-    <label><input type="checkbox" name="roomFacilities" value="Safe Box" /> Safe box</label>
+    <div class="checkbox-section">
+      <h4 class="checkbox-section-title">Room Facilities</h4>
+
+      <div class="checkbox-options">
+        <label>
+          <input type="checkbox" name="roomFacilities" value="AC" />
+          Air Conditioning
+        </label>
+
+        <label>
+          <input type="checkbox" name="roomFacilities" value="Private Bathroom" />
+          Private Bathroom
+        </label>
+
+        <label>
+          <input type="checkbox" name="roomFacilities" value="Hot Water" />
+          Hot Water
+        </label>
+
+        <label>
+          <input type="checkbox" name="roomFacilities" value="Balcony" />
+          Balcony
+        </label>
+
+        <label>
+          <input type="checkbox" name="roomFacilities" value="TV" />
+          TV
+        </label>
+
+        <label>
+          <input type="checkbox" name="roomFacilities" value="Minibar" />
+          Minibar
+        </label>
+
+        <label>
+          <input type="checkbox" name="roomFacilities" value="Safe Box" />
+          Safe Box
+        </label>
+      </div>
+    </div>
 
     <input type="file" name="roomPhotos" multiple accept="image/*" />
 
@@ -4245,6 +4530,314 @@ document.querySelectorAll(
 /* 8) Initialize delete buttons */
 addDeleteButtonsToForms();
 toggleDeleteButtons(null);
+
+
+/* =====================================================
+   FIELD TITLES WITH REAL NAMES
+===================================================== */
+
+const formFieldSelector = `
+  .form-modal input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),
+  .form-modal textarea,
+  .form-modal select
+`;
+
+let generatedFieldId = 1;
+
+/*
+  Titles for fields identified by their ID.
+*/
+const fieldTitlesById = {
+  /* Transport service */
+  serviceName: "Service Name",
+  serviceContact: "Contact Number",
+  serviceAddress: "Address",
+  serviceDescription: "Description",
+  servicePhotos: "Transport Service Photos",
+
+  /* Hotel service */
+  hotelServiceName: "Hotel Name",
+  hotelPropertyType: "Property Type",
+  hotelStarRating: "Star Rating",
+  hotelTotalRooms: "Total Number of Rooms",
+  hotelContact: "Contact Number",
+  hotelAddress: "Address",
+  hotelDescription: "Description",
+  hotelCity: "City",
+  hotelLocationSearch: "Search Hotel Location",
+  hotelPriceBasis: "Price Basis",
+  hotelTaxServiceCharge: "Tax and Service Charge",
+  hotelCleaningFees: "Cleaning Fees",
+  hotelConnectivity: "Internet Connectivity",
+  hotelPetsAllowed: "Pets Allowed",
+  hotelServicePhotos: "Hotel Photos",
+
+  /* Restaurant service */
+  restServiceName: "Restaurant Name",
+  restContact: "Contact Number",
+  restAddress: "Address",
+  restDescription: "Description",
+  restCity: "City",
+  restLocationSearch: "Search Restaurant Location",
+  restBreakfast: "Breakfast Available",
+  restLunch: "Lunch Available",
+  restDinner: "Dinner Available",
+  restLastOrderTime: "Last Order Time",
+  restSignatureDishes: "Signature Dishes",
+  restVegetarianOptions: "Vegetarian Options",
+  restHalalOptions: "Halal Options",
+  restGlutenFreeOptions: "Gluten-Free Options",
+  restKidsMenu: "Kids Menu",
+  restBuffetAvailable: "Buffet Available",
+  restBuffetTime: "Buffet Time",
+  restTakeAway: "Take Away Available",
+  restHomeDelivery: "Home Delivery Available",
+  restDeliveryRadiusKm: "Delivery Radius in KM",
+  restTaxesIncluded: "Taxes Included",
+  restPhotos: "Restaurant Photos",
+
+  /* Guide service */
+  guideServiceName: "Guide Service Name",
+  guideContact: "Contact Number",
+  guideAddress: "Address",
+  guideDescription: "Description",
+  guideYearsExperience: "Years of Experience",
+  guideLicenseNumber: "Guide License Number",
+  guideLicenseExpiryDate: "License Expiry Date",
+  guideOtherLanguage: "Other Language",
+  guidePricingDetails: "Pricing Details",
+  guidePhotos: "Guide Photos"
+};
+
+/*
+  Titles for dynamically created fields identified by name.
+*/
+const fieldTitlesByName = {
+  /* Driver fields */
+  driverName: "Driver Name",
+  driverContact: "Driver Contact Number",
+  driverNic: "Driver NIC",
+  joinedDate: "Joined Date",
+  licenseNo: "License Number",
+  issuedDate: "License Issued Date",
+  expiryDate: "License Expiry Date",
+  driverPhotos: "Driver Photos",
+
+  /* Vehicle fields */
+  vehicleNumber: "Vehicle Number",
+  category: "Vehicle Category",
+  seatCount: "Seat Count",
+  transmission: "Transmission Type",
+  driverOption: "Driver Option",
+  luggageCapacity: "Luggage Capacity",
+  airCondition: "Air Conditioning",
+  fuelType: "Fuel Type",
+  price: "Price",
+  priceCalculatedPer: "Price Calculated Per",
+  vehiclePhotos: "Vehicle Photos",
+
+  /* Hotel room fields */
+  roomCategoryName: "Room Category Name",
+  bedType: "Bed Type",
+  numberOfBeds: "Number of Beds",
+  roomSize: "Room Size",
+  roomSizeUnit: "Room Size Unit",
+  availableRooms: "Available Rooms",
+  roomPrice: "Room Price",
+  roomPhotos: "Room Photos",
+
+  /* Restaurant operating-hour fields */
+  restDay: "Day",
+  restOpeningTime: "Opening Time",
+  restCloseTime: "Closing Time"
+};
+
+/*
+  Convert camelCase or underscore names into readable titles.
+*/
+function convertToReadableTitle(value) {
+  if (!value) return "";
+
+  return value
+    .replace(/^(hotel|rest|guide|service)/i, "")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, letter => letter.toUpperCase())
+    .trim();
+}
+
+/*
+  Remove unnecessary words from placeholders or select options.
+*/
+function cleanFieldTitle(value) {
+  if (!value) return "";
+
+  return value
+    .trim()
+    .replace(/^Select\s+/i, "")
+    .replace(/\s*-\s*(Yes|No)$/i, "");
+}
+
+/*
+  Get a real title before generating an internal field ID.
+*/
+function getFieldTitle(field) {
+  const originalId = field.id || "";
+  const fieldName = field.name || "";
+
+  /* First use titles defined using field IDs */
+  if (originalId && fieldTitlesById[originalId]) {
+    return fieldTitlesById[originalId];
+  }
+
+  /* Then use titles defined using field names */
+  if (fieldName && fieldTitlesByName[fieldName]) {
+    return fieldTitlesByName[fieldName];
+  }
+
+  /* Then use the placeholder */
+  const placeholder = field.getAttribute("placeholder");
+
+  if (placeholder) {
+    return cleanFieldTitle(placeholder);
+  }
+
+  /* For select boxes, use the empty first option */
+  if (field.tagName === "SELECT") {
+    const defaultOption =
+      Array.from(field.options).find(option => option.value === "") ||
+      field.options[0];
+
+    if (defaultOption && defaultOption.textContent.trim()) {
+      return cleanFieldTitle(defaultOption.textContent);
+    }
+  }
+
+  /* Use the original name or ID only—not the generated automatic ID */
+  if (fieldName) {
+    return convertToReadableTitle(fieldName);
+  }
+
+  if (originalId) {
+    return convertToReadableTitle(originalId);
+  }
+
+  /* Final useful fallback based on input type */
+  const fallbackTitles = {
+    text: "Text",
+    number: "Number",
+    date: "Date",
+    time: "Time",
+    file: "Upload Photos",
+    email: "Email Address",
+    tel: "Contact Number"
+  };
+
+  return fallbackTitles[field.type] || "Details";
+}
+
+/*
+  Add one title above a field.
+*/
+function addTitleToField(field) {
+  if (field.dataset.fieldTitleAdded === "true") {
+    return;
+  }
+
+  field.dataset.fieldTitleAdded = "true";
+
+  /*
+    Get the title before adding an automatically generated ID.
+    This prevents titles such as "Automatic Form Field 1".
+  */
+  const fieldTitle = getFieldTitle(field);
+
+  if (!field.id) {
+    field.id = `formField${generatedFieldId++}`;
+  }
+
+  const previousElement = field.previousElementSibling;
+
+  /*
+    Reuse an existing standalone label when one is already present.
+  */
+  const existingLabel =
+    previousElement &&
+    previousElement.tagName === "LABEL" &&
+    !previousElement.querySelector("input")
+      ? previousElement
+      : null;
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "form-field";
+
+  if (field.tagName === "TEXTAREA" || field.type === "file") {
+    wrapper.classList.add("full-width");
+  }
+
+  const label = existingLabel || document.createElement("label");
+
+  label.classList.add("field-title");
+  label.htmlFor = field.id;
+
+  if (!existingLabel) {
+    label.textContent = fieldTitle;
+  }
+
+  if (field.required && !label.querySelector(".required-star")) {
+    const star = document.createElement("span");
+    star.className = "required-star";
+    star.textContent = " *";
+    label.appendChild(star);
+  }
+
+  const insertionPoint = existingLabel || field;
+
+  insertionPoint.parentNode.insertBefore(wrapper, insertionPoint);
+
+  wrapper.appendChild(label);
+  wrapper.appendChild(field);
+}
+
+/*
+  Add titles to all fields within a container.
+*/
+function addTitlesToFormFields(container = document) {
+  const fields = [];
+
+  if (container.matches && container.matches(formFieldSelector)) {
+    fields.push(container);
+  }
+
+  if (container.querySelectorAll) {
+    fields.push(...container.querySelectorAll(formFieldSelector));
+  }
+
+  fields.forEach(addTitleToField);
+}
+
+/*
+  Add titles to existing and dynamically created fields.
+*/
+document.addEventListener("DOMContentLoaded", () => {
+  addTitlesToFormFields(document);
+
+  const fieldObserver = new MutationObserver(mutations => {
+    mutations.forEach(mutation => {
+      mutation.addedNodes.forEach(node => {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          addTitlesToFormFields(node);
+        }
+      });
+    });
+  });
+
+  fieldObserver.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+});
+
 </script>
 
 </body>
