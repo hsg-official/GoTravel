@@ -8,13 +8,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/personal_style.css">
-    
-    
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript"> (function() { emailjs.init("0snPOI_S_7ftRX9BK"); })(); </script>
 </head>
 <body>
 
+<!-- ═══════════════ MODALS ═══════════════ -->
 <div id="confirmModal" class="modal-overlay">
     <div class="modal-card confirm-card">
         <div style="font-size: 3rem; color: #ff4d4d; margin-bottom: 20px;">
@@ -28,271 +27,593 @@
     </div>
 </div>
 
-    <div id="detailsModal" class="modal-overlay">
-        <div class="modal-card">
-            <i class="fas fa-times close-modal" onclick="closeTripDetails()"></i>
-            <h2 id="modalTitle" style="color: var(--neon-primary); margin-bottom: 25px; border-bottom: 2px solid var(--neon-primary); padding-bottom: 10px;">Trip Details</h2>
-            
-            <div class="detail-row">
-                <span class="detail-label"><i class="fas fa-map-marker-alt"></i> Destination</span>
-                <span id="det-dest" class="detail-val"></span>
-            </div>
-            <div class="detail-row">
-                <span class="detail-label"><i class="fas fa-calendar-day"></i> Travel Date</span>
-                <span id="det-date" class="detail-val"></span>
-            </div>
-            <div class="detail-row">
-                <span class="detail-label"><i class="fas fa-wallet"></i> Budget</span>
-                <span id="det-budget" class="detail-val"></span>
-            </div>
-            <div class="detail-row">
-                <span class="detail-label"><i class="fas fa-clock"></i> Duration</span>
-                <span id="det-days" class="detail-val"></span>
-            </div>
-            <div class="detail-row">
-                <span class="detail-label"><i class="fas fa-user-tie"></i> Tour Guide</span>
-                <span id="det-guide" class="detail-val" style="color: var(--neon-primary);"></span>
-            </div>
-            <div class="detail-row">
-                <span class="detail-label"><i class="fas fa-hotel"></i> Accommodation</span>
-                <span id="det-hotel" class="detail-val" style="color: var(--neon-primary);"></span>
-            </div>
-            <!-- REMOVE THE OLD BUTTON AND PASTE THIS ENTIRE FLEX ROW HERE -->
-            <div style="display: flex; gap: 15px; margin-top: 30px;">
-                <button id="modalEditBtn" class="plan-btn" style="margin-top: 0; background: var(--neon-secondary);">Edit Journey</button>
-                <button class="plan-btn" style="margin-top: 0;" onclick="closeTripDetails()">Close Preview</button>
-            </div>
+<div id="discardDraftModal" class="modal-overlay">
+    <div class="modal-card confirm-card">
+        <div style="font-size: 3rem; color: #ff9800; margin-bottom: 20px;">
+            <i class="fas fa-file-circle-xmark"></i>
         </div>
-    </div>
-
-    <div class="app-container">
-        <aside class="sidebar">
-            <div class="logo-area">
-                <img src="../src/images/GoTravels.png" alt="GoTravel" class="logo-img">
-                <span>GoTravel</span>
-            </div>
-            
-            <nav class="nav-menu">
-                <a href="../index.html" class="nav-item">
-                    <i class="fas fa-home"></i> Home
-                </a>
-                <div id="nav-trips" class="nav-item active" onclick="showSection('trips-section')">
-                    <i class="fas fa-suitcase"></i> My Trips
-                </div>
-                <div id="nav-planner" class="nav-item" onclick="showSection('planner-section')">
-                    <i class="fas fa-map-marked-alt"></i> Trip Planner
-                </div>
-
-                <div class="expand-section">
-                    <div class="plus-trigger" onclick="toggleMenu('services-menu')">
-                        <span>Explore Services</span>
-                        <i class="fas fa-plus-circle"></i>
-                    </div>
-                    <div class="sub-menu" id="services-menu">
-                        <a href="places.html" class="sub-item"><i class="fas fa-map-marked-alt"></i> Destinations</a>
-                        <a href="hotels.html" class="sub-item"><i class="fas fa-hotel"></i> Accommodations</a>
-                        <a href="restaurants.html" class="sub-item"><i class="fas fa-utensils"></i> Culinary Experiences</a>
-                        <a href="guides.html" class="sub-item"><i class="fas fa-user-tie"></i> Professional Tour Guiding</a>
-
-                        <div class="plus-trigger" onclick="toggleMenu('fleet-menu')" style="font-size: 0.85rem; padding: 10px 15px;">
-                            <span><i class="fas fa-route" style="margin-right: 8px;"></i> Transportation</span>
-                            <i class="fas fa-chevron-down" style="font-size: 0.7rem;"></i>
-                        </div>
-                        <div class="sub-menu nested-menu" id="fleet-menu">
-                            <a href="cabs.html" class="sub-item"><i class="fas fa-car-side"></i> Executive Private Cab</a>
-                            <a href="buses.html" class="sub-item"><i class="fas fa-bus-alt"></i> Public Transit Services</a>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-
-            <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 20px; opacity: 0.6;">
-                &copy; 2026 GoTravel Experience
-            </div>
-        </aside>
-
-        <main class="main-container">
-            <div class="header-row">
-                <h1 id="page-title">My Trips</h1>
-                <div style="position: relative;">
-                    <img id="userAvatar" src="" alt="User Avatar" style="width: 48px; height: 48px; border-radius: 50%; border: 1 solid var(--neon-secondary); cursor: pointer;">
-                    
-                    <div id="profilePopup" class="profile-popup">
-                        <div id="popupInitial" class="popup-avatar-circle">S</div>
-                        <div id="popupName" class="popup-name">Name</div>
-                        <div id="popupEmail" class="popup-email">email@example.com</div>
-                        <button class="logout-btn" onclick="logoutUser()">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="successModal" class="modal-overlay">
-                <div class="modal-card" style="text-align: center; max-width: 350px;">
-                    <div style="font-size: 3rem; color: var(--neon-primary); margin-bottom: 20px;">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <h2 style="color: #fff; margin-bottom: 10px;">Success!</h2>
-                    <p style="color: var(--text-muted); margin-bottom: 25px;">Your trip blueprint has been saved to your dashboard.</p>
-                    <button class="plan-btn" style="margin-top: 0;" onclick="closeSuccessModal()">Great!</button>
-                </div>
-            </div>
-
-            <div id="trips-section">
-                <section class="welcome-card">
-                    <div>
-                        <p id="dashboardGreeting" class="welcome-greeting">Good day, Traveler.</p>
-                        <h2 id="dashboardUserName">Welcome back</h2>
-                        <p id="dashboardNextTrip" class="welcome-next-trip">Your next trip details will appear here.</p>
-                    </div>
-
-                    <div class="welcome-stat">
-                        <span id="dashboardTripCount">0</span>
-                        <p>Upcoming Trips</p>
-                    </div>
-                 </section>
-
-                <div class="trip-tabs">
-                    <button class="tab-btn active" onclick="openTab(event, 'ongoing')">Active Explorations</button>
-                    <button class="tab-btn" onclick="openTab(event, 'past')">Travel History</button>
-                    <button class="tab-btn" onclick="openTab(event, 'cancelled')">Cancelled Bookings</button>
-                </div>
-
-                <div id="ongoing" class="tab-content active">
-                    <div class="placeholder-card" id="ongoing-placeholder">
-                        <i class="fas fa-rocket"></i>
-                        <p>Your scheduled trips and ongoing explorations will appear here.</p>
-                    </div>
-                    <div id="saved-trips-container"></div>
-                </div>
-
-                <div id="past" class="tab-content">
-                    <div class="placeholder-card" id="past-placeholder">
-                        <i class="fas fa-history"></i>
-                        <p>Your past travel history will be listed here.</p>
-                    </div>
-                    <div id="history-trips-container"></div>
-                </div>
-
-                <div id="cancelled" class="tab-content">
-                    <div class="placeholder-card">
-                        <i class="fas fa-calendar-times"></i>
-                        <p>Cancelled bookings will appear here.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div id="planner-section" style="display: none;">
-                <div class="planner-form-container">
-                    <h2 style="color: var(--neon-primary); margin-bottom: 10px;"><i class="fas fa-compass"></i> Plan Your Next Adventure</h2>
-                    <p style="color: var(--text-muted); margin-bottom: 20px;">Fill in the details to blueprint your future journey.</p>
-                    
-            <div class="planner-grid">
-                <div class="input-group planner-field-title">
-                    <label>Adventure Title</label>
-                    <input type="text" id="trip-title" class="glass-input" placeholder="e.g. Summer Vacation 2026" autocomplete="off">
-                </div>
-
-                <div class="input-group planner-field-destinations">
-                    <label>Destinations</label>
-
-                    <div id="destinations-list">
-                        <div class="destination-row">
-                            <button type="button" class="drag-handle" draggable="true" title="Drag to reorder">
-                                <i class="fas fa-grip-vertical"></i>
-                            </button>
-
-                            <input type="text" class="glass-input trip-destination" placeholder="Select destination..." readonly>
-
-                            <button type="button" class="glass-btn search-dest-btn" onclick="goToPlaces(this)">
-                                <i class="fas fa-location-dot"></i>
-                            </button>
-
-                            <button type="button" class="glass-btn remove-stop-btn" onclick="removeDestinationRow(this)" title="Remove this stop">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <button type="button" id="add-destination-btn" class="add-mini-btn">
-                        <i class="fas fa-plus-circle"></i> Add Another Stop
-                    </button>
-                </div>
-
-                <div class="input-group planner-field-date">
-                    <label>Target Date</label>
-                    <div class="date-type-tabs">
-                        <div id="tab-single" class="date-tab active" onclick="setDateMode('single')">Specific Date</div>
-                        <div id="tab-range" class="date-tab" onclick="setDateMode('range')">Flexible Range</div>
-                    </div>
-                    <div id="input-single">
-                        <input type="date" id="trip-date" class="glass-input">
-                    </div>
-                    <div id="input-range" style="display: none; gap: 10px;">
-                        <input type="date" id="trip-date-start" class="glass-input" title="Arrival Date">
-                        <input type="date" id="trip-date-end" class="glass-input" title="Departure Date">
-                    </div>
-                    <span id="date-error" style="color: #ff4d4d; font-size: 0.8rem; margin-top: 5px; display: none;">
-                        <i class="fas fa-exclamation-circle"></i> This date has already passed.
-                    </span>
-                </div>
-
-                <div class="input-group planner-field-budget">
-                    <label>Estimated Budget</label>
-                    <div class="budget-row">
-                            <select id="trip-currency" class="glass-select">
-                                <option value="LKR">LKR</option>
-                                <option value="USD">USD</option>
-                                <option value="EUR">EUR</option>
-                                <option value="GBP">GBP</option>
-                            </select>
-                            <input type="number" id="trip-budget-amount" class="glass-input" placeholder="Amount" autocomplete="off">
-                        </div>
-                    </div>
-
-    <div class="input-group planner-field-days">
-        <label>Number of Days</label>
-        <input type="number" id="trip-days" class="glass-input" placeholder="e.g. 5" autocomplete="off">
+        <p class="confirm-msg">Discard your saved draft? This cannot be undone.</p>
+        <div class="confirm-actions">
+            <button id="discardDraftOk" class="confirm-btn btn-delete-final">Discard</button>
+            <button id="discardDraftCancel" class="confirm-btn btn-keep">Keep Draft</button>
+        </div>
     </div>
 </div>
 
-                    <div class="booking-section">
-                        <h3 style="color: var(--neon-primary); margin-bottom: 20px; font-size: 1.1rem;"><i class="fas fa-concierge-bell"></i> Quick Bookings</h3>
-                        <div class="booking-grid">
-                            <div style="display: flex; flex-direction: column; gap: 10px;">
-                                <div class="booking-btn" onclick="toggleTransport()">
-                                    <i class="fas fa-route"></i>
-                                    <span>Transportation</span>
-                                </div>
-                                <div id="transportOptions" class="transport-options">
-                                    <a href="buses.html" class="booking-btn" style="padding: 10px; font-size: 0.8rem;">
-                                        <i class="fas fa-bus"></i> Buses
-                                    </a>
-                                    <a href="cabs.html" class="booking-btn" style="padding: 10px; font-size: 0.8rem;">
-                                        <i class="fas fa-car"></i> Cabs
-                                    </a>
-                                </div>
-                            </div>
-                            <a onclick="goToHotels()" class="booking-btn" id="hotel-booking-btn">
-                                <i class="fas fa-hotel"></i>
-                                <span id="hotel-btn-text">Hotels</span>
-                            </a>
-                            <a onclick="goToGuides()" class="booking-btn" id="guide-booking-btn" style="cursor: pointer;">
-                                <i class="fas fa-user-tie"></i>
-                                <span id="guide-btn-text">Guides</span>
-                            </a>
-                            
-                        </div>
-                    </div>
+<div id="detailsModal" class="modal-overlay">
+    <div class="modal-card details-modal-card">
+        <i class="fas fa-times close-modal" onclick="closeTripDetails()"></i>
+        <h2 id="modalTitle" class="modal-title">Trip Details</h2>
+        <div id="modalContent" class="modal-details-body"></div>
+        <div class="modal-btn-row">
+            <button id="modalEditBtn" class="plan-btn btn-secondary">Edit Journey</button>
+            <button class="plan-btn" onclick="closeTripDetails()">Close Preview</button>
+        </div>
+    </div>
+</div>
 
-                    <button class="plan-btn" onclick="saveTrip()">Save Trip Blueprint</button>
+<div id="successModal" class="modal-overlay">
+    <div class="modal-card" style="text-align: center; max-width: 350px;">
+        <div style="font-size: 3rem; color: var(--neon-primary); margin-bottom: 20px;">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h2 style="color: #fff; margin-bottom: 10px;">Success!</h2>
+        <p style="color: var(--text-muted); margin-bottom: 25px;">Your trip has been saved to your dashboard.</p>
+        <button class="plan-btn" style="margin-top: 0;" onclick="closeSuccessModal()">Great!</button>
+    </div>
+</div>
+
+<!-- Toast notification -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ═══════════════ APP LAYOUT ═══════════════ -->
+<div class="app-container">
+    <aside class="sidebar">
+        <div class="logo-area">
+            <img src="../src/images/GoTravels.png" alt="GoTravel" class="logo-img">
+            <span>GoTravel</span>
+        </div>
+        <nav class="nav-menu">
+            <a href="../index.html" class="nav-item">
+                <i class="fas fa-home"></i> Home
+            </a>
+            <div id="nav-trips" class="nav-item active" onclick="showSection('trips-section')">
+                <i class="fas fa-suitcase"></i> My Trips
+            </div>
+            <div id="nav-planner" class="nav-item" onclick="showSection('planner-section')">
+                <i class="fas fa-map-marked-alt"></i> Trip Planner
+            </div>
+            <div class="expand-section">
+                <div class="plus-trigger" onclick="toggleMenu('services-menu')">
+                    <span>Explore Services</span>
+                    <i class="fas fa-plus-circle"></i>
+                </div>
+                <div class="sub-menu" id="services-menu">
+                    <a href="places.html" class="sub-item"><i class="fas fa-map-marked-alt"></i> Destinations</a>
+                    <a href="hotels.html" class="sub-item"><i class="fas fa-hotel"></i> Accommodations</a>
+                    <a href="restaurants.html" class="sub-item"><i class="fas fa-utensils"></i> Culinary Experiences</a>
+                    <a href="guides.html" class="sub-item"><i class="fas fa-user-tie"></i> Professional Tour Guiding</a>
+                    <div class="plus-trigger" onclick="toggleMenu('fleet-menu')" style="font-size: 0.85rem; padding: 10px 15px;">
+                        <span><i class="fas fa-route" style="margin-right: 8px;"></i> Transportation</span>
+                        <i class="fas fa-chevron-down" style="font-size: 0.7rem;"></i>
+                    </div>
+                    <div class="sub-menu nested-menu" id="fleet-menu">
+                        <a href="cabs.html" class="sub-item"><i class="fas fa-car-side"></i> Executive Private Cab</a>
+                        <a href="buses.html" class="sub-item"><i class="fas fa-bus-alt"></i> Public Transit Services</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 20px; opacity: 0.6;">
+            &copy; 2026 GoTravel Experience
+        </div>
+    </aside>
+
+    <main class="main-container">
+        <div class="header-row">
+            <h1 id="page-title">My Trips</h1>
+            <div style="position: relative;">
+                <img id="userAvatar" src="" alt="User Avatar" style="width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--neon-secondary); cursor: pointer;">
+                <div id="profilePopup" class="profile-popup">
+                    <div id="popupInitial" class="popup-avatar-circle">S</div>
+                    <div id="popupName" class="popup-name">Name</div>
+                    <div id="popupEmail" class="popup-email">email@example.com</div>
+                    <button class="logout-btn" onclick="logoutUser()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════ MY TRIPS SECTION ═══════════════ -->
+        <div id="trips-section">
+            <section class="welcome-card">
+                <div>
+                    <p id="dashboardGreeting" class="welcome-greeting">Good day, Traveler.</p>
+                    <h2 id="dashboardUserName">Welcome back</h2>
+                    <p id="dashboardNextTrip" class="welcome-next-trip">Your next trip details will appear here.</p>
+                </div>
+                <div class="welcome-stat">
+                    <span id="dashboardTripCount">0</span>
+                    <p>Upcoming Trips</p>
+                </div>
+            </section>
+
+            <div class="trip-tabs">
+                <button class="tab-btn active" onclick="openTab(event, 'ongoing')">Active Explorations</button>
+                <button class="tab-btn" onclick="openTab(event, 'past')">Travel History</button>
+                <button class="tab-btn" onclick="openTab(event, 'cancelled')">Cancelled Bookings</button>
+            </div>
+
+            <div id="ongoing" class="tab-content active">
+                <div class="placeholder-card" id="ongoing-placeholder">
+                    <i class="fas fa-rocket"></i>
+                    <p>Your scheduled trips and ongoing explorations will appear here.</p>
+                </div>
+                <div id="saved-trips-container"></div>
+            </div>
+            <div id="past" class="tab-content">
+                <div class="placeholder-card" id="past-placeholder">
+                    <i class="fas fa-history"></i>
+                    <p>Your past travel history will be listed here.</p>
+                </div>
+                <div id="history-trips-container"></div>
+            </div>
+            <div id="cancelled" class="tab-content">
+                <div class="placeholder-card">
+                    <i class="fas fa-calendar-times"></i>
+                    <p>Cancelled bookings will appear here.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════ TRIP PLANNER WIZARD ═══════════════ -->
+        <div id="planner-section" style="display: none;">
+
+            <!-- Autosave indicator -->
+            <div class="autosave-indicator" id="autosaveIndicator">
+                <i class="fas fa-cloud"></i> <span id="autosaveText">Ready</span>
+            </div>
+
+            <!-- Progress Stepper -->
+            <div class="wizard-stepper">
+                <div class="stepper-step active" data-step="1" onclick="goToStep(1)">
+                    <div class="stepper-circle"><span>1</span></div>
+                    <div class="stepper-label">Trip Details</div>
+                </div>
+                <div class="stepper-line"></div>
+                <div class="stepper-step" data-step="2" onclick="goToStep(2)">
+                    <div class="stepper-circle"><span>2</span></div>
+                    <div class="stepper-label">Destinations</div>
+                </div>
+                <div class="stepper-line"></div>
+                <div class="stepper-step" data-step="3" onclick="goToStep(3)">
+                    <div class="stepper-circle"><span>3</span></div>
+                    <div class="stepper-label">Transportation</div>
+                </div>
+                <div class="stepper-line"></div>
+                <div class="stepper-step" data-step="4" onclick="goToStep(4)">
+                    <div class="stepper-circle"><span>4</span></div>
+                    <div class="stepper-label">Hotels &amp; Services</div>
+                </div>
+                <div class="stepper-line"></div>
+                <div class="stepper-step" data-step="5" onclick="goToStep(5)">
+                    <div class="stepper-circle"><span>5</span></div>
+                    <div class="stepper-label">Daily Itinerary</div>
+                </div>
+                <div class="stepper-line"></div>
+                <div class="stepper-step" data-step="6" onclick="goToStep(6)">
+                    <div class="stepper-circle"><span>6</span></div>
+                    <div class="stepper-label">Review &amp; Save</div>
                 </div>
             </div>
 
-        </main>
-    </div>
+            <!-- Two-column wizard layout -->
+            <div class="wizard-layout">
 
-    <script src="../backend/personal_script.js"></script>
+                <!-- LEFT: Step content -->
+                <div class="wizard-main">
+
+                    <!-- ════════ STEP 1: Trip Details ════════ -->
+                    <div class="wizard-step active" id="step-1">
+                        <div class="step-header">
+                            <i class="fas fa-compass"></i>
+                            <div>
+                                <h2>Tell Us About Your Journey</h2>
+                                <p>Set the foundation for your trip — dates, travelers, preferences, and budget.</p>
+                            </div>
+                        </div>
+
+                        <!-- Basic Info -->
+                        <div class="form-section">
+                            <h3 class="section-title"><i class="fas fa-info-circle"></i> Basic Information</h3>
+                            <div class="form-grid cols-2">
+                                <div class="input-group span-2">
+                                    <label for="trip-title">Trip Title <span class="required">*</span></label>
+                                    <input type="text" id="trip-title" class="glass-input" placeholder="e.g. Summer Vacation 2026" autocomplete="off">
+                                    <span class="field-error" id="err-title"></span>
+                                </div>
+                                <div class="input-group">
+                                    <label for="trip-start-location">Starting Location</label>
+                                    <input type="text" id="trip-start-location" class="glass-input" placeholder="e.g. Colombo" autocomplete="off">
+                                </div>
+                                <div class="input-group">
+                                    <label>Trip Duration</label>
+                                    <div class="computed-value" id="trip-duration-display">Select dates to calculate</div>
+                                </div>
+                                <div class="input-group">
+                                    <label for="trip-date-start">Start Date <span class="required">*</span></label>
+                                    <input type="date" id="trip-date-start" class="glass-input">
+                                    <span class="field-error" id="err-start-date"></span>
+                                </div>
+                                <div class="input-group">
+                                    <label for="trip-date-end">End Date <span class="required">*</span></label>
+                                    <input type="date" id="trip-date-end" class="glass-input">
+                                    <span class="field-error" id="err-end-date"></span>
+                                </div>
+                            </div>
+
+                            <div class="form-grid cols-3" style="margin-top: 20px;">
+                                <div class="input-group">
+                                    <label for="trip-adults">Adults</label>
+                                    <input type="number" id="trip-adults" class="glass-input" value="1" min="1" max="50">
+                                </div>
+                                <div class="input-group">
+                                    <label for="trip-children">Children</label>
+                                    <input type="number" id="trip-children" class="glass-input" value="0" min="0" max="20">
+                                </div>
+                                <div class="input-group">
+                                    <label for="trip-infants">Infants</label>
+                                    <input type="number" id="trip-infants" class="glass-input" value="0" min="0" max="10">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Trip Preferences -->
+                        <div class="form-section">
+                            <h3 class="section-title"><i class="fas fa-sliders-h"></i> Trip Preferences</h3>
+
+                            <label class="field-label">Trip Type</label>
+                            <div class="chip-group" id="tripTypeChips">
+                                <button type="button" class="chip" data-value="Leisure"><i class="fas fa-umbrella-beach"></i> Leisure</button>
+                                <button type="button" class="chip" data-value="Cultural"><i class="fas fa-landmark"></i> Cultural</button>
+                                <button type="button" class="chip" data-value="Adventure"><i class="fas fa-mountain"></i> Adventure</button>
+                                <button type="button" class="chip" data-value="Wildlife"><i class="fas fa-paw"></i> Wildlife</button>
+                                <button type="button" class="chip" data-value="Beach"><i class="fas fa-water"></i> Beach</button>
+                                <button type="button" class="chip" data-value="Business"><i class="fas fa-briefcase"></i> Business</button>
+                                <button type="button" class="chip" data-value="Religious"><i class="fas fa-place-of-worship"></i> Religious</button>
+                                <button type="button" class="chip" data-value="Family"><i class="fas fa-people-group"></i> Family</button>
+                                <button type="button" class="chip" data-value="Honeymoon"><i class="fas fa-heart"></i> Honeymoon</button>
+                                <button type="button" class="chip" data-value="Educational"><i class="fas fa-graduation-cap"></i> Educational</button>
+                            </div>
+
+                            <label class="field-label" style="margin-top:20px;">Interests</label>
+                            <div class="chip-group" id="interestChips">
+                                <button type="button" class="chip" data-value="History"><i class="fas fa-scroll"></i> History</button>
+                                <button type="button" class="chip" data-value="Nature"><i class="fas fa-leaf"></i> Nature</button>
+                                <button type="button" class="chip" data-value="Hiking"><i class="fas fa-hiking"></i> Hiking</button>
+                                <button type="button" class="chip" data-value="Photography"><i class="fas fa-camera"></i> Photography</button>
+                                <button type="button" class="chip" data-value="Food"><i class="fas fa-utensils"></i> Food</button>
+                                <button type="button" class="chip" data-value="Shopping"><i class="fas fa-shopping-bag"></i> Shopping</button>
+                                <button type="button" class="chip" data-value="Beaches"><i class="fas fa-umbrella-beach"></i> Beaches</button>
+                                <button type="button" class="chip" data-value="Wildlife"><i class="fas fa-binoculars"></i> Wildlife</button>
+                                <button type="button" class="chip" data-value="Nightlife"><i class="fas fa-cocktail"></i> Nightlife</button>
+                                <button type="button" class="chip" data-value="Local Culture"><i class="fas fa-masks-theater"></i> Local Culture</button>
+                            </div>
+
+                            <label class="field-label" style="margin-top:20px;">Travel Pace</label>
+                            <div class="chip-group single-select" id="paceChips">
+                                <button type="button" class="chip" data-value="Relaxed"><i class="fas fa-spa"></i> Relaxed</button>
+                                <button type="button" class="chip" data-value="Balanced"><i class="fas fa-balance-scale"></i> Balanced</button>
+                                <button type="button" class="chip" data-value="Fast-paced"><i class="fas fa-bolt"></i> Fast-paced</button>
+                            </div>
+
+                            <label class="field-label" style="margin-top:20px;">Special Requirements</label>
+                            <div class="chip-group" id="requirementChips">
+                                <button type="button" class="chip" data-value="Wheelchair"><i class="fas fa-wheelchair"></i> Wheelchair Access</button>
+                                <button type="button" class="chip" data-value="Children"><i class="fas fa-baby"></i> Traveling with Children</button>
+                                <button type="button" class="chip" data-value="Elderly"><i class="fas fa-person-cane"></i> Elderly Travelers</button>
+                                <button type="button" class="chip" data-value="Vegetarian"><i class="fas fa-seedling"></i> Vegetarian Meals</button>
+                                <button type="button" class="chip" data-value="Halal"><i class="fas fa-moon"></i> Halal Meals</button>
+                            </div>
+                            <div class="input-group" style="margin-top: 15px;">
+                                <label for="trip-special-notes">Other Special Requirements</label>
+                                <textarea id="trip-special-notes" class="glass-input glass-textarea" placeholder="Any additional requirements..." rows="2"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Budget -->
+                        <div class="form-section">
+                            <h3 class="section-title"><i class="fas fa-wallet"></i> Budget Planning</h3>
+                            <div class="form-grid cols-2">
+                                <div class="input-group">
+                                    <label for="trip-currency">Currency</label>
+                                    <select id="trip-currency" class="glass-select">
+                                        <option value="LKR">LKR - Sri Lankan Rupee</option>
+                                        <option value="USD">USD - US Dollar</option>
+                                        <option value="EUR">EUR - Euro</option>
+                                        <option value="GBP">GBP - British Pound</option>
+                                        <option value="AUD">AUD - Australian Dollar</option>
+                                        <option value="INR">INR - Indian Rupee</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label for="trip-budget-total">Total Budget</label>
+                                    <input type="number" id="trip-budget-total" class="glass-input" placeholder="Total budget" min="0" autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="form-grid cols-2" style="margin-top: 15px;">
+                                <div class="input-group">
+                                    <label for="budget-accommodation">Accommodation</label>
+                                    <input type="number" id="budget-accommodation" class="glass-input budget-field" placeholder="0" min="0">
+                                </div>
+                                <div class="input-group">
+                                    <label for="budget-transport">Transportation</label>
+                                    <input type="number" id="budget-transport" class="glass-input budget-field" placeholder="0" min="0">
+                                </div>
+                                <div class="input-group">
+                                    <label for="budget-food">Food &amp; Dining</label>
+                                    <input type="number" id="budget-food" class="glass-input budget-field" placeholder="0" min="0">
+                                </div>
+                                <div class="input-group">
+                                    <label for="budget-activities">Activities</label>
+                                    <input type="number" id="budget-activities" class="glass-input budget-field" placeholder="0" min="0">
+                                </div>
+                                <div class="input-group">
+                                    <label for="budget-emergency">Emergency</label>
+                                    <input type="number" id="budget-emergency" class="glass-input budget-field" placeholder="0" min="0">
+                                </div>
+                            </div>
+                            <div class="budget-bar-container" id="budgetBarContainer" style="display:none;">
+                                <div class="budget-bar-label">Budget Allocation</div>
+                                <div class="budget-bar">
+                                    <div class="budget-segment" id="seg-accommodation" data-label="Accommodation"></div>
+                                    <div class="budget-segment" id="seg-transport" data-label="Transport"></div>
+                                    <div class="budget-segment" id="seg-food" data-label="Food"></div>
+                                    <div class="budget-segment" id="seg-activities" data-label="Activities"></div>
+                                    <div class="budget-segment" id="seg-emergency" data-label="Emergency"></div>
+                                </div>
+                                <div class="budget-legend" id="budgetLegend"></div>
+                                <div class="budget-remaining" id="budgetRemaining"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ════════ STEP 2: Destinations ════════ -->
+                    <div class="wizard-step" id="step-2">
+                        <div class="step-header">
+                            <i class="fas fa-route"></i>
+                            <div>
+                                <h2>Build Your Travel Route</h2>
+                                <p>Add destinations in order. Drag to reorder your route.</p>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <div class="route-timeline" id="routeTimeline"></div>
+
+                            <div id="destinations-list"></div>
+
+                            <button type="button" id="add-destination-btn" class="add-mini-btn">
+                                <i class="fas fa-plus-circle"></i> Add Another Stop
+                            </button>
+                            <span class="field-error" id="err-destinations"></span>
+                        </div>
+                    </div>
+
+                    <!-- ════════ STEP 3: Transportation ════════ -->
+                    <div class="wizard-step" id="step-3">
+                        <div class="step-header">
+                            <i class="fas fa-car-side"></i>
+                            <div>
+                                <h2>Choose How You Will Travel</h2>
+                                <p>Select transport for each segment of your route.</p>
+                            </div>
+                        </div>
+                        <div class="form-section">
+                            <div id="transportSegments" class="transport-segments-list">
+                                <div class="empty-state">
+                                    <i class="fas fa-route"></i>
+                                    <p>Add at least two destinations in Step 2 to plan transport between them.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ════════ STEP 4: Hotels & Services ════════ -->
+                    <div class="wizard-step" id="step-4">
+                        <div class="step-header">
+                            <i class="fas fa-concierge-bell"></i>
+                            <div>
+                                <h2>Choose Hotels and Travel Services</h2>
+                                <p>Select accommodation, guides, and restaurants for your trip.</p>
+                            </div>
+                        </div>
+
+                        <!-- Hotels -->
+                        <div class="form-section">
+                            <h3 class="section-title"><i class="fas fa-hotel"></i> Accommodation</h3>
+                            <div id="hotelSelections" class="service-cards-list">
+                                <div class="empty-state">
+                                    <i class="fas fa-hotel"></i>
+                                    <p>Add destinations first, then select hotels for each stop.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Guide -->
+                        <div class="form-section">
+                            <h3 class="section-title"><i class="fas fa-user-tie"></i> Tour Guide</h3>
+                            <div class="form-grid cols-2">
+                                <div class="input-group span-2">
+                                    <label for="guide-type">Guide Preference</label>
+                                    <select id="guide-type" class="glass-select">
+                                        <option value="none">No guide needed</option>
+                                        <option value="full-trip">Guide for the entire trip</option>
+                                        <option value="selected-dest">Guide for selected destinations</option>
+                                        <option value="selected-days">Guide for selected days</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="guideSelectionArea" style="margin-top: 15px;">
+                                <div id="selectedGuideCard" style="display:none;" class="selected-service-card">
+                                    <div class="service-card-header">
+                                        <div class="service-card-icon"><i class="fas fa-user-tie"></i></div>
+                                        <div>
+                                            <h4 id="guideCardName">No guide selected</h4>
+                                            <p id="guideCardDetails" class="text-muted"></p>
+                                        </div>
+                                    </div>
+                                    <div class="service-card-actions">
+                                        <button type="button" class="btn-sm btn-outline" onclick="goToGuides()"><i class="fas fa-exchange-alt"></i> Change</button>
+                                        <button type="button" class="btn-sm btn-danger-outline" onclick="removeGuide()"><i class="fas fa-times"></i> Remove</button>
+                                    </div>
+                                </div>
+                                <button type="button" id="findGuideBtn" class="service-search-btn" onclick="goToGuides()">
+                                    <i class="fas fa-search"></i> Find a Tour Guide
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Restaurants -->
+                        <div class="form-section">
+                            <h3 class="section-title"><i class="fas fa-utensils"></i> Restaurants (Optional)</h3>
+                            <div id="restaurantSelections" class="service-cards-list"></div>
+                            <button type="button" class="add-mini-btn" onclick="addRestaurantEntry()">
+                                <i class="fas fa-plus-circle"></i> Add a Restaurant
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ════════ STEP 5: Daily Itinerary ════════ -->
+                    <div class="wizard-step" id="step-5">
+                        <div class="step-header">
+                            <i class="fas fa-calendar-alt"></i>
+                            <div>
+                                <h2>Organize Your Daily Itinerary</h2>
+                                <p>Drag activities to reorder. Items from previous steps are auto-added.</p>
+                            </div>
+                        </div>
+                        <div class="form-section">
+                            <div id="itineraryContainer" class="itinerary-days">
+                                <div class="empty-state">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <p>Set your travel dates in Step 1 to generate the daily itinerary.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ════════ STEP 6: Review & Save ════════ -->
+                    <div class="wizard-step" id="step-6">
+                        <div class="step-header">
+                            <i class="fas fa-clipboard-check"></i>
+                            <div>
+                                <h2>Review Your Complete Trip</h2>
+                                <p>Verify all details before saving your travel plan.</p>
+                            </div>
+                        </div>
+                        <div class="form-section" id="reviewContent"></div>
+
+                        <div class="form-section">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="confirmCheckbox">
+                                <span>I confirm that the trip details, traveler information, dates, and selected services are correct.</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Wizard navigation buttons -->
+                    <div class="wizard-nav">
+                        <button type="button" class="wizard-btn btn-prev" id="btnPrev" onclick="prevStep()">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </button>
+                        <div class="wizard-nav-right">
+                            <button type="button" class="wizard-btn btn-draft" onclick="manualSaveDraft()">
+                                <i class="fas fa-save"></i> Save Draft
+                            </button>
+                            <button type="button" class="wizard-btn btn-discard" id="btnDiscard" onclick="confirmDiscardDraft()">
+                                <i class="fas fa-trash-alt"></i> Discard Draft
+                            </button>
+                            <button type="button" class="wizard-btn btn-next" id="btnNext" onclick="nextStep()">
+                                Continue <i class="fas fa-arrow-right"></i>
+                            </button>
+                            <button type="button" class="wizard-btn btn-save-final" id="btnSave" style="display:none;" onclick="saveTrip()">
+                                <i class="fas fa-check-circle"></i> Save Trip Plan
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- RIGHT: Live Trip Summary -->
+                <div class="wizard-sidebar">
+                    <div class="summary-card" id="tripSummaryCard">
+                        <h3 class="summary-title"><i class="fas fa-clipboard-list"></i> Live Trip Summary</h3>
+                        <div class="summary-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="completionBar" style="width: 0%"></div>
+                            </div>
+                            <span class="progress-text" id="completionText">0% Complete</span>
+                        </div>
+                        <div class="summary-body" id="summaryBody">
+                            <div class="summary-row">
+                                <span class="summary-label"><i class="fas fa-heading"></i> Title</span>
+                                <span class="summary-value" id="sum-title">Not set</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label"><i class="fas fa-calendar"></i> Dates</span>
+                                <span class="summary-value" id="sum-dates">Not set</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label"><i class="fas fa-clock"></i> Duration</span>
+                                <span class="summary-value" id="sum-duration">—</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label"><i class="fas fa-users"></i> Travelers</span>
+                                <span class="summary-value" id="sum-travelers">1</span>
+                            </div>
+                            <div class="summary-divider"></div>
+                            <div class="summary-row">
+                                <span class="summary-label"><i class="fas fa-map-marker-alt"></i> Destinations</span>
+                                <span class="summary-value" id="sum-destinations">None</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label"><i class="fas fa-car"></i> Transport</span>
+                                <span class="summary-value" id="sum-transport">None</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label"><i class="fas fa-hotel"></i> Hotels</span>
+                                <span class="summary-value" id="sum-hotels">None</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label"><i class="fas fa-user-tie"></i> Guide</span>
+                                <span class="summary-value" id="sum-guide">None</span>
+                            </div>
+                            <div class="summary-divider"></div>
+                            <div class="summary-row">
+                                <span class="summary-label"><i class="fas fa-wallet"></i> Budget</span>
+                                <span class="summary-value summary-budget" id="sum-budget">Not set</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label"><i class="fas fa-coins"></i> Remaining</span>
+                                <span class="summary-value" id="sum-remaining">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobile toggle -->
+                    <button type="button" class="summary-toggle" id="summaryToggle" onclick="toggleMobileSummary()">
+                        <i class="fas fa-clipboard-list"></i> View Trip Summary
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script src="../backend/personal_script.js"></script>
 </body>
 </html>
