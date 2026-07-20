@@ -1,6 +1,21 @@
+// Default Explore Sri Lanka background
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelector('.gradient-bg').style.backgroundImage =
-        "linear-gradient(rgba(10,10,20,0.75), rgba(10,10,20,0.85)), url('../src/images/sri-lanka.jpg')";
+
+    const mainBackground = document.querySelector('.gradient-bg');
+
+    if(mainBackground){
+
+        mainBackground.style.backgroundImage =
+        `
+        linear-gradient(
+            rgba(10,10,20,0.70),
+            rgba(10,10,20,0.80)
+        ),
+        url("../src/images/sri-lanka.jpg")
+        `;
+
+    }
+
 });
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwHltBHkWqBNrk67zieDRl9xr1hscq3ZlnJu7aHv6njFxhL0vt6tyWg0hJYeTxLz5liPA/exec';
 
@@ -225,14 +240,35 @@ async function loadDestination(destination) {
         list.appendChild(li);
     });
 
-    const bg = document.getElementById('destImageBg');
-    bg.style.backgroundImage = aiData.imageUrl ? `url(${aiData.imageUrl})` : 'none';
-    document.querySelector('.gradient-bg').style.backgroundImage =
-    aiData.imageUrl
-    ?
-    `linear-gradient(rgba(10,10,20,0.55), rgba(10,10,20,0.65)), url(${aiData.imageUrl})`
-    :
-    "linear-gradient(rgba(10,10,20,0.75), rgba(10,10,20,0.85)), url('../src/images/sri-lanka.jpg')";
+    // Destination card image
+const bg = document.getElementById('destImageBg');
+
+if(aiData.imageUrl){
+
+    bg.style.backgroundImage = 
+    `url(${aiData.imageUrl})`;
+
+}
+
+
+
+// Main page background changes after searching
+
+const mainBackground = document.querySelector('.gradient-bg');
+
+
+if(aiData.imageUrl && mainBackground){
+
+    mainBackground.style.backgroundImage =
+    `
+    linear-gradient(
+        rgba(10,10,20,0.55),
+        rgba(10,10,20,0.65)
+    ),
+    url(${aiData.imageUrl})
+    `;
+
+}
     updateSelectButton();
 
     document.getElementById('loader').style.display = 'none';
