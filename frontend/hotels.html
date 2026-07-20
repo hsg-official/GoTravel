@@ -129,6 +129,9 @@
                     </div>
 
                     <div id="modalInfoContainer"></div>
+                    <div class="modal-footer">
+                        <button type="button" id="bookNowBtn" class="btn-explore book-now-btn">Book Now</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -150,6 +153,16 @@
                 <button class="btn-explore" onclick="closeSearchAlert()">OK</button>
             </div>
         </div>
+
+    
+        <div id="bookingAlertModal" class="details-modal">
+            <div class="modal-content" style="text-align: center; max-width: 400px;">
+                <h2 class="neon-text">Booking</h2>
+                <p style="margin: 20px 0;">Booking coming soon!</p>
+                <button class="btn-explore" onclick="closeBookingAlert()">OK</button>
+            </div>
+        </div>
+
     </main>
     <script src="../backend/hotels_script.js"></script>
 </body>
