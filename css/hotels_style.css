@@ -87,7 +87,7 @@ body {
     text-shadow: 0 0 10px var(--neon-cyan);
 }
 
-/* 2. Logo Icon - Defines size and looks */
+/* Logo Icon - Defines size and looks */
 .logo-icon {
     height: 60px; /* Adjust this value to make the logo larger or smaller */
     width: auto; /* Keeps the logo proportional */
@@ -97,7 +97,7 @@ body {
     padding: 5px; /* Creates space between the logo image and the border */
 }
 
-/* 3. Logo Text - Defines the appearance of the 'GoTravel' text */
+/* Logo Text - Defines the appearance of the 'GoTravel' text */
 .logo-text {
     font-family: 'Poppins', sans-serif;
     font-size: 2rem;
@@ -174,9 +174,8 @@ body {
 
 .btn-outline:hover { background: white; color: black; }
 
-/* =========================================
-   Custom Glass Neon Hero Button
-   ========================================= */
+/* Custom Glass Neon Hero Button */
+
 .btn-glass-neon {
     background: rgba(255, 255, 255, 0.05);       /* Subtle glass transparency */
     backdrop-filter: blur(8px);                  /* Frosty blur effect behind the button */
@@ -433,9 +432,8 @@ body {
     box-shadow: 0 0 10px var(--neon-cyan);
 }
 
-/* =========================================
-   1. The Teaser Gallery
-   ========================================= */
+/* 1. The Teaser Gallery */
+
 .modal-teaser-gallery {
     display: flex; /* Horizontally aligned images */
     gap: 10px;
@@ -507,9 +505,7 @@ body {
     color: var(--neon-cyan);
 }
 
-/* =========================================
-   2. Full Gallery Viewer Modal
-   ========================================= */
+/* 2. Full Gallery Viewer Modal */
 .full-gallery-modal {
     display: none; /* Hidden by default */
     position: fixed;
@@ -727,9 +723,8 @@ body {
     border-radius: 4px;
 }
 
-/* =========================================
-   6. Sidebar Grid Layout Configuration
-   ========================================= */
+/* 6. Sidebar Grid Layout Configuration */
+  
 
 /* The main layout splitting sidebar (280px) and grid contents */
 .main-layout {
@@ -857,10 +852,9 @@ body {
     }
 }
 
-/* =========================================
-   7. Interactive Hotel Details Modal
-   (badges, tabs, info grid, chips, room cards)
-   ========================================= */
+/* 7. Interactive Hotel Details Modal
+   (badges, tabs, info grid, chips, room cards) */
+   
 
 .badge-row {
     display: flex;
@@ -1039,4 +1033,17 @@ body {
     font-weight: 700;
     font-size: 1.1rem;
     white-space: nowrap;
+}
+
+.modal-footer {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.book-now-btn {
+  padding: 12px 32px;
+  font-size: 1rem;
 }
