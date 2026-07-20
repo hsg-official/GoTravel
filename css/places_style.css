@@ -16,17 +16,16 @@ body {
 }
 
 .gradient-bg {
+    background-image:
+    linear-gradient(
+        rgba(10,10,20,0.75),
+        rgba(10,10,20,0.85)
+    ),
+    url("../src/images/sri-lanka.jpg");
 
-background:
-linear-gradient(
-rgba(20,20,50,0.75),
-rgba(20,20,50,0.85)
-),
-url("../src/images/sri-lanka.jpg.jpg");
-
-background-size:cover;
-background-position:center;
-
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .overlay {
