@@ -1,12 +1,10 @@
-/* ═══════════════════════════════════════════════════════
-   GoTravel — Trip Planner Wizard (personal_script.js)
-   ═══════════════════════════════════════════════════════ */
+//GoTravel — Trip Planner Wizard (personal_script.js)
 
 const SUPABASE_URL = 'https://cdcolkoavowjjymzdzud.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_aXQLF_zuk6pGmo4v0E1LPg_-TzUnQ0_';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* ── Global state ── */
+//Global state
 let currentStep = 1;
 const TOTAL_STEPS = 6;
 let currentUserProfile = null;
@@ -16,10 +14,8 @@ let autosaveTimer = null;
 let draggedDestinationCard = null;
 let draggedItineraryItem = null;
 
-/* ══════════════════════════════════════════════
-   SECTION 1 — UTILITY HELPERS
-   ══════════════════════════════════════════════ */
-
+// UTILITY HELPERS
+// Protects the website from malicious HTML input.
 function escapeHtml(str) {
     if (!str) return '';
     const div = document.createElement('div');
@@ -27,6 +23,7 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
+// Creates small popup messages.
 function showToast(message, type = 'info') {
     const container = document.getElementById('toastContainer');
     const toast = document.createElement('div');
@@ -43,6 +40,7 @@ function formatDate(dateStr) {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+// Calculates trip duration.
 function daysBetween(start, end) {
     if (!start || !end) return 0;
     const s = new Date(start), e = new Date(end);
@@ -64,10 +62,9 @@ function getTimeGreeting() {
     return 'Good evening';
 }
 
-/* ══════════════════════════════════════════════
-   SECTION 2 — NAVIGATION / SECTIONS
-   ══════════════════════════════════════════════ */
-
+// NAVIGATION / SECTIONS
+ 
+// Controls switching between: My Trips and Trip Planner
 function showSection(sectionId) {
     document.getElementById('trips-section').style.display = 'none';
     document.getElementById('planner-section').style.display = 'none';
@@ -105,11 +102,9 @@ function toggleTransport() {
     document.getElementById('transportOptions')?.classList.toggle('show');
 }
 
-/* ══════════════════════════════════════════════
-   SECTION 3 — WIZARD STEP NAVIGATION
-   ══════════════════════════════════════════════ */
-
-function goToStep(step) {
+// WIZARD STEP NAVIGATION
+// Moves between wizard steps.
+  function goToStep(step) {
     if (step < 1 || step > TOTAL_STEPS) return;
     // Only allow jumping to completed or next step
     if (step > currentStep + 1) return;
@@ -173,10 +168,7 @@ function renderWizardState() {
     document.getElementById('btnSave').style.display = currentStep === TOTAL_STEPS ? 'flex' : 'none';
 }
 
-/* ══════════════════════════════════════════════
-   SECTION 4 — VALIDATION
-   ══════════════════════════════════════════════ */
-
+// VALIDATION
 function validatePlannerStep(step) {
     clearAllErrors();
     let valid = true;
@@ -220,10 +212,7 @@ function clearAllErrors() {
     document.querySelectorAll('.glass-input.invalid').forEach(e => e.classList.remove('invalid'));
 }
 
-/* ══════════════════════════════════════════════
-   SECTION 5 — CHIP SELECTORS
-   ══════════════════════════════════════════════ */
-
+// CHIP SELECTORS
 function initChips() {
     document.querySelectorAll('.chip-group').forEach(group => {
         const isSingle = group.classList.contains('single-select');
@@ -253,10 +242,8 @@ function setSelectedChips(groupId, values) {
     });
 }
 
-/* ══════════════════════════════════════════════
-   SECTION 6 — BUDGET
-   ══════════════════════════════════════════════ */
-
+//BUDGET
+//Shows how money is divided.
 function updateBudgetBar() {
     const total = parseFloat(document.getElementById('trip-budget-total')?.value) || 0;
     const container = document.getElementById('budgetBarContainer');
@@ -304,10 +291,8 @@ function calculateTripBudget() {
     return { total, spent, remaining: total - spent };
 }
 
-/* ══════════════════════════════════════════════
-   SECTION 7 — DESTINATIONS (Step 2)
-   ══════════════════════════════════════════════ */
-
+// DESTINATIONS (Step 2)
+// Creates destination cards
 function addDestinationRow(name = '', imageUrl = '', arrivalDate = '', departureDate = '', notes = '') {
     const list = document.getElementById('destinations-list');
     const index = list.children.length;
@@ -388,6 +373,7 @@ function calculateDestNights(card) {
     }
 }
 
+// Allow changing order.
 function setupDestinationDropArea() {
     const list = document.getElementById('destinations-list');
     list.addEventListener('dragover', (e) => {
@@ -416,6 +402,7 @@ function updateDestinationStopNumbers() {
     });
 }
 
+// Creates visual route
 function updateRouteTimeline() {
     const timeline = document.getElementById('routeTimeline');
     if (!timeline) return;
@@ -459,10 +446,9 @@ function goToPlaces(card) {
     window.location.href = 'places.html';
 }
 
-/* ══════════════════════════════════════════════
-   SECTION 8 — TRANSPORTATION (Step 3)
-   ══════════════════════════════════════════════ */
 
+// TRANSPORTATION (Step 3)
+// Creates transport options.
 function renderTransportSegments() {
     const container = document.getElementById('transportSegments');
     const dests = getDestinations().filter(d => d.name);
@@ -572,10 +558,7 @@ function getTransportSegments() {
     return segments;
 }
 
-/* ══════════════════════════════════════════════
-   SECTION 9 — HOTELS & SERVICES (Step 4)
-   ══════════════════════════════════════════════ */
-
+//HOTELS & SERVICES (Step 4)
 function renderHotelSelections() {
     const container = document.getElementById('hotelSelections');
     const dests = getDestinations().filter(d => d.name);
@@ -671,7 +654,8 @@ function updateGuideCard(state) {
     }
 }
 
-/* Restaurants */
+// Restaurants
+// Allows adding meals.
 function addRestaurantEntry() {
     const container = document.getElementById('restaurantSelections');
     const entry = document.createElement('div');
@@ -709,10 +693,8 @@ function getRestaurants() {
     }));
 }
 
-/* ══════════════════════════════════════════════
-   SECTION 10 — DAILY ITINERARY (Step 5)
-   ══════════════════════════════════════════════ */
-
+// DAILY ITINERARY (Step 5)
+// Automatically creates daily plans.
 function generateItineraryDays() {
     const container = document.getElementById('itineraryContainer');
     const startDate = document.getElementById('trip-date-start')?.value;
@@ -858,10 +840,8 @@ function autoPopulateItinerary() {
     generateItineraryDays();
 }
 
-/* ══════════════════════════════════════════════
-   SECTION 11 — REVIEW (Step 6)
-   ══════════════════════════════════════════════ */
-
+//REVIEW (Step 6)
+// Creates final summary.
 function renderReview() {
     const state = collectPlannerState();
     const dests = getDestinations().filter(d => d.name);
@@ -960,10 +940,7 @@ function renderReview() {
     checkbox.onchange = () => { saveBtn.disabled = !checkbox.checked; };
 }
 
-/* ══════════════════════════════════════════════
-   SECTION 12 — LIVE TRIP SUMMARY
-   ══════════════════════════════════════════════ */
-
+// LIVE TRIP SUMMARY - The side panel updates instantly.
 function updateTripSummary() {
     const title = document.getElementById('trip-title')?.value || '';
     const startDate = document.getElementById('trip-date-start')?.value || '';
@@ -1023,10 +1000,7 @@ function toggleMobileSummary() {
     card.classList.toggle('mobile-show');
 }
 
-/* ══════════════════════════════════════════════
-   SECTION 13 — AUTOSAVE & DRAFT
-   ══════════════════════════════════════════════ */
-
+// AUTOSAVE & DRAFT
 function collectPlannerState() {
     const existing = JSON.parse(localStorage.getItem('tripDraft') || '{}');
 
@@ -1063,6 +1037,7 @@ function collectPlannerState() {
     };
 }
 
+// Prevents losing data.
 function savePlannerDraft() {
     const state = collectPlannerState();
     localStorage.setItem('tripDraft', JSON.stringify(state));
@@ -1191,10 +1166,7 @@ function clearPlannerForm() {
     updateTripSummary();
 }
 
-/* ══════════════════════════════════════════════
-   SECTION 14 — SAVE TRIP TO SUPABASE
-   ══════════════════════════════════════════════ */
-
+// SAVE TRIP TO SUPABASE
 async function saveTrip() {
     try {
         const { data: { user }, error: authError } = await _supabase.auth.getUser();
@@ -1282,10 +1254,7 @@ async function saveTrip() {
     }
 }
 
-/* ══════════════════════════════════════════════
-   SECTION 15 — TRIP DASHBOARD
-   ══════════════════════════════════════════════ */
-
+// TRIP DASHBOARD Gets saved trips from database.
 async function fetchUserTrips() {
     const activeContainer = document.getElementById('saved-trips-container');
     const historyContainer = document.getElementById('history-trips-container');
@@ -1478,10 +1447,7 @@ function updateWelcomeSection(userProfile, trips) {
     document.getElementById('dashboardNextTrip').textContent = 'Your next trip to ' + next.destination + ' is ' + countdownText + '.';
 }
 
-/* ══════════════════════════════════════════════
-   SECTION 16 — PROFILE & AUTH
-   ══════════════════════════════════════════════ */
-
+//PROFILE & AUTH
 function updateProfileAvatar(firstName, lastName, email) {
     const avatarImg = document.getElementById('userAvatar');
     avatarImg.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(firstName) + '+' + encodeURIComponent(lastName) + '&background=7000ff&color=fff';
@@ -1496,10 +1462,7 @@ async function logoutUser() {
     if (!error) window.location.href = '../index.html';
 }
 
-/* ══════════════════════════════════════════════
-   SECTION 17 — INITIALIZATION
-   ══════════════════════════════════════════════ */
-
+// INITIALIZATION
 window.onload = async function() {
     const { data: { user } } = await _supabase.auth.getUser();
     if (user) {
