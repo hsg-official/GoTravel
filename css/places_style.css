@@ -21,7 +21,7 @@ body {
         rgba(10,10,20,0.75),
         rgba(10,10,20,0.85)
     ),
-    url("src/images/sri-lanka.jpg");
+    url("../src/images/sri-lanka.jpg");
 
     background-size: cover;
     background-position: center;
