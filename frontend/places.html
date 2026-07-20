@@ -3,126 +3,426 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>GoTravel | Places</title>
+
     <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" 
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <link rel="stylesheet" href="../css/places_style.css">
-    
 </head>
+
+
 <body>
+
+    <!-- Dynamic background -->
     <div class="gradient-bg"></div>
-    <div class="overlay"></div>
+
 
     <header>
+
         <div class="info-panel">
             <div class="time-text" id="time">12:00</div>
             <span class="date-text" id="date">Today</span>
         </div>
+
+
         <a href="../index.html" class="back-btn">
-            <i class="fas fa-arrow-left"></i> BACK
+            <i class="fas fa-arrow-left"></i>
+            BACK
         </a>
+
     </header>
 
+
+
     <div class="search-section">
-        <h1 class="search-title">EXPLORE SRI LANKA</h1>
+
+        <h1 class="search-title">
+            EXPLORE SRI LANKA
+        </h1>
+
+
         <div class="search-container">
-            <input type="text" id="searchInput" class="search-input" placeholder="Search for a destination...">
-            <button id="searchBtn" class="search-btn"><i class="fas fa-search"></i></button>
+
+            <input 
+            type="text"
+            id="searchInput"
+            class="search-input"
+            placeholder="Search for a destination...">
+
+
+            <button 
+            id="searchBtn"
+            class="search-btn">
+
+                <i class="fas fa-search"></i>
+
+            </button>
+
         </div>
+
+
 
         <div class="suggestions-container">
+
+
             <div class="suggestion-card" data-destination="Sigiriya">
+
                 <i class="fas fa-mountain"></i>
+
                 <h3>Sigiriya</h3>
+
                 <p>Ancient Rock Fortress</p>
+
             </div>
+
+
+
             <div class="suggestion-card" data-destination="Ella">
+
                 <i class="fas fa-leaf"></i>
+
                 <h3>Ella</h3>
+
                 <p>Hill Country</p>
+
             </div>
+
+
+
             <div class="suggestion-card" data-destination="Galle Fort">
+
                 <i class="fas fa-fort-awesome"></i>
+
                 <h3>Galle Fort</h3>
+
                 <p>Historic Colonial Town</p>
+
             </div>
+
+
         </div>
+
+
     </div>
+
+
+
+
 
     <div class="loader" id="loader">
+
         <i class="fas fa-compass"></i>
-        <p>Loading destination info...</p>
+
+        <p>
+            Loading destination info...
+        </p>
+
     </div>
+
+
+
+
 
     <div class="destination-section" id="destinationSection">
+
+
         <div class="destination-header">
-            <div class="destination-image-bg" id="destImageBg"></div>
+
+
+            <div 
+            class="destination-image-bg" 
+            id="destImageBg">
+            </div>
+
+
+
             <div class="destination-info">
-                <h1 class="destination-name" id="destName">DESTINATION</h1>
-                <div class="rating">⭐ <span id="rating">4.5</span></div>
+
+
+                <h1 
+                class="destination-name"
+                id="destName">
+
+                    DESTINATION
+
+                </h1>
+
+
+
+                <div class="rating">
+
+                    ⭐ 
+                    <span id="rating">
+                        4.5
+                    </span>
+
+                </div>
+
+
             </div>
-            <button id="selectDestBtn" class="select-destination-btn" onclick="handlePlannerSelection()">
+
+
+
+
+            <button 
+            id="selectDestBtn"
+            class="select-destination-btn">
+
+
                 <i class="fas fa-plus"></i>
-                <span>Select Destination</span>
+
+                <span>
+                    Select Destination
+                </span>
+
+
             </button>
+
+
         </div>
 
-        <div class="content-card">
-            <h2 class="section-title"><i class="fas fa-info-circle"></i> Description</h2>
-            <p id="description">Loading...</p>
-        </div>
+
+
+
 
         <div class="content-card">
-            <h2 class="section-title"><i class="fas fa-book"></i> History</h2>
-            <p id="history">Loading...</p>
+
+
+            <h2 class="section-title">
+
+                <i class="fas fa-info-circle"></i>
+
+                Description
+
+            </h2>
+
+
+            <p id="description">
+                Loading...
+            </p>
+
+
         </div>
 
-        <div class="content-card">
-            <h2 class="section-title"><i class="fas fa-tasks"></i> Things to Do</h2>
-            <ul class="things-list" id="thingsToDo"></ul>
-        </div>
+
+
+
 
         <div class="content-card">
-            <h2 class="section-title"><i class="fas fa-clipboard-list"></i> Visitor Information</h2>
+
+
+            <h2 class="section-title">
+
+                <i class="fas fa-book"></i>
+
+                History
+
+            </h2>
+
+
+            <p id="history">
+                Loading...
+            </p>
+
+
+        </div>
+
+
+
+
+
+        <div class="content-card">
+
+
+            <h2 class="section-title">
+
+                <i class="fas fa-tasks"></i>
+
+                Things to Do
+
+            </h2>
+
+
+            <ul 
+            class="things-list"
+            id="thingsToDo">
+
+            </ul>
+
+
+        </div>
+
+
+
+
+
+        <div class="content-card">
+
+
+            <h2 class="section-title">
+
+                <i class="fas fa-clipboard-list"></i>
+
+                Visitor Information
+
+            </h2>
+
+
+
             <div class="info-grid">
+
+
                 <div class="info-item">
-                    <div class="info-label">Ticket Price</div>
-                    <div class="info-value" id="ticketPrice">-</div>
+
+                    <div class="info-label">
+                        Ticket Price
+                    </div>
+
+                    <div 
+                    class="info-value"
+                    id="ticketPrice">
+                    -
+                    </div>
+
                 </div>
+
+
+
                 <div class="info-item">
-                    <div class="info-label">Opening Hours</div>
-                    <div class="info-value" id="openingHours">-</div>
+
+                    <div class="info-label">
+                        Opening Hours
+                    </div>
+
+                    <div 
+                    class="info-value"
+                    id="openingHours">
+                    -
+                    </div>
+
                 </div>
+
+
+
+
                 <div class="info-item">
-                    <div class="info-label">Best Time to Visit</div>
-                    <div class="info-value" id="bestTime">-</div>
+
+                    <div class="info-label">
+                        Best Time to Visit
+                    </div>
+
+                    <div 
+                    class="info-value"
+                    id="bestTime">
+                    -
+                    </div>
+
                 </div>
+
+
+
+
                 <div class="info-item">
-                    <div class="info-label">Visit Duration</div>
-                    <div class="info-value" id="visitDuration">-</div>
+
+                    <div class="info-label">
+                        Visit Duration
+                    </div>
+
+                    <div 
+                    class="info-value"
+                    id="visitDuration">
+                    -
+                    </div>
+
                 </div>
+
+
             </div>
+
+
         </div>
+
+
     </div>
 
-    <!-- Selected Destinations Badge -->
+
+
+
+
     <div class="selected-badge" id="selectedBadge">
+
         <i class="fas fa-map-marked-alt"></i>
-        <span>My Trip</span>
-        <span class="badge-count" id="badgeCount">0</span>
+
+        <span>
+            My Trip
+        </span>
+
+
+        <span 
+        class="badge-count"
+        id="badgeCount">
+
+            0
+
+        </span>
+
+
     </div>
 
-    <!-- Modal for Selected Destinations -->
+
+
+
+
     <div class="modal" id="selectedModal">
+
+
         <div class="modal-content">
+
+
             <div class="modal-header">
-                <h2 class="modal-title">MY TRIP DESTINATIONS</h2>
-                <button class="close-modal" id="closeModal">&times;</button>
+
+
+                <h2 class="modal-title">
+                    MY TRIP DESTINATIONS
+                </h2>
+
+
+
+                <button 
+                class="close-modal"
+                id="closeModal">
+
+                    &times;
+
+                </button>
+
+
             </div>
-            <div class="selected-list" id="selectedList"></div>
+
+
+
+
+            <div 
+            class="selected-list"
+            id="selectedList">
+
+            </div>
+
+
         </div>
+
+
     </div>
 
-    <script src="../backend/places_script.js"></script>
+
+
+
+<script src="../backend/places_script.js"></script>
+
+
 </body>
 </html>
