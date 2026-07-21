@@ -1,10 +1,5 @@
-/* =========================================================
-   GoTravel — Hotels Page Script
-   Reads from Supabase (hotel_service + hotel_rooms tables)
-   and renders/filters/searches hotel cards + details modal.
-   ========================================================= */
-
-// Same project the business dashboard writes to (business.html)
+//GoTravel — Hotels Page Script
+   
 const supabaseUrl = 'https://cdcolkoavowjjymzdzud.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkY29sa29hdm93amp5bXpkenVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MDI2NjQsImV4cCI6MjA4Mzk3ODY2NH0.JPzj9fI1pKpPbPxyGqsemjcwpKiu0h046H7aBSURnpM';
 const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -14,9 +9,9 @@ const WISHLIST_KEY = "gotravel_hotel_wishlist";
 let allHotels = [];      // every hotel_service row (+ its rooms, + computed minPrice)
 let currentHotels = [];  // whatever is currently on screen after filters/search
 
-/* ---------------------------------------------------------
-   Wishlist (stored locally per-browser)
-   --------------------------------------------------------- */
+
+//Wishlist (stored locally per-browser)
+   
 function getWishlist() {
   try {
     return JSON.parse(localStorage.getItem(WISHLIST_KEY)) || [];
@@ -43,9 +38,7 @@ function toggleWishlist(id) {
   return list.includes(id);
 }
 
-/* ---------------------------------------------------------
-   Small helpers
-   --------------------------------------------------------- */
+//Small helpers
 function escapeHtml(value) {
   const div = document.createElement("div");
   div.textContent = value ?? "";
@@ -61,9 +54,7 @@ function toArray(value) {
   return Array.isArray(value) ? value : [];
 }
 
-/* ---------------------------------------------------------
-   Loading hotels from Supabase
-   --------------------------------------------------------- */
+// Loading hotels from Supabase
 async function loadHotels() {
   showSkeletons();
 
@@ -121,9 +112,8 @@ function populateCityFilter(hotels) {
   });
 }
 
-/* ---------------------------------------------------------
-   Rendering
-   --------------------------------------------------------- */
+// Rendering
+  
 function showSkeletons(count = 6) {
   const container = document.getElementById("hotelCardsContainer");
   container.innerHTML = Array.from({ length: count })
@@ -192,9 +182,8 @@ function renderHotels(list) {
   });
 }
 
-/* ---------------------------------------------------------
-   Filtering / sorting / searching
-   --------------------------------------------------------- */
+// Filtering / sorting / searching
+
 function applyFilters() {
   const city = document.getElementById("cityFilter").value;
   const sort = document.getElementById("sortFilter").value;
@@ -228,9 +217,8 @@ function applyFilters() {
   renderHotels(list);
 }
 
-/* ---------------------------------------------------------
-   Details modal (badges + teaser gallery + tabs)
-   --------------------------------------------------------- */
+// Details modal (badges + teaser gallery + tabs)
+
 function openDetails(id) {
   const hotel = allHotels.find(h => String(h.id) === String(id));
   if (!hotel) return;
@@ -242,10 +230,29 @@ function openDetails(id) {
   renderModalTabs(hotel);
   resetModalTabs();
 
+  const bookBtn = document.getElementById("bookNowBtn");
+  bookBtn.onclick = () => bookNow(hotel.id);
+
   document.getElementById("detailsModal").style.display = "block";
 }
 window.openDetails = openDetails;
 
+function bookNow(id) {
+  // Came from the trip planner? Send the hotel back instead of booking.
+  if (localStorage.getItem('isSelectingHotel') === 'true') {
+    const hotel = allHotels.find(h => String(h.id) === String(id));
+    if (hotel) localStorage.setItem('selectedHotelName', hotel.service_name);
+    window.location.href = 'personal.html';
+    return;
+  }
+  // Normal visitor: show the coming-soon popup
+  document.getElementById("bookingAlertModal").style.display = "block";
+}
+
+function closeBookingAlert() {
+  document.getElementById("bookingAlertModal").style.display = "none";
+}
+window.closeBookingAlert = closeBookingAlert;
 function renderModalBadges(hotel) {
   const badges = [];
 
@@ -426,9 +433,8 @@ function closeSearchAlert() {
 }
 window.closeSearchAlert = closeSearchAlert;
 
-/* ---------------------------------------------------------
-   Event wiring
-   --------------------------------------------------------- */
+//Event wiring
+
 function wireFilterControls() {
   document.getElementById("hotelSearch").addEventListener("input", applyFilters);
   document.getElementById("hotelSearch").addEventListener("keydown", event => {
@@ -496,13 +502,13 @@ function wireModalBackdropClicks() {
   window.addEventListener("click", event => {
     if (event.target === document.getElementById("detailsModal")) closeDetails();
     if (event.target === document.getElementById("fullGalleryModal")) closeFullGallery();
+    if (event.target === document.getElementById("bookingAlertModal")) closeBookingAlert();
     if (event.target === document.getElementById("searchAlertModal")) closeSearchAlert();
   });
 }
 
-/* ---------------------------------------------------------
-   Init
-   --------------------------------------------------------- */
+// Init
+  
 document.addEventListener("DOMContentLoaded", () => {
   wireFilterControls();
   wireMobileSidebar();
