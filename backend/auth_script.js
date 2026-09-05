@@ -301,7 +301,7 @@ async function completeGoogleRegistration(btn) {
     showToast("Account Created!", "success");
     
     setTimeout(() => {
-        window.location.href = role === 'business' ? "business.html" : "dashboard.html";
+        window.location.href = role === 'business' ? "business.html" : "personal.html";
     }, 1000);
 }
 
