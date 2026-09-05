@@ -143,6 +143,29 @@
             <button class="action-btn" onclick="handleSignupVerifySubmit()">VERIFY & START</button>
             <button style="background:none; border:none; color:var(--text-muted); margin-top:20px; cursor:pointer;" onclick="closeModal()">Cancel</button>
         </div>
+
+        <!-- Google Role Interception Modal -->
+        <div id="google-role-modal" class="modal">
+            <i class="fas fa-user-plus" style="font-size: 3rem; color: var(--accent); margin-bottom: 20px;"></i>
+            <h2>Welcome to GoTravel!</h2>
+            <p class="subtitle" style="margin-bottom: 20px;">How will you be using the platform?</p>
+            
+            <div class="acc-selector" style="width: 100%; max-width: 320px;">
+                <div class="acc-option selected" id="google-opt-personal" onclick="selectGoogleRole('personal')">
+                    <i class="fas fa-user"></i>
+                    <span style="font-size: 0.9rem; font-weight: 600;">Traveler</span>
+                    <span style="font-size: 0.7rem;">Personal Account</span>
+                </div>
+                <div class="acc-option" id="google-opt-business" onclick="selectGoogleRole('business')">
+                    <i class="fas fa-briefcase"></i>
+                    <span style="font-size: 0.9rem; font-weight: 600;">Partner</span>
+                    <span style="font-size: 0.7rem;">Business Account</span>
+                </div>
+            </div>
+            
+            <input type="hidden" id="google-selected-role" value="personal">
+            <button class="action-btn" style="max-width: 320px;" onclick="completeGoogleRegistration(this)">FINISH SETUP</button>
+        </div>
     </div>
 
     <script src="../backend/auth_script.js"></script>
