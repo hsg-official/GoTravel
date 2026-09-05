@@ -324,7 +324,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 // EXISTING USER: Bypass modal and route to their dashboard
                 showToast("Login Successful!", "success");
                 setTimeout(() => {
-                    window.location.href = userData.account_type === 'business' ? "business.html" : "dashboard.html";
+                    window.location.href = userData.account_type === 'business' ? "business.html" : "personal.html";
                 }, 1000);
             }
         }
