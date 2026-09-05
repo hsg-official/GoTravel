@@ -244,3 +244,58 @@
                 window.location.href = userData?.account_type === 'business' ? "business.html" : "personal.html";
             }, 1000);
         }
+
+        // ==========================================
+// 4. GOOGLE OAUTH SIGN IN
+// ==========================================
+async function signInWithGoogle() {
+    const { error } = await supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+            redirectTo: window.location.href // Redirects back to the auth page after Google confirms
+        }
+    });
+    
+    if (error) {
+        showToast("Google login failed: " + error.message, "error");
+    }
+}
+
+// Automatically catch returning Google users when the page loads
+window.addEventListener('DOMContentLoaded', () => {
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+            
+            // Check if user already exists in your custom 'users' table
+            const { data: userData, error } = await supabaseClient
+                .from('users')
+                .select('account_type')
+                .eq('email', session.user.email)
+                .single();
+
+            if (!userData) {
+                // NEW USER: Create their profile in your database
+                const fullName = session.user.user_metadata.full_name || 'Traveler';
+                const nameParts = fullName.split(' ');
+                const fName = nameParts[0];
+                const lName = nameParts.slice(1).join(' ');
+
+                await supabaseClient.from('users').insert([{
+                    email: session.user.email,
+                    first_name: fName,
+                    last_name: lName,
+                    account_type: 'personal' // Automatically assign personal account type
+                }]);
+                
+                showToast("Google Account Linked!", "success");
+                setTimeout(() => window.location.href = "personal.html", 1000);
+            } else {
+                // RETURNING USER: Send them to their correct dashboard
+                showToast("Login Successful!", "success");
+                setTimeout(() => {
+                    window.location.href = userData.account_type === 'business' ? "business.html" : "personal.html";
+                }, 1000);
+            }
+        }
+    });
+});

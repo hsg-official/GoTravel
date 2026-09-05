@@ -41,6 +41,7 @@
 
         <div class="form-container">
             <div id="login-form" class="form-slide active">
+                
                 <form onsubmit="handleLogin(event)">
                     <div class="input-group">
                         <input type="email" id="login-email" class="input-field" placeholder="Email Address" required>
@@ -52,6 +53,12 @@
                     </div>
                     <button type="submit" id="login-btn" class="action-btn">ACCESS ACCOUNT</button>
                     <a href="#" class="link-text" onclick="showForgotPassword()">Forgot Password?</a>
+                    <!-- Add this just above the </form> tag -->
+                    <div class="divider"><span>OR</span></div>
+                    <button type="button" class="google-btn" onclick="signInWithGoogle()">
+                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google Logo" class="google-icon">
+                        Continue with Google
+                    </button>
                 </form>
             </div>
 
@@ -76,7 +83,17 @@
                         <input type="password" id="reg-pass" class="input-field" placeholder="Create Password" required>
                         <i class="fas fa-eye input-icon" onclick="togglePass('reg-pass', this)"></i>
                     </div>
+                    <div class="input-group">
+                        <input type="password" id="confirm-pass" class="input-field" placeholder="Confirm Password" required>
+                        <i class="fas fa-eye input-icon" onclick="togglePass('confirm-pass', this)"></i>
+                    </div>
                     <button type="submit" id="signup-btn" class="action-btn">CREATE & VERIFY</button>
+                    <!-- Add this just above the </form> tag -->
+                    <div class="divider"><span>OR</span></div>
+                    <button type="button" class="google-btn" onclick="signInWithGoogle()">
+                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google Logo" class="google-icon">
+                        Continue with Google
+                    </button>
                 </form>
             </div>
 
@@ -111,6 +128,7 @@
                     </div>
                     <div class="input-group">
                         <input type="password" id="confirm-pass" class="input-field" placeholder="Confirm Password" required>
+                        <i class="fas fa-eye input-icon" onclick="togglePass('confirm-pass', this)"></i>
                     </div>
                     <button type="submit" id="update-pass-btn" class="action-btn">UPDATE PASSWORD</button>
                 </form>
