@@ -1587,10 +1587,18 @@ function formatMoneyValue(value, currency) {
 
 // TRIP DASHBOARD Gets saved trips from database.
 async function fetchUserTrips() {
-    const activeContainer = document.getElementById('saved-trips-container');
-    const historyContainer = document.getElementById('history-trips-container');
-    activeContainer.innerHTML = '';
-    historyContainer.innerHTML = '';
+    const activeContainer =
+    document.getElementById('saved-trips-container');
+
+const historyContainer =
+    document.getElementById('history-trips-container');
+
+const cancelledContainer =
+    document.getElementById('cancelled-trips-container');
+
+activeContainer.innerHTML = '';
+historyContainer.innerHTML = '';
+cancelledContainer.innerHTML = '';
 
     const { data: trips, error } = await _supabase
         .from('trips').select('*')
@@ -1642,7 +1650,10 @@ const isHistory =
 
         card.innerHTML =
             '<div style="display:flex;gap:15px;align-items:center;flex:1;min-width:0;">' +
-                (imagesHTML ? '<div style="display:flex;gap:5px;flex-wrap:wrap;width:90px;">' + imagesHTML + '</div>' : '') +
+                (imagesHTML
+    ? '<div class="trip-card-images">' + imagesHTML + '</div>'
+    : ''
+) +
                 '<div class="trip-card-info">' +
                     '<h3>' + escapeHtml(trip.title) + '</h3>' +
                     '<p><span><i class="fas fa-map-marker-alt"></i> ' + escapeHtml(trip.destination) + '</span></p>' +
@@ -1655,12 +1666,20 @@ const isHistory =
                 '</div>' +
             '</div>' +
             '<div class="trip-actions">' +
-                '<i class="fas fa-trash delete-trip-btn" onclick="deleteTripFromDB(event, \'' + trip.id + '\')"></i>' +
+                (!isCancelled
+    ? '<i class="fas fa-trash delete-trip-btn" onclick="deleteTripFromDB(event, \'' + trip.id + '\')"></i>'
+    : ''
+) + 
                 '<div class="' + tagClass + '">' + escapeHtml(trip.status) + '</div>' +
             '</div>';
 
-        if (isHistory) historyContainer.appendChild(card);
-        else if (!isCancelled) activeContainer.appendChild(card);
+        if (isCancelled) {
+    cancelledContainer.appendChild(card);
+} else if (isHistory) {
+    historyContainer.appendChild(card);
+} else {
+    activeContainer.appendChild(card);
+}
     });
 
     updatePlaceholders();
@@ -2244,6 +2263,12 @@ function updatePlaceholders() {
     const historyContainer = document.getElementById('history-trips-container');
     document.getElementById('ongoing-placeholder').style.display = activeContainer.children.length === 0 ? 'block' : 'none';
     document.getElementById('past-placeholder').style.display = historyContainer.children.length === 0 ? 'block' : 'none';
+    const cancelledContainer =
+    document.getElementById('cancelled-trips-container');
+
+document.getElementById('cancelled-placeholder').style.display =
+    cancelledContainer.children.length === 0 ? 'block' : 'none';
+
 }
 
 function getTripStartDate(travelDate) {
@@ -2593,13 +2618,31 @@ endDateInput?.addEventListener('change', validateSelectedDates);
 
     // Confirm/discard modals
     document.getElementById('confirmOk').onclick = async function() {
-        if (tripIdToDelete) {
-            const { error } = await _supabase.from('trips').delete().eq('id', tripIdToDelete);
-            if (!error) { fetchUserTrips(); showToast('Trip deleted', 'info'); }
-            tripIdToDelete = null;
-            document.getElementById('confirmModal').style.display = 'none';
-        }
-    };
+    if (!tripIdToDelete) return;
+
+    const { error } = await _supabase
+        .from('trips')
+        .update({ status: 'Cancelled' })
+        .eq('id', tripIdToDelete)
+        .eq('user_id', currentUserProfile.id);
+
+    if (error) {
+        showToast(
+            'Unable to cancel trip: ' + error.message,
+            'error'
+        );
+    } else {
+        await fetchUserTrips();
+
+        showToast(
+            'Trip moved to Cancelled Bookings',
+            'info'
+        );
+    }
+
+    tripIdToDelete = null;
+    document.getElementById('confirmModal').style.display = 'none';
+};
     document.getElementById('confirmCancel').onclick = function() {
         tripIdToDelete = null;
         document.getElementById('confirmModal').style.display = 'none';
