@@ -234,7 +234,58 @@ function visitRestaurant(id) {
   renderTeaserGallery(restaurant, modalGallery);
   renderRestaurantInfo(restaurant, modalInfoContainer);
 
+  if (localStorage.getItem('isSelectingRestaurant') === 'true') {
+    const selectButton = document.createElement('button');
+
+    selectButton.type = 'button';
+    selectButton.className = 'btn-explore';
+    selectButton.textContent = 'Select Restaurant';
+
+    selectButton.addEventListener('click', () => {
+        selectRestaurant(restaurant.id);
+    });
+
+    modalInfoContainer.appendChild(selectButton);
+}
+
   modal.style.display = "block";
+}
+
+function selectRestaurant(id) {
+    const restaurant = restaurants.find(
+        item => String(item.id) === String(id)
+    );
+
+    if (!restaurant) return;
+
+    const draft = JSON.parse(
+        localStorage.getItem('tripDraft') || '{}'
+    );
+
+    if (!Array.isArray(draft.restaurants)) {
+        draft.restaurants = [];
+    }
+
+    draft.restaurants.push({
+        name: restaurant.service_name || '',
+        destination: restaurant.city || '',
+        date: '',
+        meal: 'Breakfast',
+        time: '',
+        guests: '1'
+    });
+
+    localStorage.setItem(
+        'tripDraft',
+        JSON.stringify(draft)
+    );
+
+    localStorage.setItem(
+        'selectedRestaurantName',
+        restaurant.service_name || 'Restaurant'
+    );
+
+    window.location.href = 'personal.html';
 }
 
 function renderTeaserGallery(restaurant, modalGallery) {
