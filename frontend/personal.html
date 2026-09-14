@@ -19,9 +19,9 @@
         <div style="font-size: 3rem; color: #ff4d4d; margin-bottom: 20px;">
             <i class="fas fa-exclamation-triangle"></i>
         </div>
-        <p class="confirm-msg">Abandon this journey?</p>
+        <p class="confirm-msg">Move this trip to Cancelled Bookings?</p>
         <div class="confirm-actions">
-            <button id="confirmOk" class="confirm-btn btn-delete-final">Delete</button>
+            <button id="confirmOk" class="confirm-btn btn-delete-final">Cancel Trip</button>
             <button id="confirmCancel" class="confirm-btn btn-keep">Cancel</button>
         </div>
     </div>
@@ -198,14 +198,9 @@
                     <a href="hotels.html" class="sub-item"><i class="fas fa-hotel"></i> Accommodations</a>
                     <a href="restaurants.html" class="sub-item"><i class="fas fa-utensils"></i> Culinary Experiences</a>
                     <a href="guides.html" class="sub-item"><i class="fas fa-user-tie"></i> Professional Tour Guiding</a>
-                    <div class="plus-trigger" onclick="toggleMenu('fleet-menu')" style="font-size: 0.85rem; padding: 10px 15px;">
-                        <span><i class="fas fa-route" style="margin-right: 8px;"></i> Transportation</span>
-                        <i class="fas fa-chevron-down" style="font-size: 0.7rem;"></i>
-                    </div>
-                    <div class="sub-menu nested-menu" id="fleet-menu">
-                        <a href="cabs.html" class="sub-item"><i class="fas fa-car-side"></i> Executive Private Cab</a>
-                        <a href="buses.html" class="sub-item"><i class="fas fa-bus-alt"></i> Public Transit Services</a>
-                    </div>
+                    <a href="cabs.html" class="sub-item">
+    <i class="fas fa-route"></i> Transportation
+</a>
                 </div>
             </div>
         </nav>
@@ -265,11 +260,13 @@
                 <div id="history-trips-container"></div>
             </div>
             <div id="cancelled" class="tab-content">
-                <div class="placeholder-card">
-                    <i class="fas fa-calendar-times"></i>
-                    <p>Cancelled bookings will appear here.</p>
-                </div>
-            </div>
+    <div class="placeholder-card" id="cancelled-placeholder">
+        <i class="fas fa-calendar-times"></i>
+        <p>Cancelled bookings will appear here.</p>
+    </div>
+
+    <div id="cancelled-trips-container"></div>
+</div>
         </div>
 
         <!--  TRIP PLANNER WIZARD -->
