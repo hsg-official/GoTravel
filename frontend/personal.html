@@ -63,6 +63,111 @@
     </div>
 </div>
 
+<!-- Add Activity Modal -->
+<div id="activityModal" class="modal-overlay">
+    <div class="modal-card activity-modal-card">
+
+        <button
+            type="button"
+            class="activity-modal-close"
+            onclick="closeActivityModal()"
+            aria-label="Close"
+        >
+            <i class="fas fa-times"></i>
+        </button>
+
+        <h2 class="modal-title">
+            <i class="fas fa-calendar-plus"></i>
+            Add Activity
+        </h2>
+
+        <form id="activityForm" onsubmit="saveItineraryActivity(event)">
+
+            <div class="input-group activity-field-full">
+                <label for="activity-title">
+                    Activity Name <span class="required">*</span>
+                </label>
+
+                <input
+                    type="text"
+                    id="activity-title"
+                    class="glass-input"
+                    placeholder="e.g. Visit Galle Lighthouse"
+                    autocomplete="off"
+                    required
+                >
+
+                <span id="activity-title-error" class="field-error"></span>
+            </div>
+
+            <div class="activity-time-grid">
+                <div class="input-group">
+                    <label for="activity-start-time">Start Time</label>
+
+                    <input
+                        type="time"
+                        id="activity-start-time"
+                        class="glass-input"
+                        value="09:00"
+                        required
+                    >
+                </div>
+
+                <div class="input-group">
+                    <label for="activity-end-time">End Time</label>
+
+                    <input
+                        type="time"
+                        id="activity-end-time"
+                        class="glass-input"
+                        value="10:00"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="input-group activity-field-full">
+                <label for="activity-location">Location</label>
+
+                <input
+                    type="text"
+                    id="activity-location"
+                    class="glass-input"
+                    placeholder="e.g. Galle Fort"
+                    autocomplete="off"
+                >
+            </div>
+
+            <div class="input-group activity-field-full">
+                <label for="activity-notes">Notes</label>
+
+                <textarea
+                    id="activity-notes"
+                    class="glass-input glass-textarea"
+                    placeholder="Enter additional information..."
+                    rows="3"
+                ></textarea>
+            </div>
+
+            <div class="activity-modal-actions">
+                <button
+                    type="button"
+                    class="activity-cancel-btn"
+                    onclick="closeActivityModal()"
+                >
+                    Cancel
+                </button>
+
+                <button type="submit" class="activity-save-btn">
+                    <i class="fas fa-plus"></i>
+                    Add Activity
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
 <!-- Toast notification -->
 <div id="toastContainer" class="toast-container"></div>
 
@@ -479,7 +584,7 @@
                         <div class="form-section">
                             <h3 class="section-title"><i class="fas fa-utensils"></i> Restaurants (Optional)</h3>
                             <div id="restaurantSelections" class="service-cards-list"></div>
-                            <button type="button" class="add-mini-btn" onclick="addRestaurantEntry()">
+                            <button type="button" class="add-mini-btn" onclick="goToRestaurants()">
                                 <i class="fas fa-plus-circle"></i> Add a Restaurant
                             </button>
                         </div>
