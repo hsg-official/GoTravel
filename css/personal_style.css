@@ -96,7 +96,7 @@ h1 { font-size: 2.5rem; font-weight: 700; background: var(--neon-gradient); -web
     position: relative; overflow: hidden;
 }
 .welcome-card::before { display: none; }
-.welcome-greeting { color: var(--neon-primary); font-size: 1.25rem; font-weight: 700; letter-spacing: -0.2px; margin-bottom: 10px; line-height: 1.3; }
+.welcome-greeting { color: var(--neon-primary);text-transform: capitalize; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.2px; margin-bottom: 10px; line-height: 1.3; }
 .welcome-card h2 { color: var(--text-main); font-size: 1.85rem; font-weight: 700; letter-spacing: -0.5px; line-height: 1.2; margin-bottom: 10px; }
 .welcome-next-trip { color: var(--text-muted); font-size: 0.95rem; font-weight: 400; line-height: 1.6; }
 .welcome-stat { width: 120px; height: 120px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.06); background: rgba(255, 255, 255, 0.03); box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; transition: transform 0.3s ease, border-color 0.3s ease; }
@@ -137,11 +137,47 @@ h1 { font-size: 2.5rem; font-weight: 700; background: var(--neon-gradient); -web
 .trip-card:hover .image-stack img { margin-left: 5px; }
 
 /* MODALS */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
-.modal-card { background: rgba(15, 16, 45, 0.95); border: 1px solid var(--neon-primary); border-radius: 24px; padding: 40px; width: 100%; max-width: 500px; position: relative; animation: popIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
-.details-modal-card { max-width: 650px; max-height: 80vh; overflow-y: auto; }
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-card.details-modal-card {
+    width: min(1100px, 95vw);
+    max-width: 1100px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-card {
+    background: rgba(15, 16, 45, 0.95);
+    border: 1px solid var(--neon-primary);
+    border-radius: 24px;
+    padding: 40px;
+    width: 100%;
+    max-width: 500px;
+    position: relative;
+    animation: popIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
 .modal-title { color: var(--neon-primary); margin-bottom: 25px; border-bottom: 2px solid var(--neon-primary); padding-bottom: 10px; }
-.modal-details-body { margin-bottom: 20px; }
+.modal-details-body {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 20px;
+    margin-bottom: 20px;
+}
 .modal-btn-row { display: flex; gap: 15px; margin-top: 30px; }
 .modal-btn-row .plan-btn { margin-top: 0; flex: 1; }
 .btn-secondary { background: var(--neon-secondary) !important; }
@@ -160,6 +196,100 @@ h1 { font-size: 2.5rem; font-weight: 700; background: var(--neon-gradient); -web
 .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--glass-border); }
 .detail-label { color: var(--neon-primary); font-weight: 600; font-size: 0.9rem; }
 .detail-val { color: white; font-weight: 500; text-align: right; max-width: 60%; }
+
+.trip-detail-section {
+    height: 100%;
+    margin-bottom: 0;
+    padding: 20px;
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.035);
+}
+
+.trip-detail-section:last-child {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 850px) {
+    .modal-details-body {
+        grid-template-columns: 1fr;
+    }
+
+    .trip-detail-section:last-child {
+        grid-column: auto;
+    }
+}
+
+.trip-detail-section > h3 {
+    color: var(--neon-primary);
+    font-size: 1rem;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--neon-primary);
+}
+
+.trip-detail-section > h3 i {
+    margin-right: 8px;
+}
+
+.detail-subcard {
+    margin-bottom: 14px;
+    padding: 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+}
+
+.detail-subcard h4 {
+    color: white;
+    margin-bottom: 8px;
+}
+
+.detail-subcard .detail-row:last-child {
+    border-bottom: none;
+}
+
+.itinerary-preview-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 10px;
+    padding: 10px;
+    color: var(--text-muted);
+    background: rgba(0, 0, 0, 0.15);
+    border-left: 3px solid var(--neon-primary);
+    border-radius: 8px;
+}
+
+.itinerary-preview-item strong {
+    color: white;
+}
+
+.detail-empty {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+@media (max-width: 650px) {
+    .details-modal-card {
+        padding: 25px 18px;
+        max-height: 94vh;
+    }
+
+    .detail-row {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .detail-val {
+        max-width: 100%;
+        text-align: left;
+    }
+
+    .modal-btn-row {
+        flex-direction: column;
+    }
+}
 
 /* PROFILE POPUP */
 .profile-popup { position: absolute; top: 70px; right: 0; width: 300px; background: rgba(15, 16, 45, 0.95); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid var(--neon-primary); border-radius: 24px; padding: 30px 20px; display: none; flex-direction: column; align-items: center; z-index: 1000; }
@@ -514,4 +644,120 @@ h1 { font-size: 2.5rem; font-weight: 700; background: var(--neon-gradient); -web
     .chip { font-size: 0.75rem; padding: 6px 12px; }
     .step-header { flex-direction: column; gap: 12px; }
     .step-header i { font-size: 2rem; }
+}
+
+/* Add Activity Modal */
+.activity-modal-card {
+    max-width: 580px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: linear-gradient(
+        145deg,
+        rgba(34, 45, 61, 0.98),
+        rgba(22, 29, 40, 0.98)
+    );
+    border: 1px solid rgba(0, 242, 255, 0.45);
+    box-shadow:
+        0 25px 60px rgba(0, 0, 0, 0.5),
+        0 0 30px rgba(0, 242, 255, 0.12);
+}
+
+.activity-modal-card .modal-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.activity-modal-close {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 77, 77, 0.5);
+    background: rgba(255, 77, 77, 0.08);
+    color: var(--danger);
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.activity-modal-close:hover {
+    color: white;
+    background: var(--danger);
+    transform: rotate(90deg);
+}
+
+.activity-field-full {
+    margin-bottom: 18px;
+}
+
+.activity-time-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.activity-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+.activity-cancel-btn,
+.activity-save-btn {
+    padding: 12px 22px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.activity-cancel-btn {
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+}
+
+.activity-cancel-btn:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.activity-save-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #071318;
+    background: var(--neon-primary);
+    border: 1px solid var(--neon-primary);
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+}
+
+.activity-save-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 25px rgba(0, 242, 255, 0.45);
+}
+
+@media (max-width: 600px) {
+    .activity-modal-card {
+        padding: 25px 20px;
+    }
+
+    .activity-time-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .activity-modal-actions {
+        flex-direction: column-reverse;
+    }
+
+    .activity-cancel-btn,
+    .activity-save-btn {
+        width: 100%;
+        justify-content: center;
+    }
 }
