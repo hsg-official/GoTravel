@@ -50,9 +50,14 @@ function daysBetween(start, end) {
 
 function isDateInPast(dateStr) {
     if (!dateStr) return false;
-    const d = new Date(dateStr);
-    const today = new Date(); today.setHours(0,0,0,0);
-    return d < today;
+
+    const today = new Date();
+    const todayString =
+        today.getFullYear() + '-' +
+        String(today.getMonth() + 1).padStart(2, '0') + '-' +
+        String(today.getDate()).padStart(2, '0');
+
+    return dateStr < todayString;
 }
 
 function getTimeGreeting() {
@@ -183,7 +188,11 @@ function validatePlannerStep(step) {
         if (!endDate) { showFieldError('err-end-date', 'End date is required.'); valid = false; }
         if (startDate && isDateInPast(startDate)) { showFieldError('err-start-date', 'Start date cannot be in the past.'); valid = false; }
         if (endDate && isDateInPast(endDate)) { showFieldError('err-end-date', 'End date cannot be in the past.'); valid = false; }
-        if (startDate && endDate && new Date(endDate) < new Date(startDate)) { showFieldError('err-end-date', 'End date must be on or after start date.'); valid = false; }
+        if (startDate && endDate && endDate < startDate) {
+    showFieldError('err-end-date', 'End date must be after the start date.');
+    document.getElementById('trip-date-end').classList.add('invalid');
+    valid = false;
+}
     }
 
     if (step === 2) {
@@ -324,12 +333,49 @@ function addDestinationRow(name = '', imageUrl = '', arrivalDate = '', departure
     card.dataset.img = imageUrl;
 
     list.appendChild(card);
+    applyDestinationDateLimits(card);
     initDestinationCardEvents(card);
     updateDestinationStopNumbers();
     updateRouteTimeline();
     calculateDestNights(card);
     scheduleDraftSave();
     updateTripSummary();
+}
+
+function applyDestinationDateLimits(card) {
+    const tripStart = document.getElementById('trip-date-start').value;
+    const tripEnd = document.getElementById('trip-date-end').value;
+
+    const cards = Array.from(
+        document.querySelectorAll('.destination-card')
+    );
+
+    const cardIndex = cards.indexOf(card);
+    const previousCard = cards[cardIndex - 1];
+
+    const previousDeparture = previousCard
+        ? previousCard.querySelector('.dest-departure').value
+        : '';
+
+    const arrivalInput = card.querySelector('.dest-arrival');
+    const departureInput = card.querySelector('.dest-departure');
+
+    const minimumArrival =
+        previousDeparture && previousDeparture > tripStart
+            ? previousDeparture
+            : tripStart;
+
+    arrivalInput.min = minimumArrival;
+    arrivalInput.max = tripEnd;
+
+    departureInput.min = arrivalInput.value || minimumArrival;
+    departureInput.max = tripEnd;
+}
+
+function refreshDestinationDateLimits() {
+    document.querySelectorAll('.destination-card').forEach(card => {
+        applyDestinationDateLimits(card);
+    });
 }
 
 function initDestinationCardEvents(card) {
@@ -352,10 +398,64 @@ function initDestinationCardEvents(card) {
         updateTripSummary();
     });
 
-    // Date change -> recalculate nights
-    card.querySelectorAll('.dest-arrival, .dest-departure').forEach(inp => {
-        inp.addEventListener('change', () => { calculateDestNights(card); scheduleDraftSave(); updateTripSummary(); });
-    });
+    // Date change -> validate dates and recalculate nights
+const arrivalInput = card.querySelector('.dest-arrival');
+const departureInput = card.querySelector('.dest-departure');
+
+arrivalInput.addEventListener('change', () => {
+
+    applyDestinationDateLimits(card);
+
+if (
+    arrivalInput.value &&
+    arrivalInput.min &&
+    arrivalInput.value < arrivalInput.min
+) {
+    arrivalInput.value = '';
+
+    showToast(
+        'Arrival date cannot be before the previous stop departure date.',
+        'error'
+    );
+}
+
+    departureInput.min = arrivalInput.value ||
+        document.getElementById('trip-date-start').value;
+
+    if (
+        departureInput.value &&
+        departureInput.value < arrivalInput.value
+    ) {
+        departureInput.value = '';
+        showToast(
+            'Departure date cannot be before the arrival date.',
+            'error'
+        );
+    }
+
+    calculateDestNights(card);
+    scheduleDraftSave();
+    updateTripSummary();
+});
+
+departureInput.addEventListener('change', () => {
+    if (
+        arrivalInput.value &&
+        departureInput.value < arrivalInput.value
+    ) {
+        departureInput.value = '';
+        showToast(
+            'Departure date cannot be before the arrival date.',
+            'error'
+        );
+    }
+
+    refreshDestinationDateLimits();
+
+    calculateDestNights(card);
+    scheduleDraftSave();
+    updateTripSummary();
+});
     card.querySelectorAll('.dest-notes').forEach(inp => {
         inp.addEventListener('input', () => scheduleDraftSave());
     });
@@ -463,14 +563,29 @@ function renderTransportSegments() {
         return;
     }
 
-    // Retrieve saved transport data
-    const saved = collectPlannerState().transportSegments || [];
+    // Read transport directly from the saved draft.
+// The transport cards may not exist yet when returning
+// from the transport services page.
+const savedDraft = JSON.parse(
+    localStorage.getItem('tripDraft') || '{}'
+);
+
+const saved = savedDraft.transportSegments || [];
 
     let html = '';
     for (let i = 0; i < stops.length - 1; i++) {
         const from = stops[i], to = stops[i + 1];
         const savedSeg = saved.find(s => s.from === from && s.to === to) || {};
-        const selectedType = savedSeg.type || '';
+        
+        const destination = dests.find(dest => dest.name === to);
+
+const automaticTravelDate =
+    destination?.arrival || savedSeg.date || '';
+
+        const selectedType =
+            savedSeg.type === 'Train' || savedSeg.type === 'Bus'
+            ? ''
+            : savedSeg.type || '';
 
         html += '<div class="transport-segment-card" data-from="' + escapeHtml(from) + '" data-to="' + escapeHtml(to) + '">' +
             '<div class="segment-header"><div class="segment-route">' +
@@ -479,59 +594,107 @@ function renderTransportSegments() {
                 '<span class="segment-location">' + escapeHtml(to) + '</span>' +
             '</div></div>' +
             '<div class="transport-type-chips">' +
-                buildTransportChip('Train', 'fa-train', selectedType) +
-                buildTransportChip('Bus', 'fa-bus', selectedType) +
                 buildTransportChip('Private Vehicle', 'fa-car', selectedType) +
                 buildTransportChip('Taxi/Cab', 'fa-taxi', selectedType) +
                 buildTransportChip('Hotel Transfer', 'fa-shuttle-van', selectedType) +
                 buildTransportChip('Self-drive', 'fa-steering-wheel', selectedType) +
                 buildTransportChip('Not Required', 'fa-times-circle', selectedType) +
             '</div>' +
+
+            (savedSeg.serviceName
+    ? '<div class="selected-service-card" style="margin-top:12px;">' +
+        '<div class="service-card-header">' +
+            '<div class="service-card-icon">' +
+                '<i class="fas fa-car"></i>' +
+            '</div>' +
+            '<div>' +
+                '<h4>' +
+                    escapeHtml(savedSeg.serviceName) +
+                '</h4>' +
+                '<p class="text-muted">' +
+                    escapeHtml(savedSeg.serviceContact || '') +
+                '</p>' +
+            '</div>' +
+        '</div>' +
+      '</div>'
+    : '') +
+
             '<div class="transport-booking-fields" style="display:' + (selectedType && selectedType !== 'Not Required' ? 'grid' : 'none') + ';">' +
-                '<div class="input-group"><label>Travel Date</label><input type="date" class="glass-input seg-date" value="' + escapeHtml(savedSeg.date || '') + '"></div>' +
+                '<div class="input-group"><label>Travel Date</label><input type="date" class="glass-input seg-date" value="' + escapeHtml(automaticTravelDate) + '" readonly></div>' +
                 '<div class="input-group"><label>Departure Time</label><input type="time" class="glass-input seg-time" value="' + escapeHtml(savedSeg.time || '') + '"></div>' +
                 '<div class="input-group"><label>Passengers</label><input type="number" class="glass-input seg-passengers" value="' + (savedSeg.passengers || 1) + '" min="1"></div>' +
-                '<div class="input-group"><label>Seat Class</label><select class="glass-select seg-class">' +
-                    '<option value="">Select</option><option value="First Class">First Class</option><option value="Second Class">Second Class</option><option value="Third Class">Third Class</option><option value="AC">Air-conditioned</option><option value="Luxury">Luxury</option>' +
-                '</select></div>' +
+                
                 '<div class="input-group"><label>Est. Price</label><input type="number" class="glass-input seg-price" value="' + (savedSeg.price || '') + '" min="0" placeholder="0"></div>' +
                 '<div class="input-group"><label>Notes</label><input type="text" class="glass-input seg-notes" value="' + escapeHtml(savedSeg.notes || '') + '" placeholder="e.g. Luggage needs"></div>' +
             '</div>';
 
-        // Search button for bus/train
-        if (selectedType === 'Bus' || selectedType === 'Train') {
-            html += '<div style="margin-top:12px;"><a href="' + (selectedType === 'Bus' ? 'buses.html' : 'buses.html') + '" class="service-search-btn" style="display:inline-flex;width:auto;text-decoration:none;"><i class="fas fa-search"></i> Search Available ' + selectedType + '</a></div>';
-        }
-        if (selectedType === 'Taxi/Cab' || selectedType === 'Private Vehicle') {
-            html += '<div style="margin-top:12px;"><a href="cabs.html" class="service-search-btn" style="display:inline-flex;width:auto;text-decoration:none;"><i class="fas fa-search"></i> Search Available Transport</a></div>';
-        }
+        
+        if (
+    selectedType === 'Taxi/Cab' ||
+    selectedType === 'Private Vehicle' ||
+    selectedType === 'Hotel Transfer' ||
+    selectedType === 'Self-drive'
+) {
+    html +=
+        '<div style="margin-top:12px;">' +
+            '<button type="button" ' +
+                'class="service-search-btn" ' +
+                'style="display:inline-flex;width:auto;" ' +
+                'onclick="goToTransportServices(' + i + ')">' +
+                '<i class="fas fa-search"></i> ' +
+                'Select Transport Service' +
+            '</button>' +
+        '</div>';
+}
 
         html += '</div>';
     }
     container.innerHTML = html;
 
-    // Restore select values
-    container.querySelectorAll('.seg-class').forEach((sel, i) => {
-        if (saved[i]?.seatClass) sel.value = saved[i].seatClass;
-    });
-
     // Chip click handlers
-    container.querySelectorAll('.transport-chip').forEach(chip => {
-        chip.addEventListener('click', function() {
-            const parent = this.closest('.transport-segment-card');
-            parent.querySelectorAll('.transport-chip').forEach(c => c.classList.remove('selected'));
-            this.classList.add('selected');
-            const fields = parent.querySelector('.transport-booking-fields');
-            fields.style.display = this.dataset.value !== 'Not Required' ? 'grid' : 'none';
-            scheduleDraftSave();
-            updateTripSummary();
-        });
+container.querySelectorAll('.transport-chip').forEach(chip => {
+    chip.addEventListener('click', function() {
+        const parent =
+            this.closest('.transport-segment-card');
+
+        parent
+            .querySelectorAll('.transport-chip')
+            .forEach(c => c.classList.remove('selected'));
+
+        this.classList.add('selected');
+
+        // Save the selected transport immediately.
+        savePlannerDraft();
+
+        // Rebuild the transport cards so the conditional
+        // Select Transport Service button becomes visible.
+        renderTransportSegments();
+
+        updateTripSummary();
     });
+});
 
     // Field change handlers
     container.querySelectorAll('input, select').forEach(inp => {
         inp.addEventListener('change', () => { scheduleDraftSave(); updateTripSummary(); });
     });
+}
+
+function goToTransportServices(segmentIndex) {
+    // Save the selected transport type and entered information first.
+    savePlannerDraft();
+
+    localStorage.setItem(
+        'isSelectingTransport',
+        'true'
+    );
+
+    localStorage.setItem(
+        'transportSegmentIndex',
+        String(segmentIndex)
+    );
+
+    window.location.href = 'cabs.html';
 }
 
 function buildTransportChip(label, icon, selectedType) {
@@ -540,23 +703,39 @@ function buildTransportChip(label, icon, selectedType) {
 }
 
 function getTransportSegments() {
+    const existing = JSON.parse(
+        localStorage.getItem('tripDraft') || '{}'
+    );
+
+    const savedSegments = existing.transportSegments || [];
     const segments = [];
+
     document.querySelectorAll('.transport-segment-card').forEach(card => {
         const selected = card.querySelector('.transport-chip.selected');
+
+        const saved = savedSegments.find(segment =>
+            segment.from === card.dataset.from &&
+            segment.to === card.dataset.to
+        ) || {};
+
         segments.push({
-            from: card.dataset.from,
-            to: card.dataset.to,
+            from: card.dataset.from || '',
+            to: card.dataset.to || '',
             type: selected ? selected.dataset.value : '',
+            serviceName: saved.serviceName || '',
+            serviceContact: saved.serviceContact || '',
             date: card.querySelector('.seg-date')?.value || '',
             time: card.querySelector('.seg-time')?.value || '',
-            passengers: card.querySelector('.seg-passengers')?.value || '1',
-            seatClass: card.querySelector('.seg-class')?.value || '',
+            passengers:
+                card.querySelector('.seg-passengers')?.value || '1',
             price: card.querySelector('.seg-price')?.value || '',
             notes: card.querySelector('.seg-notes')?.value || ''
         });
     });
+
     return segments;
 }
+        
 
 //HOTELS & SERVICES (Step 4)
 function renderHotelSelections() {
@@ -656,7 +835,14 @@ function updateGuideCard(state) {
 
 // Restaurants
 // Allows adding meals.
-function addRestaurantEntry() {
+
+function goToRestaurants() {
+    savePlannerDraft();
+    localStorage.setItem('isSelectingRestaurant', 'true');
+    window.location.href = 'restaurants.html';
+}
+
+function addRestaurantEntry(restaurantData = {}) {
     const container = document.getElementById('restaurantSelections');
     const entry = document.createElement('div');
     entry.className = 'restaurant-entry';
@@ -676,7 +862,25 @@ function addRestaurantEntry() {
         '</div>' +
         '<div style="margin-top:10px;"><button type="button" class="btn-sm btn-danger-outline" onclick="this.closest(\'.restaurant-entry\').remove(); scheduleDraftSave(); updateTripSummary();"><i class="fas fa-times"></i> Remove</button></div>';
 
-    container.appendChild(entry);
+    entry.querySelector('.rest-name').value =
+    restaurantData.name || '';
+
+entry.querySelector('.rest-dest').value =
+    restaurantData.destination || '';
+
+entry.querySelector('.rest-date').value =
+    restaurantData.date || '';
+
+entry.querySelector('.rest-meal').value =
+    restaurantData.meal || 'Breakfast';
+
+entry.querySelector('.rest-time').value =
+    restaurantData.time || '';
+
+entry.querySelector('.rest-guests').value =
+    restaurantData.guests || '1';
+    
+        container.appendChild(entry);
     entry.querySelectorAll('input, select').forEach(inp => {
         inp.addEventListener('change', () => { scheduleDraftSave(); updateTripSummary(); });
     });
@@ -769,24 +973,99 @@ function buildItineraryItemHTML(item, dayNum, idx) {
     '</div>';
 }
 
-function addItineraryItem(dayNum) {
-    const state = collectPlannerState();
-    if (!state.itineraryItems) state.itineraryItems = {};
-    if (!state.itineraryItems['day-' + dayNum]) state.itineraryItems['day-' + dayNum] = [];
+let activityDayToAdd = null;
 
-    state.itineraryItems['day-' + dayNum].push({
-        startTime: '09:00',
-        endTime: '10:00',
+function addItineraryItem(dayNum) {
+    activityDayToAdd = dayNum;
+
+    const modal = document.getElementById('activityModal');
+    const form = document.getElementById('activityForm');
+
+    form.reset();
+
+    document.getElementById('activity-start-time').value = '09:00';
+    document.getElementById('activity-end-time').value = '10:00';
+    document.getElementById('activity-title-error').textContent = '';
+
+    modal.style.display = 'flex';
+
+    setTimeout(() => {
+        document.getElementById('activity-title').focus();
+    }, 100);
+}
+
+function closeActivityModal() {
+    document.getElementById('activityModal').style.display = 'none';
+    document.getElementById('activity-title-error').textContent = '';
+    activityDayToAdd = null;
+}
+
+function saveItineraryActivity(event) {
+    event.preventDefault();
+
+    const titleInput = document.getElementById('activity-title');
+    const title = titleInput.value.trim();
+    const startTime =
+        document.getElementById('activity-start-time').value;
+    const endTime =
+        document.getElementById('activity-end-time').value;
+    const location =
+        document.getElementById('activity-location').value.trim();
+    const notes =
+        document.getElementById('activity-notes').value.trim();
+
+    if (!title) {
+        document.getElementById('activity-title-error').textContent =
+            'Please enter an activity name.';
+
+        titleInput.classList.add('invalid');
+        titleInput.focus();
+        return;
+    }
+
+    titleInput.classList.remove('invalid');
+    document.getElementById('activity-title-error').textContent = '';
+
+    if (startTime && endTime && endTime <= startTime) {
+        showToast(
+            'End time must be later than start time',
+            'error'
+        );
+        return;
+    }
+
+    const state = collectPlannerState();
+
+    if (!state.itineraryItems) {
+        state.itineraryItems = {};
+    }
+
+    const dayKey = 'day-' + activityDayToAdd;
+
+    if (!state.itineraryItems[dayKey]) {
+        state.itineraryItems[dayKey] = [];
+    }
+
+    state.itineraryItems[dayKey].push({
+        startTime: startTime,
+        endTime: endTime,
         type: 'Custom Activity',
-        title: 'New Activity',
-        location: '',
-        notes: '',
+        title: title,
+        location: location,
+        notes: notes,
         status: 'Planned'
     });
 
-    localStorage.setItem('tripDraft', JSON.stringify(state));
+    localStorage.setItem(
+        'tripDraft',
+        JSON.stringify(state)
+    );
+
+    closeActivityModal();
     generateItineraryDays();
     updateTripSummary();
+
+    showToast('Activity added successfully', 'success');
 }
 
 function removeItineraryItem(dayNum, idx) {
@@ -821,12 +1100,7 @@ function autoPopulateItinerary() {
         date.setDate(date.getDate() + day);
         const dateStr = date.toISOString().split('T')[0];
 
-        // Add destination visits
-        dests.forEach(d => {
-            if (d.arrival === dateStr) {
-                state.itineraryItems[dayKey].push({ startTime: '10:00', endTime: '18:00', type: 'Destination Visit', title: 'Explore ' + d.name, location: d.name, status: 'Planned' });
-            }
-        });
+        
 
         // Add transport
         transport.forEach(t => {
@@ -1125,6 +1399,18 @@ function restorePlannerDraft() {
         addDestinationRow();
     }
 
+    // Restaurants
+const restaurantContainer =
+    document.getElementById('restaurantSelections');
+
+restaurantContainer.innerHTML = '';
+
+if (Array.isArray(data.restaurants)) {
+    data.restaurants.forEach(restaurant => {
+        addRestaurantEntry(restaurant);
+    });
+}
+
     updateBudgetBar();
     updateTripSummary();
     renderWizardState();
@@ -1215,6 +1501,7 @@ async function saveTrip() {
             duration_days: safeDays,
             guide_name: guideNameStr,
             hotel_name: hotelNameStr,
+            planner_data: state,
             status: status
         };
 
@@ -1254,6 +1541,50 @@ async function saveTrip() {
     }
 }
 
+function modalDetailRow(icon, label, value) {
+    const displayValue =
+        value !== undefined &&
+        value !== null &&
+        String(value).trim() !== ''
+            ? String(value)
+            : 'Not specified';
+
+    return `
+        <div class="detail-row">
+            <span class="detail-label">
+                <i class="fas ${icon}"></i> ${escapeHtml(label)}
+            </span>
+            <span class="detail-val">
+                ${escapeHtml(displayValue)}
+            </span>
+        </div>
+    `;
+}
+
+function modalSection(title, icon, content) {
+    if (!content) return '';
+
+    return `
+        <section class="trip-detail-section">
+            <h3>
+                <i class="fas ${icon}"></i>
+                ${escapeHtml(title)}
+            </h3>
+            ${content}
+        </section>
+    `;
+}
+
+function formatMoneyValue(value, currency) {
+    const amount = Number(value);
+
+    if (!value || Number.isNaN(amount)) {
+        return 'Not specified';
+    }
+
+    return `${currency || 'LKR'} ${amount.toLocaleString()}`;
+}
+
 // TRIP DASHBOARD Gets saved trips from database.
 async function fetchUserTrips() {
     const activeContainer = document.getElementById('saved-trips-container');
@@ -1274,8 +1605,21 @@ async function fetchUserTrips() {
         card.className = 'trip-card';
         card.onclick = () => showTripDetails(trip);
 
-        const isHistory = trip.status === 'Visited' || trip.status === 'Completed';
-        const isCancelled = trip.status === 'Cancelled';
+        const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+const tripEndDate = getTripEndDate(trip.travel_date);
+const hasPassed = tripEndDate && tripEndDate < today;
+
+const isCancelled = trip.status === 'Cancelled';
+
+const isHistory =
+    !isCancelled &&
+    (
+        trip.status === 'Visited' ||
+        trip.status === 'Completed' ||
+        hasPassed
+    );
         let tagClass = 'trip-tag';
         if (isHistory) tagClass += ' history';
         else if (trip.status === 'Draft') tagClass += ' draft';
@@ -1323,14 +1667,471 @@ async function fetchUserTrips() {
 }
 
 function showTripDetails(trip) {
-    document.getElementById('modalTitle').textContent = trip.title;
+    document.getElementById('modalTitle').textContent =
+        trip.title || 'Trip Details';
 
-    let html = '<div class="detail-row"><span class="detail-label"><i class="fas fa-map-marker-alt"></i> Destinations</span><span class="detail-val">' + escapeHtml(trip.destination) + '</span></div>' +
-        '<div class="detail-row"><span class="detail-label"><i class="fas fa-calendar-day"></i> Travel Date</span><span class="detail-val">' + escapeHtml(trip.travel_date || 'Not set') + '</span></div>' +
-        '<div class="detail-row"><span class="detail-label"><i class="fas fa-wallet"></i> Budget</span><span class="detail-val">' + (trip.budget_amount ? (trip.currency || 'LKR') + ' ' + parseFloat(trip.budget_amount).toLocaleString() : 'Not specified') + '</span></div>' +
-        '<div class="detail-row"><span class="detail-label"><i class="fas fa-clock"></i> Duration</span><span class="detail-val">' + (trip.duration_days ? trip.duration_days + ' Days' : 'Not specified') + '</span></div>' +
-        '<div class="detail-row"><span class="detail-label"><i class="fas fa-user-tie"></i> Tour Guide</span><span class="detail-val" style="color:var(--neon-primary);">' + escapeHtml(trip.guide_name || 'No guide booked') + '</span></div>' +
-        '<div class="detail-row"><span class="detail-label"><i class="fas fa-hotel"></i> Hotels</span><span class="detail-val" style="color:var(--neon-primary);">' + escapeHtml(trip.hotel_name || 'No hotel booked') + '</span></div>';
+    const state =
+        trip.planner_data &&
+        typeof trip.planner_data === 'object'
+            ? trip.planner_data
+            : {};
+
+    const currency = state.currency || trip.currency || 'LKR';
+
+    const destinations =
+        Array.isArray(state.destinations)
+            ? state.destinations.filter(destination => destination.name)
+            : [];
+
+    const transportSegments =
+        Array.isArray(state.transportSegments)
+            ? state.transportSegments.filter(segment => segment.type)
+            : [];
+
+    const hotels =
+        Array.isArray(state.hotels)
+            ? state.hotels.filter(hotel => hotel && hotel.name)
+            : [];
+
+    const restaurants =
+        Array.isArray(state.restaurants)
+            ? state.restaurants.filter(restaurant => restaurant.name)
+            : [];
+
+    const itinerary =
+        state.itineraryItems &&
+        typeof state.itineraryItems === 'object'
+            ? state.itineraryItems
+            : {};
+
+    const travelers =
+        `${state.adults || 1} adult(s), ` +
+        `${state.children || 0} child(ren), ` +
+        `${state.infants || 0} infant(s)`;
+
+    let html = '';
+
+    // General trip information
+    let generalHtml = '';
+    generalHtml += modalDetailRow(
+        'fa-location-arrow',
+        'Starting Location',
+        state.startLocation
+    );
+    generalHtml += modalDetailRow(
+        'fa-map-marker-alt',
+        'Destinations',
+        destinations.length
+            ? destinations.map(destination => destination.name).join(', ')
+            : trip.destination
+    );
+    generalHtml += modalDetailRow(
+        'fa-calendar-day',
+        'Travel Date',
+        state.startDate && state.endDate
+            ? `${state.startDate} to ${state.endDate}`
+            : trip.travel_date
+    );
+    generalHtml += modalDetailRow(
+        'fa-clock',
+        'Duration',
+        trip.duration_days
+            ? `${trip.duration_days} Days`
+            : 'Not specified'
+    );
+    generalHtml += modalDetailRow(
+        'fa-users',
+        'Travelers',
+        travelers
+    );
+    generalHtml += modalDetailRow(
+        'fa-person-walking',
+        'Travel Pace',
+        state.pace
+    );
+
+    html += modalSection(
+        'General Information',
+        'fa-circle-info',
+        generalHtml
+    );
+
+    // Preferences
+    let preferenceHtml = '';
+    preferenceHtml += modalDetailRow(
+        'fa-tags',
+        'Trip Types',
+        state.tripTypes?.length
+            ? state.tripTypes.join(', ')
+            : 'Not specified'
+    );
+    preferenceHtml += modalDetailRow(
+        'fa-heart',
+        'Interests',
+        state.interests?.length
+            ? state.interests.join(', ')
+            : 'Not specified'
+    );
+    preferenceHtml += modalDetailRow(
+        'fa-universal-access',
+        'Requirements',
+        state.requirements?.length
+            ? state.requirements.join(', ')
+            : 'None'
+    );
+    preferenceHtml += modalDetailRow(
+        'fa-note-sticky',
+        'Special Notes',
+        state.specialNotes
+    );
+
+    html += modalSection(
+        'Preferences',
+        'fa-sliders',
+        preferenceHtml
+    );
+
+    // Budget
+    let budgetHtml = '';
+    budgetHtml += modalDetailRow(
+        'fa-wallet',
+        'Total Budget',
+        formatMoneyValue(
+            state.budgetTotal || trip.budget_amount,
+            currency
+        )
+    );
+    budgetHtml += modalDetailRow(
+        'fa-hotel',
+        'Accommodation',
+        formatMoneyValue(state.budgetAccommodation, currency)
+    );
+    budgetHtml += modalDetailRow(
+        'fa-car',
+        'Transportation',
+        formatMoneyValue(state.budgetTransport, currency)
+    );
+    budgetHtml += modalDetailRow(
+        'fa-utensils',
+        'Food',
+        formatMoneyValue(state.budgetFood, currency)
+    );
+    budgetHtml += modalDetailRow(
+        'fa-ticket',
+        'Activities',
+        formatMoneyValue(state.budgetActivities, currency)
+    );
+    budgetHtml += modalDetailRow(
+        'fa-kit-medical',
+        'Emergency',
+        formatMoneyValue(state.budgetEmergency, currency)
+    );
+
+    html += modalSection('Budget', 'fa-wallet', budgetHtml);
+
+    // Destination details
+    let destinationHtml = '';
+
+    destinations.forEach((destination, index) => {
+        destinationHtml += `
+            <div class="detail-subcard">
+                <h4>
+                    Stop ${index + 1}: ${escapeHtml(destination.name)}
+                </h4>
+
+                ${modalDetailRow(
+                    'fa-plane-arrival',
+                    'Arrival',
+                    destination.arrival
+                )}
+
+                ${modalDetailRow(
+                    'fa-plane-departure',
+                    'Departure',
+                    destination.departure
+                )}
+
+                ${modalDetailRow(
+                    'fa-note-sticky',
+                    'Notes',
+                    destination.notes
+                )}
+            </div>
+        `;
+    });
+
+    html += modalSection(
+        'Destination Details',
+        'fa-map-location-dot',
+        destinationHtml
+    );
+
+    // Transportation
+    let transportHtml = '';
+
+    transportSegments.forEach((segment, index) => {
+        transportHtml += `
+            <div class="detail-subcard">
+                <h4>
+                    Segment ${index + 1}:
+                    ${escapeHtml(segment.from || '')}
+                    →
+                    ${escapeHtml(segment.to || '')}
+                </h4>
+
+                ${modalDetailRow(
+                    'fa-car-side',
+                    'Transport Type',
+                    segment.type
+                )}
+
+                ${modalDetailRow(
+                    'fa-building',
+                    'Service',
+                    segment.serviceName
+                )}
+
+                ${modalDetailRow(
+                    'fa-phone',
+                    'Contact',
+                    segment.serviceContact
+                )}
+
+                ${modalDetailRow(
+                    'fa-calendar',
+                    'Travel Date',
+                    segment.date
+                )}
+
+                ${modalDetailRow(
+                    'fa-clock',
+                    'Departure Time',
+                    segment.time
+                )}
+
+                ${modalDetailRow(
+                    'fa-users',
+                    'Passengers',
+                    segment.passengers
+                )}
+
+                ${modalDetailRow(
+                    'fa-money-bill',
+                    'Estimated Price',
+                    formatMoneyValue(segment.price, currency)
+                )}
+
+                ${modalDetailRow(
+                    'fa-note-sticky',
+                    'Notes',
+                    segment.notes
+                )}
+            </div>
+        `;
+    });
+
+    html += modalSection(
+        'Transportation',
+        'fa-route',
+        transportHtml ||
+            modalDetailRow(
+                'fa-car',
+                'Transport',
+                'No transportation selected'
+            )
+    );
+
+    // Hotels
+    let hotelHtml = '';
+
+    hotels.forEach((hotel, index) => {
+        const destination = destinations[index] || {};
+
+        hotelHtml += `
+            <div class="detail-subcard">
+                <h4>${escapeHtml(hotel.name)}</h4>
+
+                ${modalDetailRow(
+                    'fa-location-dot',
+                    'Destination',
+                    destination.name
+                )}
+
+                ${modalDetailRow(
+                    'fa-calendar-check',
+                    'Check-in',
+                    destination.arrival
+                )}
+
+                ${modalDetailRow(
+                    'fa-calendar-xmark',
+                    'Check-out',
+                    destination.departure
+                )}
+            </div>
+        `;
+    });
+
+    html += modalSection(
+        'Hotels',
+        'fa-hotel',
+        hotelHtml ||
+            modalDetailRow(
+                'fa-hotel',
+                'Hotels',
+                trip.hotel_name || 'No hotel booked'
+            )
+    );
+
+    // Guide
+    let guideHtml = '';
+    guideHtml += modalDetailRow(
+        'fa-user-tie',
+        'Guide Name',
+        state.guideName || trip.guide_name || 'No guide booked'
+    );
+    guideHtml += modalDetailRow(
+        'fa-envelope',
+        'Guide Email',
+        state.guideEmail
+    );
+    guideHtml += modalDetailRow(
+        'fa-language',
+        'Guide Type',
+        state.guideType
+    );
+
+    html += modalSection(
+        'Tour Guide',
+        'fa-user-tie',
+        guideHtml
+    );
+
+    // Restaurants
+    let restaurantHtml = '';
+
+    restaurants.forEach((restaurant, index) => {
+        restaurantHtml += `
+            <div class="detail-subcard">
+                <h4>
+                    ${index + 1}. ${escapeHtml(restaurant.name)}
+                </h4>
+
+                ${modalDetailRow(
+                    'fa-location-dot',
+                    'Destination',
+                    restaurant.destination
+                )}
+
+                ${modalDetailRow(
+                    'fa-calendar',
+                    'Date',
+                    restaurant.date
+                )}
+
+                ${modalDetailRow(
+                    'fa-bowl-food',
+                    'Meal',
+                    restaurant.meal
+                )}
+
+                ${modalDetailRow(
+                    'fa-clock',
+                    'Time',
+                    restaurant.time
+                )}
+
+                ${modalDetailRow(
+                    'fa-users',
+                    'Guests',
+                    restaurant.guests
+                )}
+            </div>
+        `;
+    });
+
+    html += modalSection(
+        'Restaurants',
+        'fa-utensils',
+        restaurantHtml ||
+            modalDetailRow(
+                'fa-utensils',
+                'Restaurants',
+                'No restaurants selected'
+            )
+    );
+
+    // Daily itinerary
+    let itineraryHtml = '';
+
+    Object.keys(itinerary)
+        .sort((first, second) => {
+            return (
+                Number(first.replace('day-', '')) -
+                Number(second.replace('day-', ''))
+            );
+        })
+        .forEach(dayKey => {
+            const activities = itinerary[dayKey] || [];
+            const dayNumber = dayKey.replace('day-', '');
+
+            itineraryHtml += `
+                <div class="detail-subcard">
+                    <h4>Day ${escapeHtml(dayNumber)}</h4>
+            `;
+
+            if (!activities.length) {
+                itineraryHtml += `
+                    <p class="detail-empty">No activities added</p>
+                `;
+            }
+
+            activities.forEach(activity => {
+                const activityTime =
+                    activity.startTime ||
+                    activity.endTime
+                        ? `${activity.startTime || ''}` +
+                          `${activity.endTime
+                              ? ` – ${activity.endTime}`
+                              : ''}`
+                        : 'Time not set';
+
+                itineraryHtml += `
+                    <div class="itinerary-preview-item">
+                        <strong>${escapeHtml(activity.title || 'Activity')}</strong>
+
+                        <span>
+                            ${escapeHtml(activityTime)}
+                            ${activity.type
+                                ? ` • ${escapeHtml(activity.type)}`
+                                : ''}
+                        </span>
+
+                        ${activity.location
+                            ? `<span><i class="fas fa-location-dot"></i>
+                               ${escapeHtml(activity.location)}</span>`
+                            : ''}
+
+                        ${activity.notes
+                            ? `<span>${escapeHtml(activity.notes)}</span>`
+                            : ''}
+                    </div>
+                `;
+            });
+
+            itineraryHtml += '</div>';
+        });
+
+    html += modalSection(
+        'Daily Itinerary',
+        'fa-calendar-days',
+        itineraryHtml ||
+            modalDetailRow(
+                'fa-calendar',
+                'Itinerary',
+                'No activities added'
+            )
+    );
 
     document.getElementById('modalContent').innerHTML = html;
 
@@ -1349,6 +2150,36 @@ function closeTripDetails() {
 function prepareEditForm(trip) {
     editingTripId = trip.id;
     showSection('planner-section');
+
+    if (
+    trip.planner_data &&
+    typeof trip.planner_data === 'object' &&
+    Object.keys(trip.planner_data).length > 0
+) {
+    const savedState = {
+        ...trip.planner_data,
+        editingTripId: trip.id,
+        currentStep: 1
+    };
+
+    localStorage.setItem(
+        'tripDraft',
+        JSON.stringify(savedState)
+    );
+
+    restorePlannerDraft();
+
+    currentStep = 1;
+    renderWizardState();
+    renderTransportSegments();
+    renderHotelSelections();
+    generateItineraryDays();
+    updateBudgetBar();
+    updateTripSummary();
+
+    showToast('Trip loaded for editing', 'info');
+    return;
+}
 
     document.getElementById('trip-title').value = trip.title || '';
 
@@ -1420,6 +2251,16 @@ function getTripStartDate(travelDate) {
     const firstDate = travelDate.split(' to ')[0];
     const d = new Date(firstDate);
     return isNaN(d.getTime()) ? null : d;
+}
+
+function getTripEndDate(travelDate) {
+    if (!travelDate || travelDate === 'TBD') return null;
+
+    const dateParts = travelDate.split(' to ');
+    const lastDate = dateParts[dateParts.length - 1];
+    const endDate = new Date(lastDate + 'T00:00:00');
+
+    return isNaN(endDate.getTime()) ? null : endDate;
 }
 
 function updateWelcomeSection(userProfile, trips) {
@@ -1519,10 +2360,68 @@ window.onload = async function() {
         savePlannerDraft();
     }
 
+    // Handle returning from Transport page
+const pickedTransport =
+    localStorage.getItem('selectedTransportName');
+
+const transportSegmentIndex = parseInt(
+    localStorage.getItem('transportSegmentIndex'),
+    10
+);
+
+if (
+    pickedTransport &&
+    !Number.isNaN(transportSegmentIndex)
+) {
+    // Read the saved draft directly so other planner data
+    // is not replaced by empty page elements.
+    const state = JSON.parse(
+        localStorage.getItem('tripDraft') || '{}'
+    );
+
+    if (!state.transportSegments) {
+        state.transportSegments = [];
+    }
+
+    if (state.transportSegments[transportSegmentIndex]) {
+        state.transportSegments[transportSegmentIndex]
+            .serviceName = pickedTransport;
+
+        state.transportSegments[transportSegmentIndex]
+            .serviceContact =
+            localStorage.getItem(
+                'selectedTransportContact'
+            ) || '';
+    }
+
+    localStorage.setItem(
+        'tripDraft',
+        JSON.stringify(state)
+    );
+
+    showSection('planner-section');
+    currentStep = 3;
+    renderWizardState();
+    renderTransportSegments();
+    updateTripSummary();
+
+    localStorage.removeItem('selectedTransportName');
+    localStorage.removeItem('selectedTransportContact');
+    localStorage.removeItem('transportSegmentIndex');
+    localStorage.removeItem('isSelectingTransport');
+
+    showToast(
+        'Transport selected: ' + pickedTransport,
+        'success'
+    );
+}
+
     // Handle returning from Hotels page
     const pickedHotel = localStorage.getItem('selectedHotelName');
     if (pickedHotel) {
-        const state = collectPlannerState();
+        const state = JSON.parse(
+        localStorage.getItem('tripDraft') || '{}'
+    );
         if (!state.hotels) state.hotels = [];
         // Add to first destination without a hotel
         const dests = getDestinations().filter(d => d.name);
@@ -1548,28 +2447,72 @@ window.onload = async function() {
         showToast('Hotel selected: ' + pickedHotel, 'success');
     }
 
+    // Handle returning from Restaurants page
+const pickedRestaurant =
+    localStorage.getItem('selectedRestaurantName');
+
+if (pickedRestaurant) {
+    showSection('planner-section');
+
+    currentStep = 4;
+    renderWizardState();
+
+    localStorage.removeItem('selectedRestaurantName');
+    localStorage.removeItem('isSelectingRestaurant');
+
+    updateTripSummary();
+
+    showToast(
+        'Restaurant selected: ' + pickedRestaurant,
+        'success'
+    );
+}
+
     // Handle returning from Guides page
-    const pickedGuide = localStorage.getItem('selectedGuideName');
-    if (pickedGuide) {
-        const state = collectPlannerState();
-        state.guideName = pickedGuide;
-        state.guideEmail = localStorage.getItem('selectedGuideEmail') || '';
-        localStorage.setItem('tripDraft', JSON.stringify(state));
-        showSection('planner-section');
-        currentStep = 4;
-        renderWizardState();
-        updateGuideCard(state);
-        localStorage.removeItem('selectedGuideName');
-        localStorage.removeItem('selectedGuideEmail');
-        localStorage.removeItem('isSelectingGuide');
-        updateTripSummary();
-        showToast('Guide selected: ' + pickedGuide, 'success');
-    }
+const pickedGuide = localStorage.getItem('selectedGuideName');
+
+if (pickedGuide) {
+    // Read the saved draft directly.
+    // Do not call collectPlannerState() here because the dynamic
+    // hotel and transportation cards have not been rebuilt yet.
+    const state = JSON.parse(
+        localStorage.getItem('tripDraft') || '{}'
+    );
+
+    state.guideName = pickedGuide;
+    state.guideEmail =
+        localStorage.getItem('selectedGuideEmail') || '';
+
+    localStorage.setItem('tripDraft', JSON.stringify(state));
+
+    showSection('planner-section');
+    currentStep = 4;
+    renderWizardState();
+
+    // Rebuild hotels and then display the selected guide.
+    renderHotelSelections();
+    updateGuideCard(state);
+
+    localStorage.removeItem('selectedGuideName');
+    localStorage.removeItem('selectedGuideEmail');
+    localStorage.removeItem('isSelectingGuide');
+
+    updateTripSummary();
+    showToast('Guide selected: ' + pickedGuide, 'success');
+}
 
     // If returning from any service page with draft, show planner
-    if (hasDraft && (localStorage.getItem('isSelectingDestination') || localStorage.getItem('isSelectingHotel') || localStorage.getItem('isSelectingGuide'))) {
-        showSection('planner-section');
-    }
+if (
+    hasDraft &&
+    (
+        localStorage.getItem('isSelectingDestination') ||
+        localStorage.getItem('isSelectingHotel') ||
+        localStorage.getItem('isSelectingGuide') ||
+        localStorage.getItem('isSelectingRestaurant')
+    )
+) {
+    showSection('planner-section');
+}
 
     // Add one default destination row if none exist
     if (document.querySelectorAll('.destination-card').length === 0) {
@@ -1577,12 +2520,70 @@ window.onload = async function() {
     }
 
     // Bind date change listeners
-    ['trip-date-start', 'trip-date-end'].forEach(id => {
-        document.getElementById(id)?.addEventListener('change', () => {
-            updateTripSummary();
-            scheduleDraftSave();
-        });
-    });
+    // Bind date change listeners
+const startDateInput = document.getElementById('trip-date-start');
+const endDateInput = document.getElementById('trip-date-end');
+
+const today = new Date();
+const todayString =
+    today.getFullYear() + '-' +
+    String(today.getMonth() + 1).padStart(2, '0') + '-' +
+    String(today.getDate()).padStart(2, '0');
+
+startDateInput.min = todayString;
+endDateInput.min = todayString;
+
+function validateSelectedDates() {
+    const startDate = startDateInput.value;
+    const endDate = endDateInput.value;
+
+    document.getElementById('err-start-date').textContent = '';
+    document.getElementById('err-start-date').classList.remove('show');
+    document.getElementById('err-end-date').textContent = '';
+    document.getElementById('err-end-date').classList.remove('show');
+
+    startDateInput.classList.remove('invalid');
+    endDateInput.classList.remove('invalid');
+
+    if (startDate && isDateInPast(startDate)) {
+        showFieldError(
+            'err-start-date',
+            'Start date cannot be in the past.'
+        );
+        startDateInput.classList.add('invalid');
+    }
+
+    if (startDate) {
+        endDateInput.min = startDate;
+    } else {
+        endDateInput.min = todayString;
+    }
+
+    if (endDate && isDateInPast(endDate)) {
+        showFieldError(
+            'err-end-date',
+            'End date cannot be in the past.'
+        );
+        endDateInput.classList.add('invalid');
+    } else if (startDate && endDate && endDate < startDate) {
+        showFieldError(
+            'err-end-date',
+            'End date cannot be after the start date.'
+        );
+        endDateInput.classList.add('invalid');
+    }
+
+    document.querySelectorAll('.destination-card').forEach(card => {
+    applyDestinationDateLimits(card);
+});
+
+    updateTripSummary();
+    scheduleDraftSave();
+}
+
+startDateInput?.addEventListener('change', validateSelectedDates);
+endDateInput?.addEventListener('change', validateSelectedDates);
+
 
     // Bind all input fields for autosave
     document.querySelectorAll('#step-1 input, #step-1 select, #step-1 textarea').forEach(el => {
