@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GoTravel | Admin Dashboard</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="../css/admin_style.css">
+</head>
+<body>
+  <div class="bg-layer"></div>
+  <div class="mobile-overlay" id="mobileOverlay" onclick="closeSidebar()"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <button class="sidebar-close" type="button" onclick="closeSidebar()" aria-label="Close menu">
+      <i class="fa-solid fa-chevron-left"></i>
+    </button>
+
+    <div class="logo">
+      <img src="../src/images/GoTravels.png" class="logo-img" alt="GoTravel logo">
+      <span>GoTravel</span>
+    </div>
+
+    <div class="admin-badge">
+      <i class="fa-solid fa-shield-halved"></i>
+      <div>
+        <strong>Admin Panel</strong>
+        <small>Platform control centre</small>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a class="nav-link active" data-section="overview" onclick="showSection('overview', this)">
+        <span><i class="fa-solid fa-chart-pie"></i> Overview</span>
+      </a>
+
+      <div class="section-title">Management</div>
+
+      <a class="nav-link" data-section="users" onclick="showSection('users', this)">
+        <span><i class="fa-solid fa-users"></i> Users</span>
+        <span class="nav-count" id="userNavCount">0</span>
+      </a>
+
+      <a class="nav-link" data-section="approvals" onclick="showSection('approvals', this)">
+        <span><i class="fa-solid fa-circle-check"></i> Approvals</span>
+        <span class="nav-count warning" id="pendingNavCount">0</span>
+      </a>
+
+      <a class="nav-link" data-section="services" onclick="showSection('services', this)">
+        <span><i class="fa-solid fa-layer-group"></i> All Services</span>
+      </a>
+
+      <div class="section-title">Account</div>
+
+      <a href="../index.html">
+        <span><i class="fa-solid fa-house"></i> Visit Website</span>
+      </a>
+
+      <a onclick="logout()">
+        <span class="danger-link"><i class="fa-solid fa-right-from-bracket"></i> Logout</span>
+      </a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="mobile-menu-btn" type="button" onclick="toggleSidebar()" aria-label="Open menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <div>
+          <p class="eyebrow">Administration</p>
+          <h1 id="pageTitle">Dashboard Overview</h1>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="refresh-btn" type="button" onclick="refreshDashboard()" title="Refresh dashboard">
+          <i class="fa-solid fa-rotate"></i>
+        </button>
+
+        <div class="profile" id="profileBtn">
+          <span class="profile-letter" id="profileLetter">A</span>
+          <div class="profile-info">
+            <strong id="adminName">Administrator</strong>
+            <small id="adminEmail">admin@gtravel.com</small>
+          </div>
+          <i class="fa-solid fa-chevron-down profile-arrow"></i>
+
+          <div class="profile-menu hidden" id="profileMenu">
+            <div class="profile-menu-head">
+              <span class="profile-letter large" id="profileLetterLarge">A</span>
+              <div>
+                <strong id="menuAdminName">Administrator</strong>
+                <small>Platform Administrator</small>
+              </div>
+            </div>
+            <button type="button" onclick="logout()">
+              <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="container">
+      <section class="dashboard-section active" id="overviewSection">
+        <div class="welcome-card">
+          <div>
+            <p class="welcome-greeting">Welcome back, <span id="welcomeName">Admin</span></p>
+            <h2>Everything on GoTravel, in one place.</h2>
+            <p>Review platform activity, manage users, and approve services submitted by business owners.</p>
+          </div>
+          <div class="welcome-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card cyan">
+            <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+            <div>
+              <p>Total Users</p>
+              <h3 id="totalUsers">0</h3>
+              <small>Registered accounts</small>
+            </div>
+          </article>
+
+          <article class="stat-card purple">
+            <div class="stat-icon"><i class="fa-solid fa-briefcase"></i></div>
+            <div>
+              <p>Business Users</p>
+              <h3 id="businessUsers">0</h3>
+              <small>Service providers</small>
+            </div>
+          </article>
+
+          <article class="stat-card orange">
+            <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
+            <div>
+              <p>Pending Approvals</p>
+              <h3 id="pendingApprovals">0</h3>
+              <small>Need your review</small>
+            </div>
+          </article>
+
+          <article class="stat-card green">
+            <div class="stat-icon"><i class="fa-solid fa-layer-group"></i></div>
+            <div>
+              <p>Total Services</p>
+              <h3 id="totalServices">0</h3>
+              <small>Across all categories</small>
+            </div>
+          </article>
+        </div>
+
+        <div class="dashboard-grid">
+          <article class="glass-card activity-card">
+            <div class="card-heading">
+              <div>
+                <p class="eyebrow">Latest activity</p>
+                <h2>Recent Service Submissions</h2>
+              </div>
+              <button class="text-btn" type="button" onclick="openApprovalsSection()">View all</button>
+            </div>
+            <div id="recentServices" class="activity-list">
+              <div class="empty-state compact"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading services...</p></div>
+            </div>
+          </article>
+
+          <article class="glass-card distribution-card">
+            <div class="card-heading">
+              <div>
+                <p class="eyebrow">Service mix</p>
+                <h2>Platform Categories</h2>
+              </div>
+            </div>
+            <div id="categorySummary" class="category-summary"></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-section" id="usersSection">
+        <div class="section-toolbar">
+          <div>
+            <p class="eyebrow">Account management</p>
+            <h2>Registered Users</h2>
+          </div>
+          <div class="toolbar-controls">
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input id="userSearch" type="search" placeholder="Search name or email..." oninput="renderUsers()">
+            </div>
+            <select id="userRoleFilter" onchange="renderUsers()">
+              <option value="all">All account types</option>
+              <option value="personal">Personal</option>
+              <option value="business">Business</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="glass-card table-card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Account Type</th>
+                  <th>Joined</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody"></tbody>
+            </table>
+          </div>
+          <div id="usersEmpty" class="empty-state hidden"><i class="fa-solid fa-users-slash"></i><p>No users found.</p></div>
+        </div>
+      </section>
+
+      <section class="dashboard-section" id="approvalsSection">
+        <div class="section-toolbar">
+          <div>
+            <p class="eyebrow">Business submissions</p>
+            <h2>Pending Service Approvals</h2>
+          </div>
+          <div class="filter-chips" id="approvalFilters">
+            <button class="filter-chip active" data-filter="all" onclick="setApprovalFilter('all', this)">All</button>
+            <button class="filter-chip" data-filter="hotel" onclick="setApprovalFilter('hotel', this)">Hotels</button>
+            <button class="filter-chip" data-filter="restaurant" onclick="setApprovalFilter('restaurant', this)">Restaurants</button>
+            <button class="filter-chip" data-filter="guide" onclick="setApprovalFilter('guide', this)">Guides</button>
+            <button class="filter-chip" data-filter="transport" onclick="setApprovalFilter('transport', this)">Transport</button>
+          </div>
+        </div>
+
+        <div id="approvalGrid" class="service-grid"></div>
+        <div id="approvalEmpty" class="glass-card empty-state hidden">
+          <i class="fa-solid fa-circle-check"></i>
+          <h3>No pending services</h3>
+          <p>All submitted services have been reviewed.</p>
+        </div>
+      </section>
+
+      <section class="dashboard-section" id="servicesSection">
+        <div class="section-toolbar">
+          <div>
+            <p class="eyebrow">Platform catalogue</p>
+            <h2>All Services</h2>
+          </div>
+          <div class="toolbar-controls">
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input id="serviceSearch" type="search" placeholder="Search services..." oninput="renderAllServices()">
+            </div>
+            <select id="serviceTypeFilter" onchange="renderAllServices()">
+              <option value="all">All categories</option>
+              <option value="hotel">Hotels</option>
+              <option value="restaurant">Restaurants</option>
+              <option value="guide">Guides</option>
+              <option value="transport">Transport</option>
+            </select>
+            <select id="serviceStatusFilter" onchange="renderAllServices()">
+              <option value="all">All statuses</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="allServicesGrid" class="service-grid"></div>
+        <div id="servicesEmpty" class="glass-card empty-state hidden"><i class="fa-solid fa-folder-open"></i><p>No services found.</p></div>
+      </section>
+    </div>
+  </main>
+
+  <div class="modal-overlay hidden" id="detailsModal" onclick="closeDetailsModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <button class="modal-close" type="button" onclick="closeDetailsModal()"><i class="fa-solid fa-xmark"></i></button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="../backend/admin_script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</body>
+</html>
