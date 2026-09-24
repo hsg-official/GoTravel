@@ -81,7 +81,7 @@ async function loadHotels() {
       return { ...hotel, rooms: hotelRooms, minPrice };
     });
 
-    populateCityFilter(allHotels);
+    populateHotelFilters(allHotels);
     applyFilters();
   } catch (error) {
     console.error("Failed to load hotels:", error);
@@ -90,25 +90,75 @@ async function loadHotels() {
   }
 }
 
-// Keep the "City" dropdown in sync with whatever cities actually exist,
-// without clobbering the hardcoded options already in the HTML.
-function populateCityFilter(hotels) {
-  const select = document.getElementById("cityFilter");
-  if (!select) return;
+function populateHotelFilters(hotels) {
+  const citySelect = document.getElementById("cityFilter");
+  const propertyTypeSelect = document.getElementById("propertyTypeFilter");
 
-  const existing = new Set(
-    Array.from(select.options).map(opt => opt.value.toLowerCase())
-  );
+  if (!citySelect || !propertyTypeSelect) return;
 
-  const cities = [...new Set(hotels.map(h => h.city).filter(Boolean))];
+  // Reset dropdowns before rebuilding them
+  citySelect.innerHTML =
+    '<option value="all">All Cities</option>';
+
+  propertyTypeSelect.innerHTML =
+    '<option value="all">All Property Types</option>';
+
+  // -------------------------
+  // Build unique city list
+  // -------------------------
+
+  const cityMap = new Map();
+
+  hotels.forEach(hotel => {
+    const city = String(hotel.city || "").trim();
+
+    if (!city) return;
+
+    const key = city.toLowerCase();
+
+    if (!cityMap.has(key)) {
+      cityMap.set(key, city);
+    }
+  });
+
+  const cities = Array.from(cityMap.values())
+    .sort((a, b) => a.localeCompare(b));
 
   cities.forEach(city => {
-    if (!existing.has(city.toLowerCase())) {
-      const option = document.createElement("option");
-      option.value = city;
-      option.textContent = city;
-      select.appendChild(option);
+    const option = document.createElement("option");
+    option.value = city;
+    option.textContent = city;
+    citySelect.appendChild(option);
+  });
+
+  // -------------------------
+  // Build unique property types
+  // -------------------------
+
+  const propertyTypeMap = new Map();
+
+  hotels.forEach(hotel => {
+    const propertyType =
+      String(hotel.property_type || "").trim();
+
+    if (!propertyType) return;
+
+    const key = propertyType.toLowerCase();
+
+    if (!propertyTypeMap.has(key)) {
+      propertyTypeMap.set(key, propertyType);
     }
+  });
+
+  const propertyTypes =
+    Array.from(propertyTypeMap.values())
+      .sort((a, b) => a.localeCompare(b));
+
+  propertyTypes.forEach(propertyType => {
+    const option = document.createElement("option");
+    option.value = propertyType;
+    option.textContent = propertyType;
+    propertyTypeSelect.appendChild(option);
   });
 }
 
@@ -142,7 +192,13 @@ function renderHotels(list) {
     const photos = toArray(hotel.photo_urls);
     const photo = photos[0] || "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg";
     const liked = isWishlisted(hotel.id);
-    const ratingText = hotel.star_rating ? ` &middot; ${escapeHtml(hotel.star_rating)}&#9733;` : "";
+    const starValue = String(hotel.star_rating ?? "").trim();
+
+    const ratingText = !starValue
+      ? ""
+      : starValue.toLowerCase() === "unrated"
+        ? " &middot; Unrated"
+        : ` &middot; ${escapeHtml(starValue)}&#9733;`;
 
     return `
       <div class="hotel-card" data-id="${hotel.id}">
@@ -183,19 +239,62 @@ function renderHotels(list) {
 }
 
 // Filtering / sorting / searching
-
 function applyFilters() {
-  const city = document.getElementById("cityFilter").value;
-  const sort = document.getElementById("sortFilter").value;
-  const maxPrice = Number(document.getElementById("priceFilter").value);
-  const wishlistOnly = document.getElementById("wishlistFilter").classList.contains("active-filter");
-  const searchTerm = document.getElementById("hotelSearch").value.trim().toLowerCase();
+  const city =
+    document.getElementById("cityFilter").value;
+
+  const propertyType =
+    document.getElementById("propertyTypeFilter").value;
+
+  const starRating =
+    document.getElementById("starFilter").value;
+
+  const sort =
+    document.getElementById("sortFilter").value;
+
+  const maxPrice =
+    Number(document.getElementById("priceFilter").value);
+
+  const wishlistOnly =
+    document
+      .getElementById("wishlistFilter")
+      .classList
+      .contains("active-filter");
+
+  const searchTerm =
+    document
+      .getElementById("hotelSearch")
+      .value
+      .trim()
+      .toLowerCase();
 
   let list = [...allHotels];
 
   if (city !== "all") {
     list = list.filter(h => (h.city || "").toLowerCase() === city.toLowerCase());
   }
+
+  // Property Type filter
+if (propertyType !== "all") {
+  list = list.filter(
+    h =>
+      String(h.property_type || "")
+        .trim()
+        .toLowerCase() ===
+      propertyType.trim().toLowerCase()
+  );
+}
+
+// Star Rating filter
+if (starRating !== "all") {
+  list = list.filter(
+    h =>
+      String(h.star_rating || "")
+        .trim()
+        .toLowerCase() ===
+      starRating.trim().toLowerCase()
+  );
+}
 
   list = list.filter(h => !h.minPrice || h.minPrice <= maxPrice);
 
@@ -257,7 +356,18 @@ function renderModalBadges(hotel) {
   const badges = [];
 
   if (hotel.property_type) badges.push(`<span class="badge badge-type">${escapeHtml(hotel.property_type)}</span>`);
-  if (hotel.star_rating) badges.push(`<span class="badge badge-rating">&#9733; ${escapeHtml(hotel.star_rating)} Star</span>`);
+  const starValue = String(hotel.star_rating ?? "").trim();
+
+if (starValue) {
+  const ratingLabel =
+    starValue.toLowerCase() === "unrated"
+      ? "Unrated"
+      : `★ ${escapeHtml(starValue)} Star`;
+
+  badges.push(
+    `<span class="badge badge-rating">${ratingLabel}</span>`
+  );
+}
   if (hotel.city) badges.push(`<span class="badge badge-type">${escapeHtml(hotel.city)}</span>`);
   if (hotel.minPrice) badges.push(`<span class="badge badge-price">From ${formatPrice(hotel.minPrice)}</span>`);
 
@@ -446,8 +556,21 @@ function wireFilterControls() {
     }
   });
 
-  document.getElementById("cityFilter").addEventListener("change", applyFilters);
-  document.getElementById("sortFilter").addEventListener("change", applyFilters);
+  document
+  .getElementById("cityFilter")
+  .addEventListener("change", applyFilters);
+
+document
+  .getElementById("propertyTypeFilter")
+  .addEventListener("change", applyFilters);
+
+document
+  .getElementById("starFilter")
+  .addEventListener("change", applyFilters);
+
+document
+  .getElementById("sortFilter")
+  .addEventListener("change", applyFilters);
 
   document.getElementById("priceFilter").addEventListener("input", event => {
     document.getElementById("priceValue").textContent = formatPrice(event.target.value);
@@ -461,14 +584,27 @@ function wireFilterControls() {
   });
 
   document.getElementById("resetFilters").addEventListener("click", () => {
-    document.getElementById("cityFilter").value = "all";
-    document.getElementById("sortFilter").value = "default";
-    document.getElementById("priceFilter").value = 100000;
-    document.getElementById("priceValue").textContent = formatPrice(100000);
-    document.getElementById("hotelSearch").value = "";
-    document.getElementById("wishlistFilter").classList.remove("active-filter");
-    applyFilters();
-  });
+  document.getElementById("cityFilter").value = "all";
+
+  document.getElementById("propertyTypeFilter").value = "all";
+
+  document.getElementById("starFilter").value = "all";
+
+  document.getElementById("sortFilter").value = "default";
+
+  document.getElementById("priceFilter").value = 100000;
+
+  document.getElementById("priceValue").textContent =
+    formatPrice(100000);
+
+  document.getElementById("hotelSearch").value = "";
+
+  document
+    .getElementById("wishlistFilter")
+    .classList.remove("active-filter");
+
+  applyFilters();
+});
 }
 
 function wireMobileSidebar() {
