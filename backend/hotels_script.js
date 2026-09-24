@@ -8,7 +8,8 @@ const WISHLIST_KEY = "gotravel_hotel_wishlist";
 
 let allHotels = [];      // every hotel_service row (+ its rooms, + computed minPrice)
 let currentHotels = [];  // whatever is currently on screen after filters/search
-
+// Hotel IDs selected for comparison
+const selectedForCompare = new Set();
 
 //Wishlist (stored locally per-browser)
    
@@ -192,6 +193,8 @@ function renderHotels(list) {
     const photos = toArray(hotel.photo_urls);
     const photo = photos[0] || "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg";
     const liked = isWishlisted(hotel.id);
+    const compareSelected =
+    selectedForCompare.has(String(hotel.id));
     const starValue = String(hotel.star_rating ?? "").trim();
 
     const ratingText = !starValue
@@ -211,7 +214,17 @@ function renderHotels(list) {
           <p>${escapeHtml(hotel.city || "")}${hotel.property_type ? " &middot; " + escapeHtml(hotel.property_type) : ""}${ratingText}</p>
           <p class="hotel-price">${hotel.minPrice ? "From " + formatPrice(hotel.minPrice) : "Contact for price"}</p>
           <button type="button" class="btn-explore view-details-btn" data-id="${hotel.id}">View Details</button>
-        </div>
+          
+          <label class="compare-option">
+              <input
+                type="checkbox"
+                class="compare-checkbox"
+                data-id="${escapeHtml(hotel.id)}"
+                ${compareSelected ? "checked" : ""}
+              >
+              Compare this hotel
+          </label>
+          </div>
       </div>
     `;
   }).join("");
@@ -236,6 +249,238 @@ function renderHotels(list) {
       }
     });
   });
+
+  
+container
+    .querySelectorAll(".compare-checkbox")
+    .forEach(checkbox => {
+        checkbox.addEventListener("change", () => {
+            const id = checkbox.dataset.id;
+
+            if (checkbox.checked) {
+                if (selectedForCompare.size >= 3) {
+                    checkbox.checked = false;
+
+                    alert(
+                        "You can compare a maximum of 3 hotels."
+                    );
+
+                    return;
+                }
+
+                selectedForCompare.add(id);
+            } else {
+                selectedForCompare.delete(id);
+            }
+
+            updateCompareBar();
+        });
+    });
+}
+
+
+function updateCompareBar() {
+    const bar = document.getElementById("compareBar");
+    const count = selectedForCompare.size;
+
+    bar.hidden = count === 0;
+
+    document.getElementById("compareCount").textContent =
+        `${count} of 3 hotels selected` +
+        (count === 1 ? " — select one more" : "");
+
+    document.getElementById("openCompare").disabled =
+        count < 2;
+}
+
+// Format the star rating for the comparison table
+function comparisonStarRating(hotel) {
+    const rating =
+        String(hotel.star_rating ?? "").trim();
+
+    if (!rating) return "Not specified";
+
+    if (rating.toLowerCase() === "unrated") {
+        return "Unrated";
+    }
+
+    return `${rating} ★`;
+}
+
+// Build and open the comparison popup
+function showHotelComparison() {
+    const selectedHotels = allHotels.filter(hotel =>
+        selectedForCompare.has(String(hotel.id))
+    );
+
+    if (
+        selectedHotels.length < 2 ||
+        selectedHotels.length > 3
+    ) {
+        return;
+    }
+
+    const rows = [
+        {
+            label: "City",
+            getValue: h => h.city || "Not listed"
+        },
+        {
+            label: "Property Type",
+            getValue: h => h.property_type || "Not listed"
+        },
+        {
+            label: "Star Rating",
+            getValue: comparisonStarRating
+        },
+        {
+            label: "Starting Room Price",
+            getValue: h =>
+                h.minPrice
+                    ? `From ${formatPrice(h.minPrice)}`
+                    : "Contact for price"
+        },
+        {
+            label: "Price Basis",
+            getValue: h => h.price_basis || "Not listed"
+        },
+        {
+            label: "Total Rooms",
+            getValue: h =>
+                h.total_rooms ?? "Not listed"
+        },
+        {
+            label: "Facilities",
+            getValue: h =>
+                toArray(h.facilities).join(", ") ||
+                "Not listed"
+        },
+        {
+            label: "Wi-Fi",
+            getValue: h =>
+                h.connectivity || "Not listed"
+        },
+        {
+            label: "Parking",
+            getValue: h =>
+                toArray(h.parkings).join(", ") ||
+                "Not listed"
+        },
+        {
+            label: "Pets Allowed",
+            getValue: h =>
+                h.pets_allowed || "Not listed"
+        }
+    ];
+
+    // Table header with selected hotel names
+    const header = `
+        <thead>
+            <tr>
+                <th>Feature</th>
+
+                ${selectedHotels.map(hotel => `
+                    <th>
+                        ${escapeHtml(
+                            hotel.service_name || "Hotel"
+                        )}
+                    </th>
+                `).join("")}
+            </tr>
+        </thead>
+    `;
+
+    // Each row contains the same feature for all hotels
+    const body = `
+        <tbody>
+            ${rows.map(row => `
+                <tr>
+                    <th scope="row">
+                        ${escapeHtml(row.label)}
+                    </th>
+
+                    ${selectedHotels.map(hotel => `
+                        <td>
+                            ${escapeHtml(
+                                String(row.getValue(hotel))
+                            )}
+                        </td>
+                    `).join("")}
+                </tr>
+            `).join("")}
+        </tbody>
+    `;
+
+    document.getElementById(
+        "compareTableWrap"
+    ).innerHTML = `
+        <table class="compare-table">
+            ${header}
+            ${body}
+        </table>
+    `;
+
+    document.getElementById(
+        "compareModal"
+    ).classList.add("open");
+}
+
+function closeHotelComparison() {
+    document.getElementById(
+        "compareModal"
+    ).classList.remove("open");
+}
+
+function clearHotelComparison() {
+    selectedForCompare.clear();
+
+    closeHotelComparison();
+    updateCompareBar();
+
+    // Re-render cards to uncheck the checkboxes
+    applyFilters();
+}
+
+function wireComparisonControls() {
+    document.getElementById(
+        "openCompare"
+    ).addEventListener(
+        "click",
+        showHotelComparison
+    );
+
+    document.getElementById(
+        "clearCompare"
+    ).addEventListener(
+        "click",
+        clearHotelComparison
+    );
+
+    document.getElementById(
+        "closeCompareModal"
+    ).addEventListener(
+        "click",
+        closeHotelComparison
+    );
+
+    const modal =
+        document.getElementById("compareModal");
+
+    // Close when clicking the dark backdrop
+    modal.addEventListener("click", event => {
+        if (event.target === modal) {
+            closeHotelComparison();
+        }
+    });
+
+    // Close with the Escape key
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape") {
+            closeHotelComparison();
+        }
+    });
+
+    updateCompareBar();
 }
 
 // Filtering / sorting / searching
@@ -651,5 +896,6 @@ document.addEventListener("DOMContentLoaded", () => {
   wireTransportDropdown();
   wireModalBackdropClicks();
   wireModalTabs();
+  wireComparisonControls();
   loadHotels();
 });
