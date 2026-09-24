@@ -123,6 +123,28 @@
                 <h2 class="section-title" style="text-align: left; margin-bottom: 30px;">
                     Popular <span class="neon-text">Hotels</span>
                 </h2>
+
+                <!-- Comparison bar -->
+                <div id="compareBar" class="compare-bar" hidden>
+
+                    <span id="compareCount">
+                        0 of 3 hotels selected
+                    </span>
+
+                    <div class="compare-bar-actions">
+
+                        <button type="button" id="clearCompare">
+                            Clear
+                        </button>
+
+                        <button type="button" id="openCompare" disabled>
+                            Compare Hotels
+                        </button>
+
+                    </div>
+
+                </div>
+
                 <div class="hotel-grid" id="hotelCardsContainer"></div>
             </section>
 
@@ -178,6 +200,39 @@
                 <button class="btn-explore" onclick="closeBookingAlert()">OK</button>
             </div>
         </div>
+
+<!-- Hotel comparison popup -->
+<div
+    id="compareModal"
+    class="hotel-compare-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="compareTitle"
+>
+    <div class="hotel-compare-content">
+        <div class="compare-header">
+            <h2 id="compareTitle">Compare Hotels</h2>
+
+            <button
+                type="button"
+                id="closeCompareModal"
+                aria-label="Close comparison"
+            >
+                &times;
+            </button>
+        </div>
+
+        <p>
+            Compare hotel information side by side
+            to help you choose accommodation.
+        </p>
+
+        <div
+            id="compareTableWrap"
+            class="compare-table-wrap"
+        ></div>
+    </div>
+</div>
 
     </main>
     <script src="../backend/hotels_script.js"></script>
