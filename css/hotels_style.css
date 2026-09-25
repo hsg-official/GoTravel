@@ -1542,3 +1542,140 @@ body {
         width: 140px;
     }
 }
+.hotel-review-summary {
+    color: #fbbf24;
+    margin: 12px 0;
+    font-size: 0.9rem;
+}
+
+.hotel-reviews-btn {
+    width: 100%;
+    padding: 11px 16px;
+    margin: 10px 0;
+    border: 1px solid #00f3ff;
+    border-radius: 10px;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    cursor: pointer;
+}
+
+.hotel-reviews-btn:hover {
+    background: rgba(0, 243, 255, 0.12);
+}
+
+.hr-dialog {
+    box-sizing: border-box;
+    width: min(560px, calc(100% - 28px));
+    max-height: 85vh;
+    margin: auto;
+    padding: 24px;
+    overflow-y: auto;
+    border: 1px solid #334155;
+    border-radius: 20px;
+    background: #111827;
+    color: #f8fafc;
+}
+
+.hr-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.75);
+}
+
+.hr-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.hr-close {
+    background: transparent;
+    border: 0;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+.hr-summary {
+    color: #fbbf24;
+    margin: 16px 0;
+}
+
+.hr-message {
+    color: #cbd5e1;
+    margin: 14px 0;
+    line-height: 1.5;
+}
+
+.hr-form {
+    padding: 16px 0;
+    border-top: 1px solid #334155;
+}
+
+.hr-form label {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.hr-form select,
+.hr-form textarea {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 16px;
+    border: 1px solid #475569;
+    border-radius: 8px;
+    background: #1e293b;
+    color: white;
+    font: inherit;
+}
+
+.hr-form textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.hr-action {
+    padding: 11px 16px;
+    margin: 8px 0;
+    border: 0;
+    border-radius: 8px;
+    background: #0284c7;
+    color: white;
+    font: inherit;
+    cursor: pointer;
+}
+
+.hr-delete {
+    background: #b91c1c;
+}
+
+.hr-review {
+    padding: 16px 0;
+    border-top: 1px solid #334155;
+}
+
+.hr-review strong {
+    color: #fbbf24;
+}
+
+.hr-review small {
+    display: block;
+    margin: 8px 0;
+    color: #94a3b8;
+}
+
+.hr-review p {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    line-height: 1.6;
+}
+
+.hr-dialog [hidden] {
+    display: none !important;
+}
+
+.hr-dialog button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
