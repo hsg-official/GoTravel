@@ -544,3 +544,17 @@ dialog::backdrop {
         height: 240px;
     }
 }
+body {
+    background:
+        linear-gradient(
+            rgba(3, 3, 10, 0.65),
+            rgba(3, 3, 10, 0.75)
+        ),
+        url("https://images.pexels.com/photos/30939937/pexels-photo-30939937.png");
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-color: #050510;
+}
