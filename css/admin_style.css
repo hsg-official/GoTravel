@@ -257,3 +257,554 @@ tbody tr:hover { background: rgba(56,189,248,.055); }
   .modal-actions { flex-direction: column; }
   .profile-menu { right: -5px; width: min(285px, calc(100vw - 36px)); }
 }
+.booking-cases-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.booking-case-card {
+  background: rgba(224, 242, 254, 0.12);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 20px;
+}
+
+.booking-case-header {
+  align-items: flex-start;
+  display: flex;
+  gap: 15px;
+  justify-content: space-between;
+}
+
+.booking-case-header h3 {
+  margin: 4px 0 0;
+}
+
+.case-status {
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 7px 11px;
+  text-transform: capitalize;
+}
+
+.case-status.pending {
+  background: rgba(245, 158, 11, 0.16);
+  color: #fbbf24;
+}
+
+.case-status.resolved {
+  background: rgba(34, 197, 94, 0.15);
+  color: #86efac;
+}
+
+.booking-case-info {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 16px;
+}
+
+.booking-case-info div,
+.case-reason,
+.case-response {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 13px;
+}
+
+.booking-case-info span,
+.case-reason span,
+.case-response span {
+  color: var(--muted);
+  display: block;
+  font-size: 0.7rem;
+  margin-bottom: 5px;
+}
+
+.case-reason,
+.case-response {
+  margin-top: 12px;
+}
+
+.case-reason p,
+.case-response p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.case-resolution {
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.case-resolution select,
+.case-resolution input,
+.case-resolution textarea {
+  width: 100%;
+}
+
+.case-resolution textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.case-resolve-button {
+  background: #0ea5e9;
+  border: 0;
+  border-radius: 11px;
+  color: white;
+  cursor: pointer;
+  font-weight: 700;
+  padding: 11px 16px;
+}
+
+.case-result {
+  color: #86efac;
+  font-weight: 700;
+  margin-top: 16px;
+}
+
+@media (max-width: 700px) {
+  .booking-case-info {
+    grid-template-columns: 1fr;
+  }
+}
+.commission-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.commission-summary article {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.commission-summary span {
+  color: var(--muted);
+}
+
+.commission-summary strong {
+  color: var(--accent);
+  font-size: 1.35rem;
+}
+
+.commissions-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.commission-card {
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: rgba(24, 37, 45, 0.9);
+}
+
+.commission-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.commission-card-header h3 {
+  margin-top: 4px;
+}
+
+.commission-status {
+  height: fit-content;
+  padding: 7px 12px;
+  border-radius: 999px;
+  text-transform: capitalize;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.commission-status.due {
+  color: #facc15;
+  background: rgba(250, 204, 21, 0.14);
+}
+
+.commission-status.paid {
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.16);
+}
+
+.commission-info {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.commission-info div {
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.commission-info span,
+.commission-amount span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.commission-amount {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 14px;
+}
+
+.commission-amount strong {
+  color: var(--accent);
+  font-size: 1.25rem;
+}
+
+.commission-payment {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.commission-payment input {
+  flex: 1;
+  padding: 13px;
+  color: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.commission-payment button {
+  padding: 12px 18px;
+  color: #06212a;
+  font-weight: 700;
+  border: 0;
+  border-radius: 12px;
+  background: var(--accent);
+  cursor: pointer;
+}
+
+.commission-paid-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 18px;
+  color: #86efac;
+}
+
+@media (max-width: 700px) {
+  .commission-summary,
+  .commission-info {
+    grid-template-columns: 1fr;
+  }
+
+  .commission-payment {
+    flex-direction: column;
+  }
+}
+.invoice-generation-panel {
+  display: grid;
+  grid-template-columns: 1fr 180px auto;
+  align-items: end;
+  gap: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.invoice-generation-panel label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.invoice-generation-panel input {
+  width: 100%;
+  padding: 12px;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  outline: none;
+  background: rgba(2, 6, 23, 0.68);
+}
+
+.invoice-generation-panel input:focus {
+  border-color: var(--accent);
+}
+
+.invoice-due-days {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.invoice-due-days span {
+  color: var(--muted);
+}
+
+#generateInvoicesButton {
+  padding: 12px 17px;
+  color: #06212a;
+  font-weight: 700;
+  border: 0;
+  border-radius: 11px;
+  background: var(--accent);
+  cursor: pointer;
+}
+
+#generateInvoicesButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+#invoiceGenerationStatus {
+  grid-column: 1 / -1;
+  min-height: 18px;
+  color: var(--muted);
+}
+
+.commission-summary.invoice-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.invoice-list-status {
+  padding: 14px 0;
+  color: var(--muted);
+}
+
+.admin-invoices-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.admin-invoice-card {
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 19px;
+  background: rgba(15, 27, 36, 0.9);
+}
+
+.admin-invoice-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.admin-invoice-header h3 {
+  margin-top: 5px;
+}
+
+.admin-invoice-status {
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.admin-invoice-status.issued {
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.18);
+}
+
+.admin-invoice-status.overdue {
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.admin-invoice-status.payment_submitted {
+  color: #bae6fd;
+  background: rgba(56, 189, 248, 0.18);
+}
+
+.admin-invoice-status.paid {
+  color: #bbf7d0;
+  background: rgba(34, 197, 94, 0.18);
+}
+
+.admin-invoice-status.cancelled {
+  color: #cbd5e1;
+  background: rgba(148, 163, 184, 0.18);
+}
+
+.admin-invoice-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+  margin-bottom: 18px;
+}
+
+.admin-invoice-summary > div {
+  padding: 14px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.admin-invoice-summary span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.admin-invoice-table-wrap {
+  overflow-x: auto;
+  margin-top: 16px;
+}
+
+.admin-invoice-table {
+  width: 100%;
+  min-width: 650px;
+  border-collapse: collapse;
+}
+
+.admin-invoice-table th,
+.admin-invoice-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(186, 230, 253, 0.15);
+}
+
+.admin-invoice-table th {
+  color: var(--muted);
+  font-size: 0.77rem;
+  text-transform: uppercase;
+}
+
+.admin-payment-review {
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 14px;
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.submitted-payment-reference {
+  margin-bottom: 14px;
+}
+
+.submitted-payment-reference span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.invoice-review-notes {
+  width: 100%;
+  min-height: 90px;
+  padding: 12px;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  outline: none;
+  resize: vertical;
+  background: rgba(2, 6, 23, 0.68);
+}
+
+.invoice-review-notes:focus {
+  border-color: var(--accent);
+}
+
+.invoice-review-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.invoice-review-actions button {
+  padding: 11px 16px;
+  color: #fff;
+  font-weight: 700;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.approve-invoice-payment {
+  background: #16a34a;
+}
+
+.reject-invoice-payment {
+  background: #dc2626;
+}
+
+.invoice-review-actions button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.admin-payment-result {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.admin-payment-result.waiting {
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.admin-payment-result.paid {
+  color: #bbf7d0;
+  background: rgba(34, 197, 94, 0.13);
+}
+
+.admin-invoice-notes {
+  margin-top: 18px;
+  padding: 14px;
+  color: #fecaca;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.09);
+}
+
+.admin-invoice-notes span {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.admin-invoice-notes p {
+  margin-top: 6px;
+}
+
+@media (max-width: 800px) {
+  .invoice-generation-panel {
+    grid-template-columns: 1fr;
+  }
+
+  #invoiceGenerationStatus {
+    grid-column: auto;
+  }
+
+  .commission-summary.invoice-summary,
+  .admin-invoice-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-invoice-header {
+    flex-direction: column;
+  }
+
+  .invoice-review-actions {
+    flex-direction: column;
+  }
+}

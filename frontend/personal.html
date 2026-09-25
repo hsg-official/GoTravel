@@ -217,6 +217,15 @@
             <div id="nav-planner" class="nav-item" onclick="showSection('planner-section')">
                 <i class="fas fa-map-marked-alt"></i> Trip Planner
             </div>
+            <div
+                id="nav-bookings"
+                class="nav-item"
+                onclick="showSection('booking-offers-section')"
+            >
+                <i class="fas fa-receipt"></i>
+                Booking Offers
+                <span id="travelerOfferCount" class="traveler-offer-count" hidden>0</span>
+            </div>
             <div class="expand-section">
                 <div class="plus-trigger" onclick="toggleMenu('services-menu')">
                     <span>Explore Services</span>
@@ -299,6 +308,36 @@
         </div>
 
         <!--  TRIP PLANNER WIZARD -->
+         <!-- BOOKING OFFERS -->
+<div id="booking-offers-section" style="display: none;">
+    <div class="booking-offers-header">
+        <div>
+            <h2>Booking Offers</h2>
+            <p>
+                Review prices sent by hotels, guides, restaurants,
+                and transport services.
+            </p>
+        </div>
+
+        <button
+            type="button"
+            class="booking-refresh-btn"
+            onclick="loadTravelerBookingOffers()"
+        >
+            <i class="fas fa-rotate"></i>
+            Refresh
+        </button>
+    </div>
+
+    <p id="travelerBookingStatus" class="traveler-booking-status">
+        Loading your booking requests...
+    </p>
+
+    <div
+        id="travelerBookingContainer"
+        class="traveler-booking-grid"
+    ></div>
+</div> 
         <div id="planner-section" style="display: none;">
 
             <!-- Autosave indicator -->
@@ -744,7 +783,62 @@
 
     </main>
 </div>
+<div
+    id="travelerProblemModal"
+    class="traveler-problem-modal"
+    aria-hidden="true"
+>
+    <div class="traveler-problem-dialog">
+        <button
+            type="button"
+            class="traveler-problem-close"
+            onclick="closeTravelerProblemModal()"
+            aria-label="Close"
+        >
+            &times;
+        </button>
 
+        <h2>Report a Booking Problem</h2>
+
+        <p id="travelerProblemService"></p>
+
+        
+
+        <label for="travelerProblemReason">
+            Explain what happened
+        </label>
+
+        <textarea
+            id="travelerProblemReason"
+            maxlength="2000"
+            placeholder="Describe the problem clearly. Include what happened and when it happened."
+        ></textarea>
+
+        <small>
+            Minimum 10 characters. Do not include passwords or
+            payment-card information.
+        </small>
+
+        <div class="traveler-problem-actions">
+            <button
+                type="button"
+                class="traveler-problem-cancel"
+                onclick="closeTravelerProblemModal()"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                id="submitTravelerProblem"
+                class="traveler-problem-submit"
+                onclick="submitTravelerBookingProblem()"
+            >
+                Submit Report
+            </button>
+        </div>
+    </div>
+</div>
 <script src="../backend/personal_script.js"></script>
 </body>
 </html>

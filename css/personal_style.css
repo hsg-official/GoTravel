@@ -970,3 +970,409 @@ h1 { font-size: 2.5rem; font-weight: 700; background: var(--neon-gradient); -web
 .btn-export i {
     margin-right: 7px;
 }
+
+/* =========================================
+   TRAVELER BOOKING OFFERS
+========================================= */
+
+.traveler-offer-count {
+    background: #ef4444;
+    border-radius: 999px;
+    color: white;
+    font-size: 0.68rem;
+    margin-left: auto;
+    min-width: 20px;
+    padding: 3px 6px;
+    text-align: center;
+}
+
+.booking-offers-header {
+    align-items: center;
+    display: flex;
+    gap: 20px;
+    justify-content: space-between;
+    margin-bottom: 25px;
+}
+
+.booking-offers-header h2 {
+    color: var(--neon-primary);
+    margin: 0 0 7px;
+}
+
+.booking-offers-header p {
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.booking-refresh-btn {
+    background: var(--neon-gradient);
+    border: 0;
+    border-radius: 12px;
+    color: white;
+    cursor: pointer;
+    font-weight: 700;
+    padding: 12px 18px;
+}
+
+.traveler-booking-status {
+    color: var(--text-muted);
+    padding: 30px;
+    text-align: center;
+}
+
+.traveler-booking-status.booking-error {
+    color: var(--danger);
+}
+
+.traveler-booking-grid {
+    display: grid;
+    gap: 20px;
+}
+
+.traveler-booking-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-left: 4px solid var(--neon-primary);
+    border-radius: 20px;
+    padding: 22px;
+}
+
+.traveler-booking-card-header {
+    align-items: flex-start;
+    display: flex;
+    gap: 15px;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.traveler-booking-card-header h3 {
+    color: white;
+    margin: 5px 0 0;
+}
+
+.traveler-booking-type {
+    color: var(--neon-primary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.traveler-booking-badge {
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 7px 11px;
+}
+
+.traveler-booking-badge.pending {
+    background: rgba(245, 158, 11, 0.18);
+    color: #fbbf24;
+}
+
+.traveler-booking-badge.price_proposed {
+    background: rgba(56, 189, 248, 0.18);
+    color: #7dd3fc;
+}
+
+.traveler-booking-badge.confirmed,
+.traveler-booking-badge.completed {
+    background: rgba(34, 197, 94, 0.18);
+    color: #86efac;
+}
+
+.traveler-booking-badge.rejected,
+.traveler-booking-badge.cancelled {
+    background: rgba(239, 68, 68, 0.18);
+    color: #fca5a5;
+}
+
+.traveler-booking-information {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.traveler-booking-information div,
+.traveler-booking-message,
+.traveler-proposed-price,
+.traveler-contact-box {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 13px;
+    padding: 14px;
+}
+
+.traveler-booking-information span,
+.traveler-booking-message span,
+.traveler-proposed-price span {
+    color: var(--text-muted);
+    display: block;
+    font-size: 0.75rem;
+    margin-bottom: 5px;
+}
+
+.traveler-booking-message,
+.traveler-proposed-price,
+.traveler-contact-box {
+    margin-top: 14px;
+}
+
+.traveler-booking-message p {
+    margin: 0;
+}
+
+.traveler-proposed-price strong {
+    color: #7dd3fc;
+    font-size: 1.25rem;
+}
+
+.traveler-contact-box {
+    border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.traveler-contact-box h4 {
+    color: #86efac;
+    margin: 0 0 10px;
+}
+
+.traveler-contact-box p {
+    margin: 6px 0;
+}
+
+.traveler-booking-actions {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.traveler-booking-actions button {
+    border: 0;
+    border-radius: 12px;
+    color: white;
+    cursor: pointer;
+    font-weight: 700;
+    padding: 12px 18px;
+}
+
+.traveler-accept-btn {
+    background: #16a34a;
+}
+
+.traveler-cancel-btn {
+    background: #dc2626;
+}
+
+.traveler-waiting-message {
+    color: #fbbf24;
+    margin-right: auto;
+}
+
+.traveler-confirmed-message {
+    color: #86efac;
+    font-weight: 600;
+    margin-top: 18px;
+}
+
+@media (max-width: 700px) {
+    .booking-offers-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .traveler-booking-information {
+        grid-template-columns: 1fr;
+    }
+
+    .traveler-booking-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}
+.traveler-booking-badge.disputed {
+    background: rgba(245, 158, 11, 0.18);
+    color: #fbbf24;
+}
+
+.traveler-report-problem-btn {
+    background: transparent;
+    border: 1px solid #f59e0b;
+    border-radius: 12px;
+    color: #fbbf24;
+    cursor: pointer;
+    font-weight: 700;
+    margin-top: 14px;
+    padding: 11px 16px;
+}
+
+.traveler-report-problem-btn:hover {
+    background: rgba(245, 158, 11, 0.12);
+}
+
+.traveler-disputed-message {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    border-radius: 12px;
+    color: #fbbf24;
+    margin-top: 16px;
+    padding: 14px;
+}
+
+.traveler-problem-modal {
+    align-items: center;
+    background: rgba(0, 0, 0, 0.78);
+    display: none;
+    inset: 0;
+    justify-content: center;
+    padding: 20px;
+    position: fixed;
+    z-index: 10000;
+}
+
+.traveler-problem-modal.open {
+    display: flex;
+}
+
+.traveler-problem-dialog {
+    background: #111827;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 20px;
+    max-width: 560px;
+    padding: 26px;
+    position: relative;
+    width: 100%;
+}
+
+.traveler-problem-dialog h2 {
+    color: #7dd3fc;
+    margin: 0 40px 8px 0;
+}
+
+.traveler-problem-dialog label {
+    color: white;
+    display: block;
+    font-weight: 700;
+    margin: 18px 0 8px;
+}
+
+.traveler-problem-dialog textarea {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    color: white;
+    min-height: 140px;
+    padding: 13px;
+    resize: vertical;
+    width: 100%;
+}
+
+.traveler-problem-dialog small {
+    color: #9ca3af;
+    display: block;
+    margin-top: 7px;
+}
+
+
+.traveler-problem-close {
+    background: transparent;
+    border: 0;
+    color: white;
+    cursor: pointer;
+    font-size: 2rem;
+    position: absolute;
+    right: 18px;
+    top: 12px;
+}
+
+.traveler-problem-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 22px;
+}
+
+.traveler-problem-actions button {
+    border: 0;
+    border-radius: 12px;
+    color: white;
+    cursor: pointer;
+    font-weight: 700;
+    padding: 12px 18px;
+}
+
+.traveler-problem-cancel {
+    background: #4b5563;
+}
+
+.traveler-problem-submit {
+    background: #dc2626;
+}
+
+.traveler-problem-submit:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+.traveler-case-box {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    border-radius: 14px;
+    margin-top: 14px;
+    padding: 15px;
+}
+
+.traveler-case-box > strong {
+    color: #fbbf24;
+}
+
+.traveler-case-box > p {
+    margin: 8px 0 0;
+}
+
+.traveler-case-detail,
+.traveler-case-reply {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    margin-top: 10px;
+    padding: 11px;
+}
+
+.traveler-case-detail span,
+.traveler-case-reply span {
+    color: var(--text-muted);
+    display: block;
+    font-size: 0.72rem;
+    margin-bottom: 5px;
+}
+
+.traveler-case-detail p,
+.traveler-case-reply p {
+    margin: 0;
+}
+
+.traveler-case-waiting {
+    color: #fbbf24;
+}
+
+.traveler-case-response-input {
+    margin-top: 12px;
+    min-height: 90px;
+    resize: vertical;
+    width: 100%;
+}
+
+.traveler-case-response-button {
+    background: #0ea5e9;
+    border: 0;
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    font-weight: 700;
+    margin-top: 10px;
+    padding: 10px 15px;
+}
+
+.traveler-case-response-button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}

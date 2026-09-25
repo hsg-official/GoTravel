@@ -65,7 +65,7 @@ async function fetchGuides() {
             card.style.cursor = 'pointer'; // Shows a pointer finger on hover
             
             // Clicking the card opens the details modal
-            card.onclick = () => openGuideDetails(name, location, spec, fac, pay, guideEmail);
+            card.onclick = () => openGuideDetails(name, location, spec, fac, pay, guideEmail, guide.id);
 
             card.innerHTML = `
                 <img src="${photo}" alt="${name}" class="guide-photo" onerror="this.src='https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=600&auto=format&fit=crop'">
@@ -100,7 +100,7 @@ async function fetchGuides() {
                         <div><i class="fas fa-star" style="color: #f59e0b;"></i> 4.9</div>
                     </div>
                     
-                    <button class="book-btn" onclick="event.stopPropagation(); handleGuideSelection('${name}', '${guideEmail}')">
+                    <button class="book-btn" onclick="event.stopPropagation(); handleGuideSelection('${name}', '${guideEmail}', '${guide.id}')">
                         Select This Guide
                     </button>
                 </div>
@@ -214,7 +214,7 @@ async function fetchGuides() {
             }
         }
 
-        function handleGuideSelection(guideName, guideEmail) {
+        function handleGuideSelection(guideName, guideEmail, guideId) {
     // 1. Check if the user came here from the Dashboard Planner
     const isPlanning = localStorage.getItem('isSelectingGuide');
 
@@ -222,6 +222,7 @@ async function fetchGuides() {
         // Save the guide details to local storage
         localStorage.setItem('selectedGuideName', guideName);
         localStorage.setItem('selectedGuideEmail', guideEmail);
+        localStorage.setItem('selectedGuideId', String(guideId || ''));
         
         // Turn off planning mode
         localStorage.removeItem('isSelectingGuide');
@@ -235,7 +236,7 @@ async function fetchGuides() {
 }
 
 // --- GUIDE DETAILS MODAL LOGIC ---
-function openGuideDetails(name, location, spec, fac, pay, email) {
+function openGuideDetails(name, location, spec, fac, pay, email, guideId) {
     document.getElementById('detGuideName').innerText = name;
     document.getElementById('detGuideLocation').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${location}`;
     document.getElementById('detGuideSpec').innerText = spec;
@@ -246,7 +247,7 @@ function openGuideDetails(name, location, spec, fac, pay, email) {
     const selectBtn = document.getElementById('modalSelectBtn');
     selectBtn.onclick = function() {
         closeGuideDetails();
-        handleGuideSelection(name, email);
+        handleGuideSelection(name, email, guideId);
     };
 
     document.getElementById('guideDetailsModal').classList.add('active');

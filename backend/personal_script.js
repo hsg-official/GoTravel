@@ -71,19 +71,54 @@ function getTimeGreeting() {
  
 // Controls switching between: My Trips and Trip Planner
 function showSection(sectionId) {
-    document.getElementById('trips-section').style.display = 'none';
-    document.getElementById('planner-section').style.display = 'none';
-    document.getElementById(sectionId).style.display = 'block';
+    const sections = [
+        'trips-section',
+        'planner-section',
+        'booking-offers-section'
+    ];
 
-    document.getElementById('nav-trips').classList.remove('active');
-    document.getElementById('nav-planner').classList.remove('active');
+    sections.forEach(id => {
+        const section = document.getElementById(id);
+
+        if (section) {
+            section.style.display =
+                id === sectionId ? 'block' : 'none';
+        }
+    });
+
+    document.getElementById('nav-trips')
+        ?.classList.remove('active');
+
+    document.getElementById('nav-planner')
+        ?.classList.remove('active');
+
+    document.getElementById('nav-bookings')
+        ?.classList.remove('active');
 
     if (sectionId === 'trips-section') {
-        document.getElementById('nav-trips').classList.add('active');
-        document.getElementById('page-title').textContent = 'My Trips';
-    } else {
-        document.getElementById('nav-planner').classList.add('active');
-        document.getElementById('page-title').textContent = 'Trip Planner';
+        document.getElementById('nav-trips')
+            ?.classList.add('active');
+
+        document.getElementById('page-title').textContent =
+            'My Trips';
+    }
+
+    if (sectionId === 'planner-section') {
+        document.getElementById('nav-planner')
+            ?.classList.add('active');
+
+        document.getElementById('page-title').textContent =
+            'Trip Planner';
+    }
+
+    if (sectionId === 'booking-offers-section') {
+        document.getElementById('nav-bookings')
+            ?.classList.add('active');
+
+        document.getElementById('page-title').textContent =
+            'Booking Offers';
+
+        loadTravelerBookingOffers();
     }
 }
 
@@ -834,6 +869,7 @@ function removeGuide() {
     const state = collectPlannerState();
     state.guideName = null;
     state.guideEmail = null;
+    state.guideId = null;
     localStorage.setItem('tripDraft', JSON.stringify(state));
 
     document.getElementById('selectedGuideCard').style.display = 'none';
@@ -1340,6 +1376,7 @@ function collectPlannerState() {
         hotels: existing.hotels || [],
         guideName: existing.guideName || null,
         guideEmail: existing.guideEmail || null,
+        guideId: existing.guideId || null,
         guideType: document.getElementById('guide-type')?.value || 'none',
         restaurants: getRestaurants(),
         itineraryItems: existing.itineraryItems || {}
@@ -1487,6 +1524,182 @@ function clearPlannerForm() {
     updateTripSummary();
 }
 
+
+function isUuid(value) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+        .test(String(value || ''));
+}
+
+function bookingDateTime(date, time, fallbackTime) {
+    if (!date) return null;
+
+    const safeTime = time || fallbackTime || '09:00';
+    const parsed = new Date(`${date}T${safeTime}:00+05:30`);
+
+    return Number.isNaN(parsed.getTime())
+        ? null
+        : parsed.toISOString();
+}
+
+function sameBookingDate(left, right) {
+    if (!left && !right) return true;
+    if (!left || !right) return false;
+    return new Date(left).toISOString() === new Date(right).toISOString();
+}
+
+function requestAlreadyExists(existing, request) {
+    return existing.some(row => {
+        if (row.service_type !== request.p_service_type) return false;
+
+        if (request.p_service_type === 'hotel') {
+            return String(row.hotel_id) === String(request.p_service_id);
+        }
+
+        if (request.p_service_type === 'guide') {
+            return String(row.guide_id) === String(request.p_service_id);
+        }
+
+        if (request.p_service_type === 'restaurant') {
+            return String(row.restaurant_id) === String(request.p_service_id) &&
+                sameBookingDate(row.start_at, request.p_start_at);
+        }
+
+        if (request.p_service_type === 'transport') {
+            return String(row.transport_id) === String(request.p_service_id) &&
+                String(row.transport_vehicle_id || '') === String(request.p_transport_vehicle_id || '') &&
+                sameBookingDate(row.start_at, request.p_start_at) &&
+                String(row.pickup_location || '') === String(request.p_pickup_location || '') &&
+                String(row.destination || '') === String(request.p_destination || '');
+        }
+
+        return false;
+    });
+}
+
+async function createTripBookingRequests(tripId, state) {
+    const guestCount = Math.max(
+        1,
+        Number(state.adults || 0) +
+        Number(state.children || 0) +
+        Number(state.infants || 0)
+    );
+
+    const sharedNotes = String(state.specialNotes || '').trim() || null;
+    const requests = [];
+
+    (state.hotels || []).forEach(hotel => {
+        if (!isUuid(hotel?.id)) return;
+
+        requests.push({
+            p_service_type: 'hotel',
+            p_service_id: hotel.id,
+            p_trip_id: tripId,
+            p_hotel_room_id: null,
+            p_transport_vehicle_id: null,
+            p_start_at: bookingDateTime(state.startDate, null, '14:00'),
+            p_end_at: bookingDateTime(state.endDate, null, '11:00'),
+            p_guest_count: guestCount,
+            p_pickup_location: null,
+            p_destination: null,
+            p_customer_notes: sharedNotes
+        });
+    });
+
+    if (isUuid(state.guideId)) {
+        requests.push({
+            p_service_type: 'guide',
+            p_service_id: state.guideId,
+            p_trip_id: tripId,
+            p_hotel_room_id: null,
+            p_transport_vehicle_id: null,
+            p_start_at: bookingDateTime(state.startDate, null, '08:00'),
+            p_end_at: bookingDateTime(state.endDate, null, '17:00'),
+            p_guest_count: guestCount,
+            p_pickup_location: state.startLocation || null,
+            p_destination: null,
+            p_customer_notes: sharedNotes
+        });
+    }
+
+    (state.restaurants || []).forEach(restaurant => {
+        if (!isUuid(restaurant?.id)) return;
+
+        const restaurantNotes = [
+            restaurant.meal ? `Meal: ${restaurant.meal}` : '',
+            sharedNotes || ''
+        ].filter(Boolean).join('. ') || null;
+
+        requests.push({
+            p_service_type: 'restaurant',
+            p_service_id: restaurant.id,
+            p_trip_id: tripId,
+            p_hotel_room_id: null,
+            p_transport_vehicle_id: null,
+            p_start_at: bookingDateTime(restaurant.date, restaurant.time, '12:00'),
+            p_end_at: null,
+            p_guest_count: Math.max(1, Number(restaurant.guests || guestCount)),
+            p_pickup_location: null,
+            p_destination: restaurant.destination || null,
+            p_customer_notes: restaurantNotes
+        });
+    });
+
+    (state.transportSegments || []).forEach(segment => {
+        if (!isUuid(segment?.serviceId)) return;
+
+        requests.push({
+            p_service_type: 'transport',
+            p_service_id: segment.serviceId,
+            p_trip_id: tripId,
+            p_hotel_room_id: null,
+            p_transport_vehicle_id: isUuid(segment.vehicleId)
+                ? segment.vehicleId
+                : null,
+            p_start_at: bookingDateTime(segment.date, segment.time, '09:00'),
+            p_end_at: null,
+            p_guest_count: Math.max(1, Number(segment.passengers || guestCount)),
+            p_pickup_location: segment.from || null,
+            p_destination: segment.to || null,
+            p_customer_notes: [segment.notes, sharedNotes]
+                .filter(Boolean)
+                .join('. ') || null
+        });
+    });
+
+    const { data: existing, error: existingError } = await _supabase
+        .from('bookings')
+        .select('service_type,hotel_id,guide_id,restaurant_id,transport_id,transport_vehicle_id,start_at,pickup_location,destination')
+        .eq('trip_id', tripId);
+
+    if (existingError) throw existingError;
+
+    const pendingRequests = requests.filter(request =>
+        !requestAlreadyExists(existing || [], request)
+    );
+
+    const failures = [];
+    let created = 0;
+
+    for (const request of pendingRequests) {
+        const { error } = await _supabase.rpc(
+            'create_booking_request',
+            request
+        );
+
+        if (error) {
+            failures.push(error.message || 'Unknown booking error');
+        } else {
+            created += 1;
+        }
+    }
+
+    return {
+        created,
+        skipped: requests.length - pendingRequests.length,
+        failures
+    };
+}
+
 // SAVE TRIP TO SUPABASE
 async function saveTrip() {
     try {
@@ -1497,8 +1710,10 @@ async function saveTrip() {
             return;
         }
 
-        const { data: userData } = await _supabase.from('users').select('first_name, last_name').eq('id', user.id).single();
-        const travelerName = userData ? (userData.first_name + ' ' + userData.last_name).trim() : (user.user_metadata?.first_name || 'A Traveler');
+        const travelerName = [
+            user.user_metadata?.first_name,
+            user.user_metadata?.last_name
+        ].filter(Boolean).join(' ') || user.email?.split('@')[0] || 'A Traveler';
 
         const state = collectPlannerState();
         const dests = getDestinations().filter(d => d.name);
@@ -1542,14 +1757,43 @@ async function saveTrip() {
 
         let result;
         if (editingTripId) {
-            result = await _supabase.from('trips').update(tripPayload).eq('id', editingTripId);
+            result = await _supabase
+                .from('trips')
+                .update(tripPayload)
+                .eq('id', editingTripId)
+                .eq('user_id', user.id)
+                .select('id')
+                .single();
         } else {
-            result = await _supabase.from('trips').insert([tripPayload]);
+            result = await _supabase
+                .from('trips')
+                .insert([tripPayload])
+                .select('id')
+                .single();
         }
 
-        if (result.error) {
-            showToast('Database Error: ' + result.error.message, 'error');
+        if (result.error || !result.data?.id) {
+            showToast(
+                'Database Error: ' +
+                (result.error?.message || 'The saved trip ID was not returned.'),
+                'error'
+            );
             return;
+        }
+
+        let bookingResult;
+
+        try {
+            bookingResult = await createTripBookingRequests(
+                result.data.id,
+                state
+            );
+        } catch (bookingError) {
+            bookingResult = {
+                created: 0,
+                skipped: 0,
+                failures: [bookingError.message || 'Unable to create booking requests.']
+            };
         }
 
         // Send guide email only on final save (not draft)
@@ -1567,6 +1811,20 @@ async function saveTrip() {
         }
 
         document.getElementById('successModal').style.display = 'flex';
+
+        if (bookingResult.failures.length) {
+            console.error('Booking request failures:', bookingResult.failures);
+            showToast(
+                `Trip saved, but ${bookingResult.failures.length} booking request(s) could not be sent.`,
+                'error'
+            );
+        } else if (bookingResult.created > 0) {
+            showToast(
+                `${bookingResult.created} booking request(s) sent to the selected businesses.`,
+                'success'
+            );
+        }
+
         clearPlannerForm();
         fetchUserTrips();
         showSection('trips-section');
@@ -2610,6 +2868,8 @@ if (pickedGuide) {
     state.guideName = pickedGuide;
     state.guideEmail =
         localStorage.getItem('selectedGuideEmail') || '';
+    state.guideId =
+        localStorage.getItem('selectedGuideId') || null;
 
     localStorage.setItem('tripDraft', JSON.stringify(state));
 
@@ -2623,6 +2883,7 @@ if (pickedGuide) {
 
     localStorage.removeItem('selectedGuideName');
     localStorage.removeItem('selectedGuideEmail');
+    localStorage.removeItem('selectedGuideId');
     localStorage.removeItem('isSelectingGuide');
 
     updateTripSummary();
@@ -3125,4 +3386,734 @@ function exportTripCalendar(trip) {
         'text/calendar;charset=utf-8',
         safeTripFileName(s.title) + '.ics'
     );
+}
+/* =========================================
+   TRAVELER BOOKING OFFERS
+========================================= */
+
+let travelerBookingOffers = [];
+let travelerBookingCases = [];
+let travelerProblemBookingId = null;
+
+async function loadTravelerBookingOffers() {
+    const container = document.getElementById(
+        'travelerBookingContainer'
+    );
+
+    const statusElement = document.getElementById(
+        'travelerBookingStatus'
+    );
+
+    if (!container || !statusElement) return;
+
+    container.innerHTML = '';
+    statusElement.textContent = 'Loading your booking requests...';
+    statusElement.style.display = 'block';
+    statusElement.classList.remove('booking-error');
+
+    try {
+        const {
+            data: { user },
+            error: authError
+        } = await _supabase.auth.getUser();
+
+        if (authError || !user) {
+            throw new Error(
+                'Please sign in to view your booking offers.'
+            );
+        }
+
+        const { data, error } = await _supabase.rpc(
+            'get_traveler_booking_requests'
+        );
+
+        if (error) throw error;
+
+        const {
+            data: caseRows,
+            error: caseError
+        } = await _supabase
+            .from('booking_cases')
+            .select(
+                'id,booking_id,opened_by_role,case_type,' +
+                'reason,claimed_fee_amount,traveler_response,' +
+                'business_response,status,created_at'
+            )
+            .eq('status', 'pending');
+
+        if (caseError) throw caseError;
+
+        travelerBookingOffers = data || [];
+        travelerBookingCases = caseRows || [];
+
+        updateTravelerOfferCount();
+        renderTravelerBookingOffers();
+    } catch (error) {
+        console.error(
+            'Could not load booking offers:',
+            error
+        );
+
+        statusElement.textContent =
+            error.message ||
+            'Could not load your booking offers.';
+
+        statusElement.classList.add('booking-error');
+    }
+}
+
+function updateTravelerOfferCount() {
+    const countElement = document.getElementById(
+        'travelerOfferCount'
+    );
+
+    if (!countElement) return;
+
+    const offerCount = travelerBookingOffers.filter(
+        booking => booking.status === 'price_proposed'
+    ).length;
+
+    countElement.textContent = offerCount;
+    countElement.hidden = offerCount === 0;
+}
+
+function renderTravelerBookingOffers() {
+    const container = document.getElementById(
+        'travelerBookingContainer'
+    );
+
+    const statusElement = document.getElementById(
+        'travelerBookingStatus'
+    );
+
+    container.innerHTML = '';
+
+    if (!travelerBookingOffers.length) {
+        statusElement.textContent =
+            'You do not have any booking requests yet.';
+
+        statusElement.style.display = 'block';
+        return;
+    }
+
+    statusElement.style.display = 'none';
+
+    travelerBookingOffers.forEach(booking => {
+        const card = document.createElement('article');
+        card.className = 'traveler-booking-card';
+
+        const statusLabel =
+            travelerBookingStatusLabel(booking.status);
+
+        const bookingPeriod =
+            booking.start_at || booking.end_at
+                ? `${travelerBookingDate(booking.start_at)} – ` +
+                  `${travelerBookingDate(booking.end_at)}`
+                : 'Dates not provided';
+
+        const proposedPrice =
+            booking.quoted_amount !== null &&
+            booking.quoted_amount !== undefined
+                ? `
+                    <div class="traveler-proposed-price">
+                        <span>Price proposed by business</span>
+                        <strong>
+                            ${escapeHtml(booking.currency || 'LKR')}
+                            ${travelerBookingMoney(
+                                booking.quoted_amount
+                            )}
+                        </strong>
+                    </div>
+                `
+                : '';
+
+        const businessMessage = booking.business_notes
+            ? `
+                <div class="traveler-booking-message">
+                    <span>Message from business</span>
+                    <p>${escapeHtml(booking.business_notes)}</p>
+                </div>
+            `
+            : '';
+
+        const contactDetails = booking.contact_released
+            ? `
+                <div class="traveler-contact-box">
+                    <h4>
+                        <i class="fas fa-address-card"></i>
+                        Business contact
+                    </h4>
+
+                    <p>
+                        <strong>Email:</strong>
+                        ${escapeHtml(
+                            booking.business_email ||
+                            'Not provided'
+                        )}
+                    </p>
+
+                    <p>
+                        <strong>Phone:</strong>
+                        ${escapeHtml(
+                            booking.business_phone ||
+                            'Not provided'
+                        )}
+                    </p>
+                </div>
+            `
+            : '';
+
+        let actions = '';
+
+        if (booking.status === 'price_proposed') {
+            actions = `
+                <div class="traveler-booking-actions">
+                    <button
+                        type="button"
+                        class="traveler-accept-btn"
+                        onclick="respondToTravelerBooking(
+                            '${booking.booking_id}',
+                            'accept'
+                        )"
+                    >
+                        <i class="fas fa-check"></i>
+                        Accept Price
+                    </button>
+
+                    <button
+                        type="button"
+                        class="traveler-cancel-btn"
+                        onclick="respondToTravelerBooking(
+                            '${booking.booking_id}',
+                            'cancel'
+                        )"
+                    >
+                        Cancel Request
+                    </button>
+                </div>
+            `;
+        }
+
+        if (booking.status === 'pending') {
+            actions = `
+                <div class="traveler-booking-actions">
+                    <p class="traveler-waiting-message">
+                        <i class="fas fa-clock"></i>
+                        Waiting for the business to send a price.
+                    </p>
+
+                    <button
+                        type="button"
+                        class="traveler-cancel-btn"
+                        onclick="respondToTravelerBooking(
+                            '${booking.booking_id}',
+                            'cancel'
+                        )"
+                    >
+                        Cancel Request
+                    </button>
+                </div>
+            `;
+        }
+
+        if (booking.status === 'confirmed') {
+            actions = `
+                <div class="traveler-confirmed-message">
+                    <i class="fas fa-circle-check"></i>
+                    Booking confirmed. You can now contact the business.
+                </div>
+
+                <button
+                    type="button"
+                    class="traveler-report-problem-btn"
+                    onclick="openTravelerProblemModal(
+                        '${booking.booking_id}'
+                    )"
+                >
+                    <i class="fas fa-triangle-exclamation"></i>
+                    Report a Problem
+                </button>
+            `;
+        }
+
+        if (booking.status === 'disputed') {
+            actions = `
+                <div class="traveler-disputed-message">
+                    <i class="fas fa-scale-balanced"></i>
+                    This booking is under review by the GoTravel admin.
+                </div>
+            `;
+        }
+
+        card.innerHTML = `
+            <div class="traveler-booking-card-header">
+                <div>
+                    <p class="traveler-booking-type">
+                        ${escapeHtml(booking.service_type)}
+                    </p>
+
+                    <h3>
+                        ${escapeHtml(booking.service_name)}
+                    </h3>
+                </div>
+
+                <span class="traveler-booking-badge
+                    ${escapeHtml(booking.status)}">
+                    ${escapeHtml(statusLabel)}
+                </span>
+            </div>
+
+            <div class="traveler-booking-information">
+                <div>
+                    <span>Booking period</span>
+                    <strong>
+                        ${escapeHtml(bookingPeriod)}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Guests</span>
+                    <strong>
+                        ${escapeHtml(booking.guest_count || 1)}
+                    </strong>
+                </div>
+
+                ${
+                    booking.selected_item
+                        ? `
+                            <div>
+                                <span>Selected option</span>
+                                <strong>
+                                    ${escapeHtml(
+                                        booking.selected_item
+                                    )}
+                                </strong>
+                            </div>
+                        `
+                        : ''
+                }
+
+                ${
+                    booking.pickup_location
+                        ? `
+                            <div>
+                                <span>Pickup</span>
+                                <strong>
+                                    ${escapeHtml(
+                                        booking.pickup_location
+                                    )}
+                                </strong>
+                            </div>
+                        `
+                        : ''
+                }
+
+                ${
+                    booking.destination
+                        ? `
+                            <div>
+                                <span>Destination</span>
+                                <strong>
+                                    ${escapeHtml(
+                                        booking.destination
+                                    )}
+                                </strong>
+                            </div>
+                        `
+                        : ''
+                }
+            </div>
+
+            ${businessMessage}
+            ${proposedPrice}
+            ${contactDetails}
+            ${actions}
+            ${travelerBookingCaseSection(booking)}
+            
+        `;
+
+        container.appendChild(card);
+    });
+}
+function travelerBookingCaseSection(booking) {
+    const bookingCase = travelerBookingCases.find(
+        item => item.booking_id === booking.booking_id
+    );
+
+    if (!bookingCase) {
+        return '';
+    }
+
+    if (bookingCase.opened_by_role === 'traveler') {
+        const businessReply = bookingCase.business_response
+            ? `
+                <div class="traveler-case-reply">
+                    <span>Business response</span>
+                    <p>
+                        ${escapeHtml(
+                            bookingCase.business_response
+                        )}
+                    </p>
+                </div>
+            `
+            : `
+                <p class="traveler-case-waiting">
+                    Waiting for business response
+                </p>
+            `;
+
+        return `
+            <div class="traveler-case-box">
+                <strong>Problem reported</strong>
+
+                <p>
+                    ${escapeHtml(bookingCase.reason)}
+                </p>
+
+                ${businessReply}
+            </div>
+        `;
+    }
+
+    const fee = Number(
+        bookingCase.claimed_fee_amount || 0
+    );
+
+    const responseArea = bookingCase.traveler_response
+        ? `
+            <div class="traveler-case-reply">
+                <span>Your response</span>
+                <p>
+                    ${escapeHtml(
+                        bookingCase.traveler_response
+                    )}
+                </p>
+            </div>
+        `
+        : `
+            <textarea
+                class="traveler-case-response-input"
+                maxlength="2000"
+                placeholder="Your response"
+            ></textarea>
+
+            <button
+                type="button"
+                class="traveler-case-response-button"
+                onclick="submitTravelerCaseResponse(
+                    '${bookingCase.id}',
+                    this
+                )"
+            >
+                Send response
+            </button>
+        `;
+
+    return `
+        <div class="traveler-case-box no-show-case">
+            <strong>No-show reported</strong>
+
+            <div class="traveler-case-detail">
+                <span>Business report</span>
+                <p>${escapeHtml(bookingCase.reason)}</p>
+            </div>
+
+            <div class="traveler-case-detail">
+                <span>Fee reported</span>
+                <p>
+                    ${escapeHtml(booking.currency || 'LKR')}
+                    ${travelerBookingMoney(fee)}
+                </p>
+            </div>
+
+            ${responseArea}
+        </div>
+    `;
+}
+
+async function submitTravelerCaseResponse(
+    caseId,
+    button
+) {
+    const caseBox = button.closest(
+        '.traveler-case-box'
+    );
+
+    const responseInput = caseBox.querySelector(
+        '.traveler-case-response-input'
+    );
+
+    const response = responseInput.value.trim();
+
+    if (response.length < 10) {
+        showToast(
+            'Enter at least 10 characters.',
+            'error'
+        );
+
+        responseInput.focus();
+        return;
+    }
+
+    if (!confirm('Send this response?')) {
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = 'Sending...';
+
+    try {
+        const { error } = await _supabase.rpc(
+            'respond_to_booking_case',
+            {
+                p_case_id: caseId,
+                p_response: response
+            }
+        );
+
+        if (error) throw error;
+
+        showToast('Response sent.', 'success');
+
+        await loadTravelerBookingOffers();
+    } catch (error) {
+        console.error(
+            'Could not send case response:',
+            error
+        );
+
+        showToast(
+            error.message ||
+            'Could not send the response.',
+            'error'
+        );
+
+        button.disabled = false;
+        button.textContent = 'Send response';
+    }
+}
+function openTravelerProblemModal(bookingId) {
+    const booking = travelerBookingOffers.find(
+        item => item.booking_id === bookingId
+    );
+
+    if (!booking) {
+        showToast(
+            'Could not find this booking.',
+            'error'
+        );
+        return;
+    }
+
+    travelerProblemBookingId = bookingId;
+
+    const modal = document.getElementById(
+        'travelerProblemModal'
+    );
+
+    const serviceElement = document.getElementById(
+        'travelerProblemService'
+    );
+
+    const reasonElement = document.getElementById(
+        'travelerProblemReason'
+    );
+
+    serviceElement.textContent =
+        `Booking: ${booking.service_name}`;
+
+    reasonElement.value = '';
+
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+
+    setTimeout(() => reasonElement.focus(), 50);
+}
+
+function closeTravelerProblemModal() {
+    const modal = document.getElementById(
+        'travelerProblemModal'
+    );
+
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+
+    travelerProblemBookingId = null;
+
+    document.getElementById(
+        'travelerProblemReason'
+    ).value = '';
+}
+
+async function submitTravelerBookingProblem() {
+    if (!travelerProblemBookingId) {
+        showToast(
+            'No booking was selected.',
+            'error'
+        );
+        return;
+    }
+
+    const reasonElement = document.getElementById(
+        'travelerProblemReason'
+    );
+
+    const submitButton = document.getElementById(
+        'submitTravelerProblem'
+    );
+
+    const reason = reasonElement.value.trim();
+
+    if (reason.length < 10) {
+        showToast(
+            'Please provide at least 10 characters.',
+            'error'
+        );
+
+        reasonElement.focus();
+        return;
+    }
+
+    if (reason.length > 2000) {
+        showToast(
+            'The report cannot exceed 2,000 characters.',
+            'error'
+        );
+
+        return;
+    }
+
+    const accepted = confirm(
+        'Submit this problem to the GoTravel admin for review?'
+    );
+
+    if (!accepted) return;
+
+    submitButton.disabled = true;
+    submitButton.textContent = 'Submitting...';
+
+    try {
+        const { error } = await _supabase.rpc(
+            'traveler_report_booking_problem',
+            {
+                p_booking_id: travelerProblemBookingId,
+                p_reason: reason
+            }
+        );
+
+        if (error) throw error;
+
+        closeTravelerProblemModal();
+
+        showToast(
+            'Your report was submitted for admin review.',
+            'success'
+        );
+
+        await loadTravelerBookingOffers();
+    } catch (error) {
+        console.error(
+            'Could not submit booking problem:',
+            error
+        );
+
+        showToast(
+            error.message ||
+            'Could not submit your report.',
+            'error'
+        );
+    } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Submit Report';
+    }
+}
+async function respondToTravelerBooking(
+    bookingId,
+    action
+) {
+    const actionText =
+        action === 'accept'
+            ? 'accept this price'
+            : 'cancel this booking request';
+
+    const confirmed = confirm(
+        `Are you sure you want to ${actionText}?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+        const { error } = await _supabase.rpc(
+            'traveler_respond_to_booking',
+            {
+                p_booking_id: bookingId,
+                p_action: action
+            }
+        );
+
+        if (error) throw error;
+
+        showToast(
+            action === 'accept'
+                ? 'Booking confirmed successfully.'
+                : 'Booking request cancelled.',
+            action === 'accept' ? 'success' : 'info'
+        );
+
+        await loadTravelerBookingOffers();
+        await fetchUserTrips();
+    } catch (error) {
+        console.error(
+            'Could not update booking:',
+            error
+        );
+
+        showToast(
+            error.message ||
+            'Could not update this booking.',
+            'error'
+        );
+    }
+}
+
+function travelerBookingStatusLabel(status) {
+    const labels = {
+        pending: 'Waiting for price',
+        price_proposed: 'Price received',
+        confirmed: 'Confirmed',
+        rejected: 'Rejected',
+        cancelled: 'Cancelled',
+        in_progress: 'In progress',
+        completed: 'Completed',
+        no_show: 'No show',
+        disputed: 'Disputed'
+    };
+
+    return labels[status] || status || 'Unknown';
+}
+
+function travelerBookingDate(value) {
+    if (!value) return 'Not provided';
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return 'Not provided';
+    }
+
+    return date.toLocaleString('en-LK', {
+        dateStyle: 'medium',
+        timeStyle: 'short'
+    });
+}
+
+function travelerBookingMoney(value) {
+    const amount = Number(value);
+
+    if (!Number.isFinite(amount)) return '0.00';
+
+    return amount.toLocaleString('en-LK', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
 }

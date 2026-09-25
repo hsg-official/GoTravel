@@ -70,19 +70,167 @@
 
 <div class="container">
 
-  <div class="tabs">
-    <div class="tab-active">Posted Services</div>
+  <div class="tabs" role="tablist">
+  <button
+    type="button"
+    id="postedServicesTab"
+    class="dashboard-tab tab-active"
+  >
+    Posted Services
+  </button>
+
+  <button
+    type="button"
+    id="bookingRequestsTab"
+    class="dashboard-tab"
+  >
+    Booking Requests
+    <span id="bookingRequestCount" class="booking-count hidden">0</span>
+  </button>
+
+  <button
+    type="button"
+    id="billingTab"
+    class="dashboard-tab"
+  >
+    Billing
+    <span id="invoicePaymentCount" class="booking-count hidden">0</span>
+  </button>
   </div>
 
+<!-- POSTED SERVICES -->
+<div id="postedServicesPanel" class="dashboard-panel">
   <div class="card">
     <div id="postedServices" class="flex"></div>
+
     <p id="noServices" style="opacity:.6;margin-top:15px">
       No services posted yet.
     </p>
   </div>
-<!--
-  <div id="formCard" class="card hidden"></div>
--->
+</div>
+
+<!-- BOOKING REQUESTS -->
+<div id="bookingRequestsPanel" class="dashboard-panel hidden">
+  <div class="card">
+    <div class="booking-toolbar">
+      <div>
+        <h2>Booking Requests</h2>
+        <p>Review requests and send customers your price.</p>
+      </div>
+
+      <div class="booking-toolbar-actions">
+        <select id="bookingStatusFilter">
+          <option value="all">All requests</option>
+          <option value="pending">Pending</option>
+          <option value="price_proposed">Price proposed</option>
+          <option value="confirmed">Confirmed</option>
+          
+          <option value="rejected">Rejected</option>
+          <option value="cancelled">Cancelled</option>
+          <option value="completed">Completed</option>
+        </select>
+
+        <button type="button" id="refreshBookingRequests">
+          <i class="fa-solid fa-rotate"></i>
+          Refresh
+        </button>
+      </div>
+    </div>
+
+    <p id="bookingRequestsStatus" class="booking-status-message">
+      Loading booking requests...
+    </p>
+
+    <div id="bookingRequestsContainer" class="booking-requests-grid"></div>
+      </div>
+    </div>
+
+    <div id="billingPanel" class="dashboard-panel hidden">
+      <div class="card">
+        <div class="booking-toolbar">
+          <div>
+            <h2>Billing</h2>
+            <p>View and pay your GoTravel commission invoices.</p>
+          </div>
+
+          <div class="booking-toolbar-actions">
+            <select id="invoiceStatusFilter">
+              <option value="all">All invoices</option>
+              <option value="issued">Payment due</option>
+              <option value="overdue">Overdue</option>
+              <option value="payment_submitted">
+                Awaiting verification
+              </option>
+              <option value="paid">Paid</option>
+            </select>
+
+            <button type="button" id="refreshInvoices">
+              <i class="fa-solid fa-rotate"></i>
+              Refresh
+            </button>
+          </div>
+        </div>
+        <div class="billing-payment-details">
+          <div class="billing-payment-heading">
+            <i class="fa-solid fa-building-columns"></i>
+
+            <div>
+              <h3>Bank transfer details</h3>
+              <p>Use your invoice number as the transfer reference.</p>
+            </div>
+          </div>
+
+          <div class="billing-bank-grid">
+            <div>
+              <span>Bank</span>
+              <strong>Commercial Bank</strong>
+            </div>
+
+            <div>
+              <span>Account name</span>
+              <strong>Gotravelorganization (Pvt) Ltd.</strong>
+            </div>
+
+            <div>
+              <span>Account number</span>
+              <strong>80794586</strong>
+            </div>
+
+            <div>
+              <span>Branch</span>
+              <strong>Negombo</strong>
+            </div>
+          </div>
+
+          <p class="billing-payment-note">
+            After transferring the invoice amount, enter the bank
+            transaction reference below the relevant invoice.
+          </p>
+        </div>
+        <div class="billing-summary">
+          <div>
+            <span>Amount due</span>
+            <strong id="billingDueTotal">LKR 0.00</strong>
+          </div>
+
+          <div>
+            <span>Amount paid</span>
+            <strong id="billingPaidTotal">LKR 0.00</strong>
+          </div>
+        </div>
+
+        <p id="billingStatus" class="booking-status-message">
+          Loading invoices...
+        </p>
+
+        <div id="billingInvoicesContainer"
+            class="billing-invoices-grid"></div>
+      </div>
+    </div>
+
+    <!--
+      <div id="formCard" class="card hidden"></div>
+    -->
 </div>
 </div>
 <!-- ===== MODAL ===== -->
@@ -571,7 +719,51 @@
     <button type="button" id="closeGuideModal">Cancel</button>
   </form>
 </div>
+<div id="noShowModal" class="no-show-modal hidden">
+  <div class="no-show-dialog">
+    <button
+      type="button"
+      class="no-show-close"
+      onclick="closeNoShowModal()"
+    >
+      &times;
+    </button>
 
+    <h2>Report no-show</h2>
+    <p id="noShowServiceName"></p>
+
+    <label for="noShowReason">Reason</label>
+    <textarea
+      id="noShowReason"
+      maxlength="2000"
+      placeholder="What happened?"
+    ></textarea>
+
+    <label for="noShowFee">No-show fee collected (LKR)</label>
+    <input
+      id="noShowFee"
+      type="number"
+      min="0"
+      step="0.01"
+      value="0"
+    >
+
+    <div class="no-show-actions">
+      <button type="button" onclick="closeNoShowModal()">
+        Cancel
+      </button>
+
+      <button
+        type="button"
+        id="submitNoShowButton"
+        class="no-show-submit"
+        onclick="submitNoShowReport()"
+      >
+        Submit
+      </button>
+    </div>
+  </div>
+</div>
 <script src="../backend/business_script.js"></script>
 
 </body>
