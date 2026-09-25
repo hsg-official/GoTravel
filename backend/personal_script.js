@@ -2159,6 +2159,13 @@ function showTripDetails(trip) {
         prepareEditForm(trip);
     };
 
+    document.getElementById('modalPdfBtn').onclick =
+    () => exportTripPDF(trip);
+
+    document.getElementById('modalCalendarBtn').onclick =
+    () => exportTripCalendar(trip);
+
+
     document.getElementById('detailsModal').style.display = 'flex';
 }
 
@@ -2668,3 +2675,358 @@ endDateInput?.addEventListener('change', validateSelectedDates);
     updateTripSummary();
     updateRouteTimeline();
 };
+
+
+/* ITINERARY EXPORT HELPERS */
+
+function buildItinerarySnapshot(trip) {
+    const p = trip.planner_data &&
+        typeof trip.planner_data === 'object'
+        ? trip.planner_data
+        : {};
+
+    const dateParts = String(trip.travel_date || '')
+        .split(' to ');
+
+    const validDate = value =>
+        /^\d{4}-\d{2}-\d{2}$/.test(value || '')
+            ? value : '';
+
+    const destinations = Array.isArray(p.destinations)
+        ? p.destinations
+            .filter(d => d && d.name)
+            .map(d => ({
+                name: d.name,
+                arrival: validDate(d.arrival),
+                departure: validDate(d.departure)
+            }))
+        : String(trip.destination || '')
+            .split(',')
+            .map(name => ({ name: name.trim() }))
+            .filter(d => d.name);
+
+    const itineraryItems = {};
+
+    Object.entries(p.itineraryItems || {}).forEach(
+        ([day, activities]) => {
+            if (!/^day-\d+$/.test(day)) return;
+
+            itineraryItems[day] = (
+                Array.isArray(activities) ? activities : []
+            ).map(a => ({
+                title: String(a.title || ''),
+                type: String(a.type || ''),
+                startTime: String(a.startTime || ''),
+                endTime: String(a.endTime || ''),
+                location: String(a.location || '')
+            }));
+        }
+    );
+
+    return {
+        title: trip.title || 'My Trip',
+        startLocation: p.startLocation || '',
+        startDate: validDate(
+            p.startDate || dateParts[0]
+        ),
+        endDate: validDate(
+            p.endDate || dateParts[1]
+        ),
+        destinations,
+        transport: Array.isArray(p.transportSegments)
+            ? p.transportSegments
+                .filter(t => t && t.type &&
+                    t.type !== 'Not Required')
+                .map(t => ({
+                    from: t.from || '',
+                    to: t.to || '',
+                    type: t.type || '',
+                    date: validDate(t.date),
+                    time: t.time || ''
+                }))
+            : [],
+        hotels: Array.isArray(p.hotels)
+            ? p.hotels
+                .filter(h => h && h.name)
+                .map(h => ({ name: h.name }))
+            : [],
+        restaurants: Array.isArray(p.restaurants)
+            ? p.restaurants
+                .filter(r => r && r.name)
+                .map(r => ({
+                    name: r.name,
+                    destination: r.destination || '',
+                    date: validDate(r.date),
+                    time: r.time || '',
+                    meal: r.meal || ''
+                }))
+            : [],
+        itineraryItems
+    };
+}
+
+function sortedItineraryDays(snapshot) {
+    return Object.entries(snapshot.itineraryItems || {})
+        .sort(([a], [b]) =>
+            Number(a.replace('day-', '')) -
+            Number(b.replace('day-', ''))
+        );
+}
+
+function shiftISODate(dateString, days) {
+    const date = new Date(dateString + 'T12:00:00Z');
+    date.setUTCDate(date.getUTCDate() + days);
+    return date.toISOString().slice(0, 10);
+}
+
+function downloadGeneratedFile(content, mimeType, fileName) {
+    const blob = new Blob([content], {
+        type: mimeType
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+function safeTripFileName(title) {
+    return String(title || 'GoTravel-Trip')
+        .replace(/[^a-z0-9_-]+/gi, '-')
+        .slice(0, 60) || 'GoTravel-Trip';
+}
+
+
+/* DOWNLOAD PDF */
+
+function exportTripPDF(trip) {
+    if (!window.jspdf) {
+        showToast('PDF library could not load.', 'error');
+        return;
+    }
+
+    const s = buildItinerarySnapshot(trip);
+    const doc = new window.jspdf.jsPDF();
+    let y = 20;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text('GoTravel - Trip Itinerary', 14, y);
+    y += 13;
+
+    function addText(value, bold = false) {
+        doc.setFont(
+            'helvetica',
+            bold ? 'bold' : 'normal'
+        );
+        doc.setFontSize(bold ? 12 : 10);
+
+        const lines = doc.splitTextToSize(
+            String(value || '-'), 180
+        );
+
+        for (const line of lines) {
+            if (y > 277) {
+                doc.addPage();
+                y = 20;
+            }
+            doc.text(line, 14, y);
+            y += 6;
+        }
+
+        y += 2;
+    }
+
+    addText(s.title, true);
+    addText(
+        `Dates: ${s.startDate || 'Not set'} to ` +
+        `${s.endDate || 'Not set'}`
+    );
+    addText(
+        `Starting location: ${s.startLocation || 'Not set'}`
+    );
+
+    y += 5;
+    addText('DESTINATIONS', true);
+
+    s.destinations.forEach((d, index) => {
+        addText(
+            `${index + 1}. ${d.name}` +
+            (d.arrival ? ` | Arrive: ${d.arrival}` : '') +
+            (d.departure
+                ? ` | Depart: ${d.departure}` : '')
+        );
+    });
+
+    if (s.transport.length) {
+        y += 5;
+        addText('TRANSPORT', true);
+
+        s.transport.forEach(t => {
+            addText(
+                `${t.from} to ${t.to} | ${t.type}` +
+                (t.date ? ` | ${t.date}` : '') +
+                (t.time ? ` at ${t.time}` : '')
+            );
+        });
+    }
+
+    if (s.hotels.length) {
+        y += 5;
+        addText('SELECTED HOTELS', true);
+        s.hotels.forEach(h => addText(h.name));
+    }
+
+    if (s.restaurants.length) {
+        y += 5;
+        addText('RESTAURANTS', true);
+
+        s.restaurants.forEach(r => {
+            addText(
+                `${r.name} | ${r.destination} | ` +
+                `${r.meal} | ${r.date} ${r.time}`
+            );
+        });
+    }
+
+    y += 5;
+    addText('DAILY ITINERARY', true);
+
+    for (const [day, activities] of sortedItineraryDays(s)) {
+        const dayNumber = Number(day.replace('day-', ''));
+        const date = s.startDate
+            ? shiftISODate(s.startDate, dayNumber - 1)
+            : '';
+
+        addText(
+            `Day ${dayNumber}${date ? ' - ' + date : ''}`,
+            true
+        );
+
+        if (!activities.length) {
+            addText('No activities added');
+        }
+
+        activities.forEach(a => {
+            addText(
+                `${a.startTime || '--:--'}` +
+                `${a.endTime ? ' - ' + a.endTime : ''}` +
+                ` | ${a.title || 'Activity'}` +
+                `${a.location ? ' | ' + a.location : ''}`
+            );
+        });
+    }
+
+    doc.save(safeTripFileName(s.title) + '.pdf');
+}
+
+
+/* DOWNLOAD CALENDAR FILE */
+
+function escapeCalendarText(value) {
+    return String(value || '')
+        .replace(/\\/g, '\\\\')
+        .replace(/\r?\n/g, '\\n')
+        .replace(/,/g, '\\,')
+        .replace(/;/g, '\\;');
+}
+
+function exportTripCalendar(trip) {
+    const s = buildItinerarySnapshot(trip);
+
+    if (!s.startDate || !s.endDate ||
+        s.endDate < s.startDate) {
+        showToast(
+            'Set valid start and end dates first.',
+            'error'
+        );
+        return;
+    }
+
+    const dateValue = d => d.replace(/-/g, '');
+    const stamp = new Date().toISOString()
+        .replace(/[-:]/g, '')
+        .replace(/\.\d{3}/, '');
+
+    let counter = 0;
+    const uid = () =>
+        `${Date.now()}-${counter++}@gotravel`;
+
+    const lines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//GoTravel//Trip Itinerary//EN',
+        'CALSCALE:GREGORIAN'
+    ];
+
+    // One all-day event covering the entire trip.
+    lines.push(
+        'BEGIN:VEVENT',
+        `UID:${uid()}`,
+        `DTSTAMP:${stamp}`,
+        `DTSTART;VALUE=DATE:${dateValue(s.startDate)}`,
+        'DTEND;VALUE=DATE:' +
+            dateValue(shiftISODate(s.endDate, 1)),
+        'SUMMARY:' +
+            escapeCalendarText(s.title),
+        'DESCRIPTION:' +
+            escapeCalendarText(
+                'Destinations: ' +
+                s.destinations.map(d => d.name).join(', ')
+            ),
+        'END:VEVENT'
+    );
+
+    // Add activities that have valid start and end times.
+    for (const [day, activities] of sortedItineraryDays(s)) {
+        const dayNumber = Number(day.replace('day-', ''));
+        const date = shiftISODate(
+            s.startDate, dayNumber - 1
+        );
+
+        if (date < s.startDate || date > s.endDate) {
+            continue;
+        }
+
+        activities.forEach(a => {
+            const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+            if (!timePattern.test(a.startTime) ||
+                !timePattern.test(a.endTime) ||
+                a.endTime <= a.startTime) {
+                return;
+            }
+
+            const eventDate = dateValue(date);
+            const start = a.startTime.replace(':', '');
+            const end = a.endTime.replace(':', '');
+
+            lines.push(
+                'BEGIN:VEVENT',
+                `UID:${uid()}`,
+                `DTSTAMP:${stamp}`,
+                `DTSTART:${eventDate}T${start}00`,
+                `DTEND:${eventDate}T${end}00`,
+                'SUMMARY:' +
+                    escapeCalendarText(a.title || 'Activity'),
+                'LOCATION:' +
+                    escapeCalendarText(a.location),
+                'END:VEVENT'
+            );
+        });
+    }
+
+    lines.push('END:VCALENDAR');
+
+    downloadGeneratedFile(
+        lines.join('\r\n') + '\r\n',
+        'text/calendar;charset=utf-8',
+        safeTripFileName(s.title) + '.ics'
+    );
+}
