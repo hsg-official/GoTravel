@@ -582,15 +582,25 @@ function openDetails(id) {
 window.openDetails = openDetails;
 
 function bookNow(id) {
-  // Came from the trip planner? Send the hotel back instead of booking.
-  if (localStorage.getItem('isSelectingHotel') === 'true') {
-    const hotel = allHotels.find(h => String(h.id) === String(id));
-    if (hotel) localStorage.setItem('selectedHotelName', hotel.service_name);
-    window.location.href = 'personal.html';
-    return;
-  }
-  // Normal visitor: show the coming-soon popup
-  document.getElementById("bookingAlertModal").style.display = "block";
+    if (localStorage.getItem("isSelectingHotel") === "true") {
+        const hotel = allHotels.find(
+            h => String(h.id) === String(id)
+        );
+
+        if (!hotel) {
+            alert("Could not find this hotel. Please refresh and try again.");
+            return;
+        }
+
+        // Store the exact hotel, not only its name.
+        localStorage.setItem("selectedHotelId", String(hotel.id));
+        localStorage.setItem("selectedHotelName", hotel.service_name);
+
+        window.location.href = "personal.html";
+        return;
+    }
+
+    document.getElementById("bookingAlertModal").style.display = "block";
 }
 
 function closeBookingAlert() {
