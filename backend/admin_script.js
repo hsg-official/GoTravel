@@ -39,36 +39,46 @@ let approvalFilter = "all";
 
 window.addEventListener("DOMContentLoaded", async () => {
   setupProfileMenu();
-  await loadAdminProfile();
+  const isAdmin = await loadAdminProfile();
+  if (!isAdmin) {
+    return;
+  }
   await refreshDashboard();
 });
-/*
+
 async function loadAdminProfile() {
   const {
-    data: { user }
+    data: { user },
+    error
   } = await supabaseClient.auth.getUser();
 
-  if (!user) {
-    window.location.href = "auth.html";
-    return;
+  if (error || !user) {
+    window.location.replace("admin_login.html");
+    return false;
   }
 
-  const { data: profile, error } = await supabaseClient
+  if (user.app_metadata?.role !== "admin") {
+    await supabaseClient.auth.signOut();
+
+    alert("You do not have administrator access.");
+
+    window.location.replace("admin_login.html");
+    return false;
+  }
+
+  const { data: profile } = await supabaseClient
     .from("users")
     .select("*")
     .eq("email", user.email)
     .maybeSingle();
-
-  if (error) {
-    console.error("Could not load admin profile:", error);
-  }
 
   const fullName =
     [profile?.first_name, profile?.last_name]
       .filter(Boolean)
       .join(" ") || "Administrator";
 
-  const firstLetter = fullName.charAt(0).toUpperCase();
+  const firstLetter =
+    fullName.charAt(0).toUpperCase();
 
   setText("adminName", fullName);
   setText("menuAdminName", fullName);
@@ -76,63 +86,10 @@ async function loadAdminProfile() {
   setText("adminEmail", user.email || "");
   setText("profileLetter", firstLetter);
   setText("profileLetterLarge", firstLetter);
+
+  return true;
 }
-*/
-async function loadAdminProfile() {
-  const {
-    data: { user }
-  } = await supabaseClient.auth.getUser();
-
-  // TEMPORARY DEVELOPMENT MODE
-  // Uncomment this block later when login protection is needed.
-
-  /*
-  if (!user) {
-    window.location.href = "auth.html";
-    return;
-  }
-  */
-
-  if (!user) {
-    setText("adminName", "Administrator");
-    setText("menuAdminName", "Administrator");
-    setText("welcomeName", "Admin");
-    setText("adminEmail", "admin@gotravel.com");
-    setText("profileLetter", "A");
-    setText("profileLetterLarge", "A");
-
-    console.warn(
-      "Admin dashboard is running in development mode without authentication."
-    );
-
-    return;
-  }
-
-  const { data: profile, error } = await supabaseClient
-    .from("users")
-    .select("*")
-    .eq("email", user.email)
-    .maybeSingle();
-
-  if (error) {
-    console.error("Could not load admin profile:", error);
-  }
-
-  const fullName =
-    [profile?.first_name, profile?.last_name]
-      .filter(Boolean)
-      .join(" ") || "Administrator";
-
-  const firstLetter = fullName.charAt(0).toUpperCase();
-
-  setText("adminName", fullName);
-  setText("menuAdminName", fullName);
-  setText("welcomeName", profile?.first_name || "Admin");
-  setText("adminEmail", user.email || "");
-  setText("profileLetter", firstLetter);
-  setText("profileLetterLarge", firstLetter);
-}
-async function refreshDashboard() {
+/*async function refreshDashboard() {
   const refreshIcon = document.querySelector(".refresh-btn i");
 
   refreshIcon?.classList.add("fa-spin");
@@ -153,8 +110,32 @@ async function refreshDashboard() {
 
   showToast("Dashboard updated.", "success");
 }
+*/
+async function refreshDashboard() {
+  const refreshIcon = document.querySelector(".refresh-btn i");
 
-async function loadUsers() {
+  refreshIcon?.classList.add("fa-spin");
+
+  const [usersLoaded] = await Promise.all([
+    loadUsers(),
+    loadServices()
+  ]);
+
+  updateStatistics();
+  renderRecentServices();
+  renderCategorySummary();
+  renderUsers();
+  renderApprovals();
+  renderAllServices();
+
+  refreshIcon?.classList.remove("fa-spin");
+
+  if (usersLoaded) {
+    showToast("Dashboard updated.", "success");
+  }
+}
+
+/*async function loadUsers() {
   const { data, error } = await supabaseClient
     .from("users")
     .select("*")
@@ -172,7 +153,49 @@ async function loadUsers() {
 
   allUsers = data || [];
 }
+*/
+async function loadUsers() {
+  const { data, error } = await supabaseClient
+    .from("users")
+    .select("*");
 
+  if (error) {
+    console.error("Could not load public.users:", {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint
+    });
+
+    allUsers = [];
+
+    showToast(
+      `Could not load users: ${error.message}`,
+      "error"
+    );
+
+    return false;
+  }
+
+  allUsers = (data || []).sort(
+    (first, second) =>
+      new Date(second.created_at || 0) -
+      new Date(first.created_at || 0)
+  );
+
+  console.log(
+    `Loaded ${allUsers.length} row(s) from public.users.`
+  );
+
+  if (!allUsers.length) {
+    showToast(
+      "public.users is empty. Authentication users are stored separately in auth.users.",
+      "info"
+    );
+  }
+
+  return true;
+}
 async function loadServices() {
   const results = await Promise.all(
     SERVICE_TABLES.map(async (config) => {
@@ -979,7 +1002,7 @@ function closeSidebar() {
 async function logout() {
   await supabaseClient.auth.signOut();
 
-  window.location.href = "auth.html";
+  window.location.href = "admin_login.html";
 }
 
 function statusBadge(status) {

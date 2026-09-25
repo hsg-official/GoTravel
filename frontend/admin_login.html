@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GoTravel | Admin Login</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+  <main>
+    <h1>Admin Login</h1>
+
+    <form id="adminLoginForm">
+      <input
+        id="adminEmail"
+        type="email"
+        placeholder="Admin email"
+        required
+      >
+
+      <input
+        id="adminPassword"
+        type="password"
+        placeholder="Password"
+        required
+      >
+
+      <button type="submit">Login</button>
+      <p id="loginMessage"></p>
+    </form>
+  </main>
+
+  <script>
+    const supabaseUrl = 'https://cdcolkoavowjjymzdzud.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkY29sa29hdm93amp5bXpkenVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MDI2NjQsImV4cCI6MjA4Mzk3ODY2NH0.JPzj9fI1pKpPbPxyGqsemjcwpKiu0h046H7aBSURnpM';
+
+    const supabaseClient =
+      window.supabase.createClient(
+        supabaseUrl,
+        supabaseKey
+      );
+
+    document
+      .getElementById("adminLoginForm")
+      .addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const message =
+          document.getElementById("loginMessage");
+
+        message.textContent = "Signing in...";
+
+        const email =
+          document.getElementById("adminEmail").value;
+
+        const password =
+          document.getElementById("adminPassword").value;
+
+        const { data, error } =
+          await supabaseClient.auth.signInWithPassword({
+            email,
+            password
+          });
+
+        if (error) {
+          message.textContent = error.message;
+          return;
+        }
+
+        const role =
+          data.user?.app_metadata?.role;
+
+        if (role !== "admin") {
+          await supabaseClient.auth.signOut();
+
+          message.textContent =
+            "This account is not an administrator.";
+
+          return;
+        }
+
+        window.location.href = "admin.html";
+      });
+  </script>
+</body>
+</html>
