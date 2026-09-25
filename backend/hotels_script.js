@@ -671,9 +671,9 @@ function renderModalTabs(hotel) {
         <div class="info-value">${escapeHtml(hotel.address || "-")}, ${escapeHtml(hotel.city || "-")}</div>
       </div>
       <div class="info-card">
-        <ion-icon name="call-outline"></ion-icon>
+        <ion-icon name="lock-closed-outline"></ion-icon>
         <div class="info-label">Contact</div>
-        <div class="info-value">${escapeHtml(hotel.contact || "-")}</div>
+        <div class="info-value">Available after confirmation</div>
       </div>
       <div class="info-card">
         <ion-icon name="pricetag-outline"></ion-icon>
