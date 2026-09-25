@@ -1,243 +1,1043 @@
-const SUPABASE_URL = 'https://cdcolkoavowjjymzdzud.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkY29sa29hdm93amp5bXpkenVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MDI2NjQsImV4cCI6MjA4Mzk3ODY2NH0.JPzj9fI1pKpPbPxyGqsemjcwpKiu0h046H7aBSURnpM';
-const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+"use strict";
+
+const SUPABASE_URL =
+    "https://cdcolkoavowjjymzdzud.supabase.co";
+
+const SUPABASE_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkY29sa29hdm93amp5bXpkenVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MDI2NjQsImV4cCI6MjA4Mzk3ODY2NH0.JPzj9fI1pKpPbPxyGqsemjcwpKiu0h046H7aBSURnpM";
+
+const _supabase = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
 
 let allCabs = [];
-let currentFilter = 'all';
-let currentSort = 'default';
-let currentUser = null;
 let selectedCab = null;
+let saving = false;
+let detailsVersion = 0;
 
-// ---- TOAST ----
-function showToast(message, type = 'success') {
-    const container = document.getElementById('toast-container');
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> <span>${message}</span>`;
-    container.appendChild(toast);
-    setTimeout(() => { if (toast.parentElement) toast.remove(); }, 3000);
+const $ = id => document.getElementById(id);
+
+/* ---------- SAFE DISPLAY HELPERS ---------- */
+
+function escapeHtml(value) {
+    return String(value ?? "").replace(
+        /[&<>"']/g,
+        character => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        })[character]
+    );
 }
 
-// ---- CLOCK ----
-function updateClock() {
-    const n = new Date();
-    document.getElementById('time').textContent = n.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    document.getElementById('date').textContent = n.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
-}
+function photos(value) {
+    let list = value;
 
-// ---- FETCH CABS FROM SUPABASE ----
-async function loadCabs() {
-    document.getElementById('loader').style.display = 'block';
-    document.getElementById('cabsGrid').innerHTML = '';
-
-    const { data, error } = await _supabase
-        .from('services')
-        .select('*')
-        .eq('service_type', 'transport');
-
-    document.getElementById('loader').style.display = 'none';
-
-    if (error) {
-        console.error('Error fetching cabs:', error);
-        showEmpty('Failed to load transport services. Please try again.');
-        return;
+    if (typeof list === "string") {
+        try {
+            list = JSON.parse(list);
+        } catch {
+            list = [list];
+        }
     }
 
-    allCabs = data || [];
-    renderCabs(allCabs);
-}
-
-// ---- RENDER CARDS ----
-function renderCabs(cabs) {
-    const grid = document.getElementById('cabsGrid');
-    const countEl = document.getElementById('resultsCount');
-    grid.innerHTML = '';
-
-    if (cabs.length === 0) {
-        showEmpty('No transport services found.');
-        countEl.textContent = '';
-        return;
+    if (!Array.isArray(list)) {
+        return [];
     }
 
-    countEl.textContent = `${cabs.length} service${cabs.length !== 1 ? 's' : ''} found`;
-
-    cabs.forEach(cab => {
-        const card = document.createElement('div');
-        card.className = 'cab-card';
-
-        const photoUrl = cab.photo_urls && cab.photo_urls.length > 0 ? cab.photo_urls[0] : null;
-        const photoHTML = photoUrl
-            ? `<img src="${photoUrl}" class="cab-photo" alt="${cab.service_name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-               <div class="cab-photo-placeholder" style="display:none"><i class="fas fa-taxi"></i></div>`
-            : `<div class="cab-photo-placeholder"><i class="fas fa-taxi"></i></div>`;
-
-        const badgeClass = cab.transport_type === 'Private' ? 'badge-private' : 'badge-public';
-        const price = cab.price ? `LKR ${cab.price} <span>/ km</span>` : '<span>Price on request</span>';
-        const contact = cab.contact || 'N/A';
-        const address = cab.address || 'Sri Lanka';
-        const description = cab.description || '';
-
-        card.innerHTML = `
-            ${photoHTML}
-            <div class="cab-info">
-                <div class="cab-top">
-                    <div class="cab-name">${cab.service_name}</div>
-                    <div class="cab-type-badge ${badgeClass}">${cab.transport_type || 'Transport'}</div>
-                </div>
-                ${description ? `<p class="cab-description">${description}</p>` : ''}
-                <div class="cab-meta">
-                    <div class="cab-meta-item">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>${address}</span>
-                    </div>
-                    <div class="cab-meta-item">
-                        <i class="fas fa-phone"></i>
-                        <span>${contact}</span>
-                    </div>
-                </div>
-                <div class="cab-price">${price}</div>
-                <button class="contact-btn" onclick="openBookingModal('${cab.service_name}', '${contact}')">
-                    <i class="fas fa-plus"></i> Add to My Trip
-                </button>
-            </div>
-        `;
-
-        grid.appendChild(card);
+    return list.filter(url => {
+        try {
+            return ["https:", "http:"].includes(
+                new URL(url).protocol
+            );
+        } catch {
+            return false;
+        }
     });
 }
 
-// ---- EMPTY STATE ----
-function showEmpty(message) {
-    const grid = document.getElementById('cabsGrid');
-    grid.innerHTML = `
-        <div class="empty-state">
-            <i class="fas fa-taxi"></i>
-            <p>${message}</p>
+function gallery(value, name) {
+    const images = photos(value);
+
+    if (!images.length) {
+        return "";
+    }
+
+    return `
+        <div class="gallery">
+            ${images.map(url => `
+                <a
+                    href="${escapeHtml(url)}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    <img
+                        src="${escapeHtml(url)}"
+                        alt="${escapeHtml(name)}"
+                        loading="lazy"
+                    >
+                </a>
+            `).join("")}
         </div>
     `;
 }
 
-// ---- OPEN BOOKING MODAL ----
-async function openBookingModal(cabName, cabContact) {
-    selectedCab = { name: cabName, contact: cabContact };
+function specification(label, value) {
+    const displayValue =
+        value === null ||
+        value === undefined ||
+        value === ""
+            ? "Not provided"
+            : value;
 
-    document.getElementById('modalCabName').innerText = `Cab: ${cabName}`;
-    document.getElementById('bookingModal').style.display = 'flex';
+    return `
+        <div class="spec">
+            <span>${escapeHtml(label)}</span>
+            <strong>${escapeHtml(displayValue)}</strong>
+        </div>
+    `;
+}
 
-    const selectBox = document.getElementById('tripSelect');
-    const confirmBtn = document.getElementById('confirmBtn');
-    selectBox.innerHTML = '<option value="">Loading your trips...</option>';
-    confirmBtn.disabled = true;
+function showToast(message) {
+    const element = document.createElement("div");
 
-    if (!currentUser) {
-        showToast('Please log in to book a cab.', 'error');
-        document.getElementById('bookingModal').style.display = 'none';
-        setTimeout(() => window.location.href = 'auth.html', 2000);
-        return;
+    element.className = "toast";
+    element.textContent = message;
+
+    $("toast-container").append(element);
+
+    setTimeout(() => element.remove(), 6000);
+}
+
+/* ---------- PRICES ---------- */
+
+function vehicleRate(vehicle) {
+    const value = vehicle?.price;
+
+    if (
+        value === null ||
+        value === undefined ||
+        value === "" ||
+        !Number.isFinite(Number(value)) ||
+        Number(value) < 0
+    ) {
+        return null;
     }
 
-    const { data: trips, error } = await _supabase
-        .from('trips')
-        .select('id, title, travel_date')
-        .eq('user_id', currentUser.id);
+    return Number(value);
+}
 
-    if (error || !trips || trips.length === 0) {
-        selectBox.innerHTML = '<option value="">No planned trips found. Create one first!</option>';
-        return;
+function priceHTML(vehicle) {
+    const rate = vehicleRate(vehicle);
+
+    if (rate === null) {
+        return "Price on request";
     }
 
-    selectBox.innerHTML = '<option value="">-- Choose a trip --</option>';
-    trips.forEach(trip => {
-        selectBox.innerHTML += `<option value="${trip.id}">${trip.title} (${trip.travel_date || 'TBD'})</option>`;
+    const unit = vehicle.price_calculated_per;
+
+    const unitText = unit
+        ? "/ " + escapeHtml(unit)
+        : "· charging unit not provided";
+
+    return `
+        LKR ${rate.toLocaleString("en-LK")}
+        <small>${unitText}</small>
+    `;
+}
+
+function summaryPrice(vehicles) {
+    const pricedVehicles = vehicles.filter(
+        vehicle => vehicleRate(vehicle) !== null
+    );
+
+    if (!pricedVehicles.length) {
+        return "Price on request";
+    }
+
+    const units = new Set(
+        pricedVehicles.map(vehicle =>
+            String(vehicle.price_calculated_per || "")
+                .trim()
+                .toLowerCase()
+        )
+    );
+
+    // Do not compare a daily price against a per-km price.
+    if (units.size > 1) {
+        return "<small>View vehicle rates</small>";
+    }
+
+    const cheapest = [...pricedVehicles].sort(
+        (a, b) => vehicleRate(a) - vehicleRate(b)
+    )[0];
+
+    const prefix = vehicles.length > 1
+        ? "<small>From </small>"
+        : "";
+
+    return prefix + priceHTML(cheapest);
+}
+
+/* ---------- LOAD SERVICES AND VEHICLES ---------- */
+
+const vehicleColumns = [
+    "id",
+    "service_id",
+    "category",
+    "seat_count",
+    "transmission",
+    "driver_option",
+    "luggage_capacity",
+    "air_condition",
+    "fuel_type",
+    "price",
+    "price_calculated_per",
+    "photo_urls"
+].join(",");
+
+function showEmpty(message, allowRetry = false) {
+    $("cabsGrid").innerHTML = `
+        <div class="empty-state">
+            <p>${escapeHtml(message)}</p>
+
+            ${allowRetry ? `
+                <button
+                    class="primary-btn"
+                    type="button"
+                    id="retryLoad"
+                >
+                    Try again
+                </button>
+            ` : ""}
+        </div>
+    `;
+
+    $("retryLoad")?.addEventListener(
+        "click",
+        loadCabs
+    );
+}
+
+async function loadCabs() {
+    $("loader").hidden = false;
+    $("cabsGrid").replaceChildren();
+    $("resultsCount").textContent = "";
+
+    try {
+        const [servicesResult, vehiclesResult] =
+            await Promise.all([
+               _supabase
+                    .from("transport_service")
+                    .select(
+                        "id,service_name,contact,address," +
+                        "description,photo_urls"
+                    )
+                    .eq("approval_status", "approved"),
+
+                _supabase
+                    .from("transport_vehicles")
+                    .select(vehicleColumns)
+            ]);
+
+        if (servicesResult.error) {
+            throw servicesResult.error;
+        }
+
+        if (vehiclesResult.error) {
+            throw vehiclesResult.error;
+        }
+
+        const vehicles = vehiclesResult.data || [];
+
+        allCabs = (servicesResult.data || []).map(
+            service => ({
+                ...service,
+
+                vehicles: vehicles.filter(
+                    vehicle =>
+                        String(vehicle.service_id) ===
+                        String(service.id)
+                )
+            })
+        );
+
+        populateCategoryFilter(vehicles);
+        applyFilters();
+
+    } catch (error) {
+        console.error("Transport loading failed:", error);
+
+        showEmpty(
+            "Unable to load transport services. " +
+            "Please try again. If this continues, " +
+            "check read permissions for transport_service " +
+            "and transport_vehicles.",
+            true
+        );
+
+    } finally {
+        $("loader").hidden = true;
+    }
+}
+
+function populateCategoryFilter(vehicles) {
+    const previousValue = $("categoryFilter").value;
+
+    $("categoryFilter").innerHTML =
+        '<option value="all">All vehicles</option>';
+
+    const categories = [
+        ...new Set(
+            vehicles
+                .map(vehicle => vehicle.category)
+                .filter(Boolean)
+        )
+    ].sort();
+
+    categories.forEach(category => {
+        $("categoryFilter").add(
+            new Option(category, category)
+        );
     });
 
-    confirmBtn.disabled = false;
+    const previousValueExists = [
+        ...$("categoryFilter").options
+    ].some(option => option.value === previousValue);
+
+    if (previousValueExists) {
+        $("categoryFilter").value = previousValue;
+    }
 }
 
-// ---- CLOSE MODAL ----
-function closeModal() {
-    document.getElementById('bookingModal').style.display = 'none';
-    selectedCab = null;
+/* ---------- SEARCH AND FILTER ---------- */
+
+function applyFilters() {
+    const query = $("searchInput")
+        .value
+        .trim()
+        .toLowerCase();
+
+    const category = $("categoryFilter").value;
+
+    const filteredServices = allCabs.filter(service => {
+        const searchableText = `
+            ${service.service_name || ""}
+            ${service.address || ""}
+        `.toLowerCase();
+
+        const matchesSearch =
+            searchableText.includes(query);
+
+        const matchesCategory =
+            category === "all" ||
+            service.vehicles.some(
+                vehicle => vehicle.category === category
+            );
+
+        return matchesSearch && matchesCategory;
+    });
+
+    if ($("sortSelect").value === "name_asc") {
+        filteredServices.sort((a, b) =>
+            String(a.service_name || "").localeCompare(
+                String(b.service_name || "")
+            )
+        );
+    }
+
+    $("resultsCount").textContent =
+        `${filteredServices.length} ` +
+        `service${filteredServices.length === 1 ? "" : "s"} found`;
+
+    renderCabs(filteredServices);
 }
 
-// ---- CONFIRM BOOKING ----
+/* ---------- SUMMARY CARDS ---------- */
+
+function renderCabs(services) {
+    $("cabsGrid").replaceChildren();
+
+    if (!services.length) {
+        showEmpty(
+            "No transport services match your search."
+        );
+        return;
+    }
+
+    services.forEach(service => {
+        const cover =
+            photos(service.photo_urls)[0] ||
+            photos(service.vehicles[0]?.photo_urls)[0];
+
+        const categories = [
+            ...new Set(
+                service.vehicles
+                    .map(vehicle => vehicle.category)
+                    .filter(Boolean)
+            )
+        ];
+
+        const badge =
+            categories.length === 1
+                ? categories[0]
+                : "Transport";
+
+        const card = document.createElement("article");
+        card.className = "cab-card";
+
+        card.innerHTML = `
+            ${cover ? `
+                <img
+                    class="cab-photo"
+                    src="${escapeHtml(cover)}"
+                    alt="${escapeHtml(service.service_name)}"
+                    loading="lazy"
+                >
+            ` : `
+                <div class="photo-placeholder">
+                    <i
+                        class="fas fa-car"
+                        aria-hidden="true"
+                    ></i>
+                </div>
+            `}
+
+            <div class="cab-info">
+                <div class="cab-top">
+                    <h2>
+                        ${escapeHtml(
+                            service.service_name ||
+                            "Transport service"
+                        )}
+                    </h2>
+
+                    <span class="badge">
+                        ${escapeHtml(badge)}
+                    </span>
+                </div>
+
+                <p class="cab-description">
+                    ${escapeHtml(
+                        service.description ||
+                        "Explore vehicles and service details."
+                    )}
+                </p>
+
+                <p class="meta">
+                    <i
+                        class="fas fa-location-dot"
+                        aria-hidden="true"
+                    ></i>
+
+                    ${escapeHtml(
+                        service.address ||
+                        "Address not provided"
+                    )}
+                </p>
+
+                <p class="meta">
+                    <i
+                        class="fas fa-phone"
+                        aria-hidden="true"
+                    ></i>
+
+                    ${escapeHtml(
+                        service.contact ||
+                        "Contact not provided"
+                    )}
+                </p>
+
+                <div class="cab-price">
+                    ${summaryPrice(service.vehicles)}
+                </div>
+
+                <button
+                    class="primary-btn"
+                    type="button"
+                >
+                    See more →
+                </button>
+            </div>
+        `;
+
+        card.querySelector("button").addEventListener(
+            "click",
+            () => openDetails(service)
+        );
+
+        $("cabsGrid").append(card);
+    });
+}
+
+/* ---------- SERVICE DETAILS ---------- */
+
+async function openDetails(service) {
+    const version = ++detailsVersion;
+
+    $("detailsContent").innerHTML = `
+        <h2 id="detailsTitle">
+            ${escapeHtml(service.service_name)}
+        </h2>
+
+        ${gallery(
+            service.photo_urls,
+            service.service_name
+        )}
+
+        <p class="meta">
+            ${escapeHtml(
+                service.address ||
+                "Address not provided"
+            )}
+        </p>
+
+        <p class="meta">
+            Contact:
+            ${escapeHtml(service.contact || "Not provided")}
+        </p>
+
+        <p class="detail-description">${escapeHtml(
+            service.description ||
+            "No description provided."
+        )}</p>
+
+        <h3 class="section-heading">
+            Choose your vehicle
+        </h3>
+
+        <p class="muted">
+            Prices are listed as provided by the service.
+            Confirm availability and the total fare
+            before travelling.
+        </p>
+
+        <div id="vehicleList"></div>
+
+        <h3 class="section-heading">
+            Meet the drivers
+        </h3>
+
+        <div id="driverList" class="driver-list">
+            <p class="loading">Loading drivers…</p>
+        </div>
+    `;
+
+    service.vehicles.forEach(vehicle => {
+        const element = document.createElement("article");
+
+        element.className = "vehicle-card";
+
+        element.innerHTML = `
+            <h3>
+                ${escapeHtml(vehicle.category || "Vehicle")}
+            </h3>
+
+            ${gallery(
+                vehicle.photo_urls,
+                vehicle.category || "Vehicle"
+            )}
+
+            <div class="spec-grid">
+                ${specification(
+                    "Seats",
+                    vehicle.seat_count
+                )}
+
+                ${specification(
+                    "Transmission",
+                    vehicle.transmission
+                )}
+
+                ${specification(
+                    "Driver option",
+                    vehicle.driver_option
+                )}
+
+                ${specification(
+                    "Luggage capacity",
+                    vehicle.luggage_capacity
+                )}
+
+                ${specification(
+                    "Air conditioning",
+                    vehicle.air_condition
+                )}
+
+                ${specification(
+                    "Fuel",
+                    vehicle.fuel_type
+                )}
+            </div>
+
+            <div class="cab-price">
+                ${priceHTML(vehicle)}
+            </div>
+
+            <button
+                class="primary-btn"
+                type="button"
+            >
+                + Add to My Trip
+            </button>
+        `;
+
+        element.querySelector("button").addEventListener(
+            "click",
+            () => chooseVehicle(service, vehicle)
+        );
+
+        $("vehicleList").append(element);
+    });
+
+    if (!service.vehicles.length) {
+        $("vehicleList").innerHTML = `
+            <p class="muted">
+                No vehicles are available to display.
+                Contact the service for details.
+            </p>
+        `;
+    }
+
+    $("detailsModal").showModal();
+
+    await loadDrivers(service.id, version);
+}
+
+/* ---------- PUBLIC DRIVER DETAILS ---------- */
+
+async function loadDrivers(serviceId, version) {
+    try {
+        // Only request public-facing driver fields.
+        // NIC, licence numbers and private contact details
+        // are intentionally not requested.
+        const result = await _supabase
+            .from("transport_drivers")
+            .select("id,service_id,name,photo_urls")
+            .eq("service_id", serviceId);
+
+        if (
+            version !== detailsVersion ||
+            !$("detailsModal").open
+        ) {
+            return;
+        }
+
+        if (result.error) {
+            throw result.error;
+        }
+
+        const drivers = result.data || [];
+
+        $("driverList").innerHTML = drivers.map(driver => {
+            const image = photos(driver.photo_urls)[0];
+
+            return `
+                <div class="driver">
+                    ${image ? `
+                        <img
+                            src="${escapeHtml(image)}"
+                            alt="${escapeHtml(driver.name)}"
+                            loading="lazy"
+                        >
+                    ` : ""}
+
+                    <strong>
+                        ${escapeHtml(driver.name || "Driver")}
+                    </strong>
+                </div>
+            `;
+        }).join("");
+
+        if (!drivers.length) {
+            $("driverList").innerHTML = `
+                <p class="muted">
+                    No public driver profiles are available.
+                </p>
+            `;
+        }
+
+    } catch (error) {
+        console.error(
+            "Driver profiles unavailable:",
+            error
+        );
+
+        if (
+            version === detailsVersion &&
+            $("detailsModal").open
+        ) {
+            $("driverList").innerHTML = `
+                <p class="muted">
+                    Driver profiles could not be loaded.
+                    Contact the service for driver information.
+                </p>
+            `;
+        }
+    }
+}
+
+/* ---------- VEHICLE SELECTION ---------- */
+
+function createSelection(service, vehicle) {
+    return {
+        serviceId: service.id,
+        vehicleId: vehicle.id,
+
+        serviceName: service.service_name || "",
+        serviceContact: service.contact || "",
+
+        vehicleCategory: vehicle.category || "",
+        unitPrice: vehicleRate(vehicle),
+        priceUnit: vehicle.price_calculated_per || "",
+
+        seatCount: vehicle.seat_count,
+        driverOption: vehicle.driver_option || ""
+    };
+}
+
+function selectionLabel(selection) {
+    return selection.serviceName + (
+        selection.vehicleCategory
+            ? " — " + selection.vehicleCategory
+            : ""
+    );
+}
+
+async function chooseVehicle(service, vehicle) {
+    try {
+        const { data, error } =
+            await _supabase.auth.getUser();
+
+        if (error || !data.user) {
+            showToast(
+                "Please sign in through Account " +
+                "before adding transport to a trip."
+            );
+            return;
+        }
+
+        selectedCab = createSelection(service, vehicle);
+
+        // The user came from a particular route segment
+        // in the personal trip planner.
+        if (
+            localStorage.getItem("isSelectingTransport") ===
+            "true"
+        ) {
+            returnSelectionToPlanner();
+            return;
+        }
+
+        await openTripSelection(data.user.id);
+
+    } catch (error) {
+        console.error(
+            "Unable to select transport:",
+            error
+        );
+
+        showToast(
+            "Unable to load your trip selection. " +
+            "Please try again."
+        );
+    }
+}
+
+function returnSelectionToPlanner() {
+    const rawIndex = localStorage.getItem(
+        "transportSegmentIndex"
+    );
+
+    const index =
+        rawIndex === null ? -1 : Number(rawIndex);
+
+    const draft = JSON.parse(
+        localStorage.getItem("tripDraft") || "{}"
+    );
+
+    if (
+        !Number.isInteger(index) ||
+        index < 0 ||
+        !draft.transportSegments?.[index]
+    ) {
+        showToast(
+            "Your route draft is unavailable. " +
+            "Return to the planner and choose " +
+            "the transport segment again."
+        );
+        return;
+    }
+
+    draft.transportSegments[index] = {
+        ...draft.transportSegments[index],
+        ...selectedCab,
+        serviceName: selectionLabel(selectedCab)
+    };
+
+    localStorage.setItem(
+        "tripDraft",
+        JSON.stringify(draft)
+    );
+
+    // These keys match your existing planner return flow.
+    localStorage.setItem(
+        "selectedTransportName",
+        selectionLabel(selectedCab)
+    );
+
+    localStorage.setItem(
+        "selectedTransportContact",
+        selectedCab.serviceContact
+    );
+
+    window.location.href = "personal.html";
+}
+
+/* ---------- SELECT AN EXISTING TRIP ---------- */
+
+async function openTripSelection(userId) {
+    $("modalCabName").textContent =
+        selectionLabel(selectedCab);
+
+    $("tripSelect").replaceChildren(
+        new Option("Loading trips…", "")
+    );
+
+    $("confirmBtn").disabled = true;
+    $("bookingStatus").textContent = "";
+
+    $("bookingModal").showModal();
+
+    const result = await _supabase
+        .from("trips")
+        .select("id,title,travel_date,status")
+        .eq("user_id", userId);
+
+    if (result.error) {
+        throw result.error;
+    }
+
+    const trips = (result.data || []).filter(
+        trip => !["cancelled", "completed"].includes(
+            String(trip.status || "").toLowerCase()
+        )
+    );
+
+    $("tripSelect").replaceChildren(
+        new Option(
+            trips.length
+                ? "Choose a trip"
+                : "No trips available — create one in your dashboard",
+            ""
+        )
+    );
+
+    trips.forEach(trip => {
+        $("tripSelect").add(
+            new Option(
+                `${trip.title || "Untitled trip"} ` +
+                `(${trip.travel_date || "Dates not set"})`,
+                trip.id
+            )
+        );
+    });
+}
+
+/* ---------- SAVE TO AN EXISTING TRIP ---------- */
+
 async function confirmBooking() {
-    const tripId = document.getElementById('tripSelect').value;
-    const confirmBtn = document.getElementById('confirmBtn');
+    const tripId = $("tripSelect").value;
 
-    if (!tripId) {
-        showToast('Please select a trip.', 'error');
+    if (saving || !selectedCab || !tripId) {
         return;
     }
 
-    confirmBtn.disabled = true;
-    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    saving = true;
+    $("confirmBtn").disabled = true;
 
-    const { error } = await _supabase
-        .from('trips')
-        .update({
-            cab_name: selectedCab.name,
-            cab_contact: selectedCab.contact
-        })
-        .eq('id', tripId);
+    $("bookingStatus").textContent =
+        "Saving your transport choice…";
 
-    if (error) {
-        showToast('Failed to update trip: ' + error.message, 'error');
-        confirmBtn.disabled = false;
-        confirmBtn.innerHTML = '<i class="fas fa-plus"></i> ADD TO MY TRIP';
-        return;
+    try {
+        const { data, error } =
+            await _supabase.auth.getUser();
+
+        if (error || !data.user) {
+            throw new Error("Please sign in again.");
+        }
+
+        const existing = await _supabase
+            .from("trips")
+            .select("id,planner_data,status")
+            .eq("id", tripId)
+            .eq("user_id", data.user.id)
+            .single();
+
+        if (existing.error) {
+            throw existing.error;
+        }
+
+        const status = String(
+            existing.data.status || ""
+        ).toLowerCase();
+
+        if (["cancelled", "completed"].includes(status)) {
+            throw new Error(
+                "This trip is no longer available for changes."
+            );
+        }
+
+        const planner = existing.data.planner_data;
+
+        if (
+            planner !== null &&
+            planner !== undefined &&
+            (
+                typeof planner !== "object" ||
+                Array.isArray(planner)
+            )
+        ) {
+            throw new Error(
+                "This trip uses an older data format. " +
+                "Please open and save it in the planner first."
+            );
+        }
+
+        const result = await _supabase
+            .from("trips")
+            .update({
+                cab_name: selectionLabel(selectedCab),
+                cab_contact: selectedCab.serviceContact,
+
+                planner_data: {
+                    ...(planner || {}),
+                    selectedTransport: selectedCab
+                }
+            })
+            .eq("id", tripId)
+            .eq("user_id", data.user.id)
+            .select("id")
+            .single();
+
+        if (result.error) {
+            throw result.error;
+        }
+
+        $("bookingModal").close();
+
+        showToast(
+            "Transport added to your trip. " +
+            "Contact the service to confirm your ride."
+        );
+
+        window.location.href = "personal.html";
+
+    } catch (error) {
+        console.error(
+            "Unable to save transport:",
+            error
+        );
+
+        $("bookingStatus").textContent =
+            error.message ||
+            "Unable to save. Please try again.";
+
+    } finally {
+        saving = false;
+        $("confirmBtn").disabled =
+            !$("tripSelect").value;
+    }
+}
+
+/* ---------- INITIALIZATION ---------- */
+
+document.addEventListener("DOMContentLoaded", () => {
+    function updateClock() {
+        const now = new Date();
+
+        $("time").textContent =
+            now.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+
+        $("date").textContent =
+            now.toLocaleDateString([], {
+                weekday: "short",
+                month: "short",
+                day: "numeric"
+            });
     }
 
-    showToast('Cab added to your trip!', 'success');
-    setTimeout(() => {
-        closeModal();
-        window.location.href = 'personal.html';
-    }, 1500);
-}
-
-// ---- FILTER ----
-function filterCabs(type, btn) {
-    currentFilter = type;
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    applyFilterAndSort();
-}
-
-// ---- SORT ----
-function sortCabs(value) {
-    currentSort = value;
-    applyFilterAndSort();
-}
-
-// ---- APPLY FILTER + SORT TOGETHER ----
-function applyFilterAndSort() {
-    let result = [...allCabs];
-
-    if (currentFilter !== 'all') {
-        result = result.filter(c => c.transport_type === currentFilter);
-    }
-
-    if (currentSort === 'price_asc') {
-        result.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
-    } else if (currentSort === 'price_desc') {
-        result.sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0));
-    } else if (currentSort === 'name_asc') {
-        result.sort((a, b) => a.service_name.localeCompare(b.service_name));
-    }
-
-    renderCabs(result);
-}
-
-// ---- ON PAGE LOAD ----
-document.addEventListener('DOMContentLoaded', async () => {
-    setInterval(updateClock, 1000);
     updateClock();
+    setInterval(updateClock, 1000);
 
-    // Get current user
-    const { data: { user } } = await _supabase.auth.getUser();
-    if (user) {
-        currentUser = user;
-    }
+    $("searchInput").addEventListener(
+        "input",
+        applyFilters
+    );
+
+    $("categoryFilter").addEventListener(
+        "change",
+        applyFilters
+    );
+
+    $("sortSelect").addEventListener(
+        "change",
+        applyFilters
+    );
+
+    $("tripSelect").addEventListener("change", () => {
+        $("confirmBtn").disabled =
+            saving || !$("tripSelect").value;
+    });
+
+    $("confirmBtn").addEventListener(
+        "click",
+        confirmBooking
+    );
+
+    document.querySelectorAll("[data-close]")
+        .forEach(button => {
+            button.addEventListener("click", () => {
+                if (!saving) {
+                    $(button.dataset.close).close();
+                }
+            });
+        });
+
+    $("bookingModal").addEventListener(
+        "cancel",
+        event => {
+            if (saving) {
+                event.preventDefault();
+            }
+        }
+    );
+
+    // Replace unavailable images without broken-image icons.
+    document.addEventListener(
+        "error",
+        event => {
+            if (event.target instanceof HTMLImageElement) {
+                const placeholder =
+                    document.createElement("div");
+
+                placeholder.className =
+                    "photo-placeholder";
+
+                placeholder.textContent =
+                    "Photo unavailable";
+
+                event.target.replaceWith(placeholder);
+            }
+        },
+        true
+    );
 
     loadCabs();
 });
