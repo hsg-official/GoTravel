@@ -51,7 +51,7 @@ async function fetchGuides() {
             photo = photo || "https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=600&auto=format&fit=crop";
             
             const guideEmail = guide.email || "guide@example.com"; 
-            const contactNo = guide.contact || "Number not provided";
+            
             const experience = guide.years_of_experience ? `${guide.years_of_experience} Yrs Experience` : "New Guide";
             const languages = guide.languages ? guide.languages : "English";
 
@@ -85,12 +85,10 @@ async function fetchGuides() {
                     <p class="guide-desc">${desc.substring(0, 75)}...</p>
                     
                     <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 10px; border-radius: 8px; margin-bottom: 15px;">
-                        <div style="color: #fff; font-weight: 600; font-size: 0.9rem; margin-bottom: 3px;">
-                            <i class="fas fa-phone-alt" style="color: var(--success); margin-right: 5px;"></i> ${contactNo}
-                        </div>
-                        <div style="font-size: 0.7rem; color: var(--text-muted); font-style: italic;">
-                            * Call for availability and inquiries.
-                        </div>
+                            <div style="color: #fff; font-weight: 600; font-size: 0.9rem;">
+                                <i class="fas fa-lock" style="color: var(--success); margin-right: 5px;"></i>
+                                Contact available after confirmation
+                            </div>
                     </div>
                     
                     <div class="guide-meta">
