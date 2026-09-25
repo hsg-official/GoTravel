@@ -3044,3 +3044,439 @@ document.addEventListener("DOMContentLoaded", () => {
     subtree: true
   });
 });
+/* =========================================
+   BUSINESS BOOKING REQUESTS
+========================================= */
+
+let businessBookingRequests = [];
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const postedTab = document.getElementById("postedServicesTab");
+  const bookingTab = document.getElementById("bookingRequestsTab");
+  const refreshButton = document.getElementById("refreshBookingRequests");
+  const statusFilter = document.getElementById("bookingStatusFilter");
+  const bookingContainer = document.getElementById("bookingRequestsContainer");
+
+  if (!postedTab || !bookingTab || !bookingContainer) return;
+
+  postedTab.addEventListener("click", () => {
+    switchBusinessDashboardTab("services");
+  });
+
+  bookingTab.addEventListener("click", () => {
+    switchBusinessDashboardTab("bookings");
+    loadBusinessBookingRequests();
+  });
+
+  refreshButton.addEventListener("click", loadBusinessBookingRequests);
+  statusFilter.addEventListener("change", renderBusinessBookingRequests);
+
+  bookingContainer.addEventListener("click", handleBusinessBookingAction);
+
+  const {
+    data: { user }
+  } = await supabaseClient.auth.getUser();
+
+  if (user) {
+    await loadBusinessBookingRequests();
+  }
+});
+
+function switchBusinessDashboardTab(tabName) {
+  const postedTab = document.getElementById("postedServicesTab");
+  const bookingTab = document.getElementById("bookingRequestsTab");
+  const postedPanel = document.getElementById("postedServicesPanel");
+  const bookingPanel = document.getElementById("bookingRequestsPanel");
+
+  const showingServices = tabName === "services";
+
+  postedTab.classList.toggle("tab-active", showingServices);
+  bookingTab.classList.toggle("tab-active", !showingServices);
+
+  postedPanel.classList.toggle("hidden", !showingServices);
+  bookingPanel.classList.toggle("hidden", showingServices);
+}
+
+async function loadBusinessBookingRequests() {
+  const statusElement = document.getElementById("bookingRequestsStatus");
+  const container = document.getElementById("bookingRequestsContainer");
+  const refreshButton = document.getElementById("refreshBookingRequests");
+
+  statusElement.classList.remove("booking-error");
+  statusElement.textContent = "Loading booking requests...";
+  statusElement.style.display = "block";
+  container.innerHTML = "";
+  refreshButton.disabled = true;
+
+  try {
+    const { data, error } = await supabaseClient.rpc(
+      "get_business_booking_requests"
+    );
+
+    if (error) throw error;
+
+    businessBookingRequests = data || [];
+
+    updateBookingRequestCount();
+    renderBusinessBookingRequests();
+  } catch (error) {
+    console.error("Failed to load booking requests:", error);
+
+    statusElement.textContent =
+      error.message || "Could not load booking requests.";
+
+    statusElement.classList.add("booking-error");
+    statusElement.style.display = "block";
+  } finally {
+    refreshButton.disabled = false;
+  }
+}
+
+function updateBookingRequestCount() {
+  const countElement = document.getElementById("bookingRequestCount");
+
+  const pendingCount = businessBookingRequests.filter(
+    booking => booking.status === "pending"
+  ).length;
+
+  countElement.textContent = pendingCount;
+  countElement.classList.toggle("hidden", pendingCount === 0);
+}
+
+function renderBusinessBookingRequests() {
+  const container = document.getElementById("bookingRequestsContainer");
+  const statusElement = document.getElementById("bookingRequestsStatus");
+  const selectedStatus =
+    document.getElementById("bookingStatusFilter").value;
+
+  const visibleBookings = businessBookingRequests.filter(booking => {
+    return selectedStatus === "all" || booking.status === selectedStatus;
+  });
+
+  container.innerHTML = "";
+
+  if (!visibleBookings.length) {
+    statusElement.textContent =
+      selectedStatus === "all"
+        ? "No booking requests yet."
+        : "No requests with this status.";
+
+    statusElement.style.display = "block";
+    return;
+  }
+
+  statusElement.style.display = "none";
+
+  visibleBookings.forEach(booking => {
+    const card = document.createElement("article");
+    card.className = "booking-request-card";
+    card.dataset.bookingId = booking.booking_id;
+
+    const statusLabel = formatBookingStatus(booking.status);
+
+    const requestedPeriod =
+      booking.start_at || booking.end_at
+        ? `${formatBookingDate(booking.start_at)} – ${formatBookingDate(
+            booking.end_at
+          )}`
+        : "Dates not supplied";
+
+    const quotedPrice =
+      booking.quoted_amount !== null &&
+      booking.quoted_amount !== undefined
+        ? `
+          <p class="booking-price">
+            Proposed price:
+            ${escapeHTML(booking.currency || "LKR")}
+            ${formatBookingMoney(booking.quoted_amount)}
+          </p>
+        `
+        : "";
+
+    const contactSection = booking.contact_released
+      ? `
+        <div class="booking-contact-box">
+          <h4>
+            <i class="fa-solid fa-address-card"></i>
+            Customer contact
+          </h4>
+
+          <p>
+            <strong>Email:</strong>
+            ${escapeHTML(booking.traveler_email || "Not provided")}
+          </p>
+
+          <p>
+            <strong>Phone:</strong>
+            ${escapeHTML(booking.traveler_phone || "Not provided")}
+          </p>
+        </div>
+      `
+      : `
+        <p class="booking-contact-locked">
+          <i class="fa-solid fa-lock"></i>
+          Customer contact becomes available after the customer accepts
+          your price.
+        </p>
+      `;
+
+    const actionSection =
+      booking.status === "pending" ||
+      booking.status === "price_proposed"
+        ? `
+          <div class="booking-offer-form">
+            <label>
+              Your total price
+              <input
+                type="number"
+                class="booking-offer-amount"
+                min="1"
+                step="0.01"
+                value="${
+                  booking.quoted_amount !== null &&
+                  booking.quoted_amount !== undefined
+                    ? escapeHTML(booking.quoted_amount)
+                    : ""
+                }"
+                placeholder="Enter the total amount"
+              >
+            </label>
+
+            <label>
+              Message to customer
+              <textarea
+                class="booking-business-notes"
+                maxlength="1000"
+                placeholder="Price information, meeting instructions or other details"
+              >${escapeHTML(booking.business_notes || "")}</textarea>
+            </label>
+
+            <div class="booking-action-buttons">
+              <button
+                type="button"
+                data-booking-action="offer"
+                data-booking-id="${escapeHTML(booking.booking_id)}"
+              >
+                ${
+                  booking.status === "price_proposed"
+                    ? "Update Price"
+                    : "Send Price"
+                }
+              </button>
+
+              <button
+                type="button"
+                class="booking-reject-button"
+                data-booking-action="reject"
+                data-booking-id="${escapeHTML(booking.booking_id)}"
+              >
+                Reject Request
+              </button>
+            </div>
+          </div>
+        `
+        : "";
+
+    card.innerHTML = `
+      <div class="booking-request-header">
+        <div>
+          <p class="booking-service-type">
+            ${escapeHTML(booking.service_type)}
+          </p>
+
+          <h3>${escapeHTML(booking.service_name)}</h3>
+        </div>
+
+        <span class="booking-badge ${escapeHTML(booking.status)}">
+          ${escapeHTML(statusLabel)}
+        </span>
+      </div>
+
+      <div class="booking-information">
+        <div>
+          <span>Customer</span>
+          <strong>${escapeHTML(booking.traveler_name)}</strong>
+        </div>
+
+        <div>
+          <span>Requested</span>
+          <strong>${formatBookingDate(booking.created_at)}</strong>
+        </div>
+
+        <div>
+          <span>Booking period</span>
+          <strong>${escapeHTML(requestedPeriod)}</strong>
+        </div>
+
+        <div>
+          <span>Guests</span>
+          <strong>${escapeHTML(booking.guest_count || 1)}</strong>
+        </div>
+
+        ${
+          booking.selected_item
+            ? `
+              <div>
+                <span>Selected option</span>
+                <strong>${escapeHTML(booking.selected_item)}</strong>
+              </div>
+            `
+            : ""
+        }
+
+        ${
+          booking.pickup_location
+            ? `
+              <div>
+                <span>Pickup</span>
+                <strong>${escapeHTML(booking.pickup_location)}</strong>
+              </div>
+            `
+            : ""
+        }
+
+        ${
+          booking.destination
+            ? `
+              <div>
+                <span>Destination</span>
+                <strong>${escapeHTML(booking.destination)}</strong>
+              </div>
+            `
+            : ""
+        }
+
+        ${
+          booking.customer_notes
+            ? `
+              <div class="booking-full-row">
+                <span>Customer message</span>
+                <strong>${escapeHTML(booking.customer_notes)}</strong>
+              </div>
+            `
+            : ""
+        }
+      </div>
+
+      ${quotedPrice}
+      ${contactSection}
+      ${actionSection}
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+async function handleBusinessBookingAction(event) {
+  const button = event.target.closest("[data-booking-action]");
+
+  if (!button) return;
+
+  const action = button.dataset.bookingAction;
+  const bookingId = button.dataset.bookingId;
+  const card = button.closest(".booking-request-card");
+
+  if (!bookingId || !card) return;
+
+  const notes =
+    card.querySelector(".booking-business-notes")?.value.trim() || null;
+
+  let quotedAmount = null;
+
+  if (action === "offer") {
+    const amountInput = card.querySelector(".booking-offer-amount");
+    quotedAmount = Number(amountInput.value);
+
+    if (!Number.isFinite(quotedAmount) || quotedAmount <= 0) {
+      alert("Please enter a valid total price.");
+      amountInput.focus();
+      return;
+    }
+  }
+
+  if (action === "reject") {
+    const confirmed = confirm(
+      "Are you sure you want to reject this booking request?"
+    );
+
+    if (!confirmed) return;
+  }
+
+  const cardButtons = card.querySelectorAll("button");
+  cardButtons.forEach(cardButton => {
+    cardButton.disabled = true;
+  });
+
+  try {
+    const { error } = await supabaseClient.rpc(
+      "business_respond_to_booking",
+      {
+        p_booking_id: bookingId,
+        p_action: action,
+        p_quoted_amount: quotedAmount,
+        p_business_notes: notes
+      }
+    );
+
+    if (error) throw error;
+
+    alert(
+      action === "offer"
+        ? "Your price was sent to the customer."
+        : "The booking request was rejected."
+    );
+
+    await loadBusinessBookingRequests();
+  } catch (error) {
+    console.error("Booking response failed:", error);
+
+    alert(
+      error.message ||
+        "Could not update this booking request. Please try again."
+    );
+
+    cardButtons.forEach(cardButton => {
+      cardButton.disabled = false;
+    });
+  }
+}
+
+function formatBookingStatus(status) {
+  const labels = {
+    pending: "Pending",
+    price_proposed: "Price proposed",
+    confirmed: "Confirmed",
+    rejected: "Rejected",
+    cancelled: "Cancelled",
+    in_progress: "In progress",
+    completed: "Completed",
+    no_show: "No show",
+    disputed: "Disputed"
+  };
+
+  return labels[status] || status || "Unknown";
+}
+
+function formatBookingDate(value) {
+  if (!value) return "Not provided";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "Not provided";
+
+  return date.toLocaleString("en-LK", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  });
+}
+
+function formatBookingMoney(value) {
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) return "0.00";
+
+  return number.toLocaleString("en-LK", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}

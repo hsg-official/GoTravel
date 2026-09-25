@@ -70,16 +70,70 @@
 
 <div class="container">
 
-  <div class="tabs">
-    <div class="tab-active">Posted Services</div>
-  </div>
+  <div class="tabs" role="tablist">
+  <button
+    type="button"
+    id="postedServicesTab"
+    class="dashboard-tab tab-active"
+  >
+    Posted Services
+  </button>
 
+  <button
+    type="button"
+    id="bookingRequestsTab"
+    class="dashboard-tab"
+  >
+    Booking Requests
+    <span id="bookingRequestCount" class="booking-count hidden">0</span>
+  </button>
+</div>
+
+<!-- POSTED SERVICES -->
+<div id="postedServicesPanel" class="dashboard-panel">
   <div class="card">
     <div id="postedServices" class="flex"></div>
+
     <p id="noServices" style="opacity:.6;margin-top:15px">
       No services posted yet.
     </p>
   </div>
+</div>
+
+<!-- BOOKING REQUESTS -->
+<div id="bookingRequestsPanel" class="dashboard-panel hidden">
+  <div class="card">
+    <div class="booking-toolbar">
+      <div>
+        <h2>Booking Requests</h2>
+        <p>Review requests and send customers your price.</p>
+      </div>
+
+      <div class="booking-toolbar-actions">
+        <select id="bookingStatusFilter">
+          <option value="all">All requests</option>
+          <option value="pending">Pending</option>
+          <option value="price_proposed">Price proposed</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="rejected">Rejected</option>
+          <option value="cancelled">Cancelled</option>
+          <option value="completed">Completed</option>
+        </select>
+
+        <button type="button" id="refreshBookingRequests">
+          <i class="fa-solid fa-rotate"></i>
+          Refresh
+        </button>
+      </div>
+    </div>
+
+    <p id="bookingRequestsStatus" class="booking-status-message">
+      Loading booking requests...
+    </p>
+
+    <div id="bookingRequestsContainer" class="booking-requests-grid"></div>
+  </div>
+</div>
 <!--
   <div id="formCard" class="card hidden"></div>
 -->
