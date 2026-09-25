@@ -942,3 +942,31 @@ h1 { font-size: 2.5rem; font-weight: 700; background: var(--neon-gradient); -web
 .trip-card-images img:only-child {
     grid-column: 1 / -1;
 }
+
+
+/* ITINERARY EXPORT */
+
+.modal-btn-row {
+    flex-wrap: wrap;
+}
+
+.modal-btn-row .plan-btn {
+    min-width: 155px;
+    flex: 1 1 155px;
+    margin-top: 0;
+}
+
+.btn-export {
+    background: rgba(0, 242, 255, 0.08);
+    color: var(--neon-primary);
+    border: 1px solid var(--neon-primary);
+    box-shadow: none;
+}
+
+.btn-export:hover {
+    background: rgba(0, 242, 255, 0.18);
+}
+
+.btn-export i {
+    margin-right: 7px;
+}
