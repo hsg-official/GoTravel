@@ -70,4 +70,141 @@
         .loader i { font-size: 2.5rem; animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+.guide-review-button {
+    width: 100%;
+    margin-top: 10px;
+    padding: 11px 16px;
+    border: 1px solid var(--accent, #0ea5e9);
+    border-radius: 10px;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    cursor: pointer;
+}
+
+.guide-review-button:hover {
+    background: rgba(14, 165, 233, 0.15);
+}
+
+.gr-dialog {
+    width: min(560px, calc(100% - 28px));
+    max-height: 85vh;
+    margin: auto;
+    padding: 24px;
+    overflow-y: auto;
+    border: 1px solid #334155;
+    border-radius: 20px;
+    background: #111827;
+    color: #f8fafc;
+}
+
+.gr-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.75);
+}
+
+.gr-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.gr-close {
+    border: 0;
+    background: transparent;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+.gr-summary {
+    color: #fbbf24;
+    margin-bottom: 16px;
+}
+
+.gr-message {
+    color: #cbd5e1;
+    margin: 12px 0;
+    line-height: 1.5;
+}
+
+.gr-form {
+    padding: 16px 0;
+    border-top: 1px solid #334155;
+    border-bottom: 1px solid #334155;
+}
+
+.gr-form label {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.gr-form select,
+.gr-form textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 14px;
+    border: 1px solid #475569;
+    border-radius: 8px;
+    background: #1e293b;
+    color: white;
+    font: inherit;
+}
+
+.gr-form textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.gr-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 12px 0;
+}
+
+.gr-actions button {
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 8px;
+    background: #0284c7;
+    color: white;
+    font: inherit;
+    cursor: pointer;
+}
+
+.gr-actions .gr-delete {
+    background: #b91c1c;
+}
+
+.gr-dialog button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.gr-review {
+    padding: 16px 0;
+    border-bottom: 1px solid #334155;
+}
+
+.gr-review strong {
+    color: #fbbf24;
+}
+
+.gr-review small {
+    display: block;
+    color: #94a3b8;
+    margin: 6px 0;
+}
+
+.gr-review p {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    line-height: 1.6;
+}
+
+.gr-dialog [hidden] {
+    display: none !important;
+}
     
