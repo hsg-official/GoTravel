@@ -3,73 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>GoTravel | Cabs & Transport</title>
-    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    >
+
     <link rel="stylesheet" href="../css/cabs_style.css">
 </head>
+
 <body>
-
-    <div class="gradient-bg"></div>
-    <div class="overlay"></div>
-
-    <div id="toast-container"></div>
-
     <header>
-        <div class="info-panel">
-            <div class="time-text" id="time">12:00</div>
-            <span class="date-text" id="date">Today</span>
+        <div>
+            <strong id="time"></strong>
+            <span id="date"></span>
         </div>
-        <a href="../index.html" class="back-btn">
-            <i class="fas fa-arrow-left"></i> BACK
+
+        <a class="back-btn" href="../index.html">
+            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            Back
         </a>
     </header>
 
-    <div class="page-title-section">
-        <h1 class="page-title">CABS & TRANSPORT</h1>
-        <p class="page-subtitle">Find your ride across Sri Lanka</p>
-    </div>
+    <main>
+        <div class="page-title-section">
+            <p class="eyebrow">EXPLORE SRI LANKA</p>
+            <h1>Cabs & Transport</h1>
+            <p>Find a service. Explore the vehicles. Plan your ride.</p>
+        </div>
 
-    <div class="filter-bar">
-        <button class="filter-btn active" onclick="filterCabs('all', this)">All</button>
-        <button class="filter-btn" onclick="filterCabs('Private', this)">Private</button>
-        <button class="filter-btn" onclick="filterCabs('Public', this)">Public</button>
-        <select class="filter-select" onchange="sortCabs(this.value)">
-            <option value="default">Sort by</option>
-            <option value="price_asc">Price: Low to High</option>
-            <option value="price_desc">Price: High to Low</option>
-            <option value="name_asc">Name: A to Z</option>
-        </select>
-    </div>
+        <div class="filter-bar">
+            <label class="search-label">
+                Search services
 
-    <div class="results-count" id="resultsCount"></div>
+                <input
+                    id="searchInput"
+                    type="search"
+                    placeholder="Service name or location"
+                >
+            </label>
 
-    <div class="loader" id="loader">
-        <i class="fas fa-taxi"></i>
-        <p>Finding available rides...</p>
-    </div>
+            <label>
+                Vehicle category
 
-    <div class="cabs-grid" id="cabsGrid"></div>
-
-    <!-- BOOKING MODAL -->
-    <div class="modal-overlay" id="bookingModal">
-        <div class="modal-content">
-            <i class="fas fa-times close-modal" onclick="closeModal()"></i>
-            <h2 class="modal-title">Add Cab to Trip</h2>
-            <p class="modal-subtitle" id="modalCabName">Cab: ---</p>
-
-            <div class="input-group">
-                <label>Select Your Planned Trip</label>
-                <select id="tripSelect" class="modal-select" required>
-                    <option value="">Loading trips...</option>
+                <select id="categoryFilter">
+                    <option value="all">All vehicles</option>
                 </select>
-            </div>
+            </label>
 
-            <button id="confirmBtn" class="confirm-btn" onclick="confirmBooking()">
-                <i class="fas fa-plus"></i> ADD TO MY TRIP
+            <label>
+                Sort by
+
+                <select id="sortSelect">
+                    <option value="default">Default</option>
+                    <option value="name_asc">Name: A to Z</option>
+                </select>
+            </label>
+        </div>
+
+        <p id="resultsCount" role="status"></p>
+
+        <div id="loader" role="status">
+            Finding available rides…
+        </div>
+
+        <div class="cabs-grid" id="cabsGrid"></div>
+    </main>
+
+    <!-- SERVICE DETAILS -->
+    <dialog id="detailsModal" aria-labelledby="detailsTitle">
+        <div class="dialog-header">
+            <p class="eyebrow">TRANSPORT SERVICE</p>
+
+            <button
+                type="button"
+                class="close-btn"
+                data-close="detailsModal"
+                aria-label="Close service details"
+            >
+                &times;
             </button>
         </div>
-    </div>
+
+        <div id="detailsContent"></div>
+    </dialog>
+
+    <!-- EXISTING TRIP SELECTION -->
+    <dialog id="bookingModal" aria-labelledby="bookingTitle">
+        <div class="dialog-header">
+            <h2 id="bookingTitle">Add to My Trip</h2>
+
+            <button
+                type="button"
+                class="close-btn"
+                data-close="bookingModal"
+                aria-label="Close trip selection"
+            >
+                &times;
+            </button>
+        </div>
+
+        <p id="modalCabName"></p>
+
+        <p class="muted">
+            This saves your transport choice. Contact the service to
+            confirm availability and the final price.
+        </p>
+
+        <label>
+            Select your trip
+            <select id="tripSelect"></select>
+        </label>
+
+        <p id="bookingStatus" role="status"></p>
+
+        <button
+            type="button"
+            class="primary-btn"
+            id="confirmBtn"
+            disabled
+        >
+            Add to My Trip
+        </button>
+    </dialog>
+
+    <div
+        id="toast-container"
+        role="status"
+        aria-live="polite"
+    ></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../backend/cabs_script.js"></script>
