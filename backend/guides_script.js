@@ -473,7 +473,7 @@ const GuideReviews = (() => {
         }
 
         if (error.code === "42501") {
-            return "Review not allowed. Make sure this guide is saved in your trip and you are signed in.";
+            return "Review not allowed. Make sure you are signed in.";
         }
 
         return "Could not complete the request. Please try again.";
@@ -558,7 +558,7 @@ const GuideReviews = (() => {
 
                 el("gr-message").textContent =
                     successMessage ||
-                    "You can review this guide because they are saved in your trip.";
+                    "You can review this guide ";
             } else {
                 const explanation = activeUser
                     ? "To review, add this guide to a trip and save that trip. Cancelled trips do not qualify. You cannot review your own guide listing."
