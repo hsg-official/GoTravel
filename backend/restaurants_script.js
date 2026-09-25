@@ -266,15 +266,15 @@ function selectRestaurant(id) {
         draft.restaurants = [];
     }
 
-    draft.restaurants.push({
-        name: restaurant.service_name || '',
-        destination: restaurant.city || '',
-        date: '',
-        meal: 'Breakfast',
-        time: '',
-        guests: '1'
-    });
-
+   draft.restaurants.push({
+    id: String(restaurant.id).toLowerCase(),
+    name: restaurant.service_name || '',
+    destination: restaurant.city || '',
+    date: '',
+    meal: 'Breakfast',
+    time: '',
+    guests: '1'
+});
     localStorage.setItem(
         'tripDraft',
         JSON.stringify(draft)
