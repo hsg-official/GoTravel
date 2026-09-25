@@ -217,6 +217,15 @@
             <div id="nav-planner" class="nav-item" onclick="showSection('planner-section')">
                 <i class="fas fa-map-marked-alt"></i> Trip Planner
             </div>
+            <div
+                id="nav-bookings"
+                class="nav-item"
+                onclick="showSection('booking-offers-section')"
+            >
+                <i class="fas fa-receipt"></i>
+                Booking Offers
+                <span id="travelerOfferCount" class="traveler-offer-count" hidden>0</span>
+            </div>
             <div class="expand-section">
                 <div class="plus-trigger" onclick="toggleMenu('services-menu')">
                     <span>Explore Services</span>
@@ -299,6 +308,36 @@
         </div>
 
         <!--  TRIP PLANNER WIZARD -->
+         <!-- BOOKING OFFERS -->
+<div id="booking-offers-section" style="display: none;">
+    <div class="booking-offers-header">
+        <div>
+            <h2>Booking Offers</h2>
+            <p>
+                Review prices sent by hotels, guides, restaurants,
+                and transport services.
+            </p>
+        </div>
+
+        <button
+            type="button"
+            class="booking-refresh-btn"
+            onclick="loadTravelerBookingOffers()"
+        >
+            <i class="fas fa-rotate"></i>
+            Refresh
+        </button>
+    </div>
+
+    <p id="travelerBookingStatus" class="traveler-booking-status">
+        Loading your booking requests...
+    </p>
+
+    <div
+        id="travelerBookingContainer"
+        class="traveler-booking-grid"
+    ></div>
+</div> 
         <div id="planner-section" style="display: none;">
 
             <!-- Autosave indicator -->
