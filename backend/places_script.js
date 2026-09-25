@@ -17,7 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 });
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwHltBHkWqBNrk67zieDRl9xr1hscq3ZlnJu7aHv6njFxhL0vt6tyWg0hJYeTxLz5liPA/exec';
+const GOOGLE_SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbyjAnkCVBLBzlvhFaqSwMu_8--RPK7K1c4W_bqRybEL98SF76x0Fs0sHiGizwBWkVn6cg/exec";
 
 // Store selected destinations
 let selectedDestinations = JSON.parse(localStorage.getItem('selectedDestinations') || '[]');
@@ -128,38 +129,105 @@ function removeDestination(name) {
     showSelectedModal();
     updateSelectButton();
 }
-
 async function getAIInfo(destination) {
-    const cache = JSON.parse(localStorage.getItem('travelCache') || '{}');
-    if (cache[destination]) {
-        console.log('Using cached data for', destination);
-        return cache[destination];
+    // New cache name ignores the old image-only responses.
+    const cacheKey = "travelCache_v2";
+    const place = destination.trim();
+    const entryKey = place.toLowerCase();
+
+    function isComplete(data) {
+        return (
+            data &&
+            !data.error &&
+            typeof data.description === "string" &&
+            data.description.trim() &&
+            typeof data.history === "string" &&
+            data.history.trim() &&
+            Array.isArray(data.thingsToDo) &&
+            data.thingsToDo.every(item => typeof item === "string")
+        );
+    }
+
+    let cache = {};
+
+    try {
+        const saved = JSON.parse(
+            localStorage.getItem(cacheKey) || "{}"
+        );
+
+        if (saved && typeof saved === "object" &&
+            !Array.isArray(saved)) {
+            cache = saved;
+        }
+    } catch {
+        // A damaged cache should not stop a search.
+    }
+
+    const cached = cache[entryKey];
+    const oneDay = 24 * 60 * 60 * 1000;
+
+    if (
+        cached &&
+        Date.now() - cached.savedAt < oneDay &&
+        isComplete(cached.data)
+    ) {
+        return cached.data;
     }
 
     try {
-        const response = await fetch(`${GOOGLE_SCRIPT_URL}?destination=${encodeURIComponent(destination)}`);
+        const response = await fetch(
+            GOOGLE_SCRIPT_URL +
+            "?destination=" +
+            encodeURIComponent(place)
+        );
 
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            throw new Error(
+                "Destination request failed: HTTP " + response.status
+            );
         }
 
         const data = await response.json();
 
-        if (data.error && data.fallback) {
-            console.log('Using fallback data:', data.error);
-            return data.fallback;
+        if (data.error) {
+            throw new Error(data.error);
         }
 
-        cache[destination] = data;
-        localStorage.setItem('travelCache', JSON.stringify(cache));
+        if (!isComplete(data)) {
+            throw new Error(
+                "The server returned incomplete destination details."
+            );
+        }
+
+        cache[entryKey] = {
+            savedAt: Date.now(),
+            data: data
+        };
+
+        try {
+            localStorage.setItem(cacheKey, JSON.stringify(cache));
+        } catch {
+            // Display the result even if browser storage is full.
+        }
 
         return data;
 
-    } catch (e) {
-        console.error('Error fetching from Google Script:', e);
-        return getLocalFallback(destination);
+    } catch (error) {
+        console.error("Destination search failed:", error);
+
+        alert(
+            "Unable to load destination details: " + error.message
+        );
+
+        // Restore the search screen without showing invented details.
+        document.getElementById("loader").style.display = "none";
+        document.getElementById("destinationSection").style.display =
+            "none";
+
+        return null;
     }
 }
+
 
 function getLocalFallback(destination) {
     const fallbacks = {
@@ -216,6 +284,7 @@ async function loadDestination(destination) {
     document.getElementById('destinationSection').style.display = 'none';
 
     const aiData = await getAIInfo(destination);
+    if (!aiData) return;
 
     currentDestination = {
         name: destination,
