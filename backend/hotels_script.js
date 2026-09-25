@@ -229,6 +229,8 @@ function renderHotels(list) {
     `;
   }).join("");
 
+    HotelReviews.attach(container, list);
+
   container.querySelectorAll(".view-details-btn").forEach(btn => {
     btn.addEventListener("click", () => openDetails(btn.dataset.id));
   });
@@ -909,3 +911,527 @@ document.addEventListener("DOMContentLoaded", () => {
   wireComparisonControls();
   loadHotels();
 });
+
+// ===== HOTEL REVIEWS ONLY =====
+const HotelReviews = (() => {
+    let dialog;
+    let activeHotel;
+    let user;
+    let ownReview;
+    let eligible = false;
+    let busy = false;
+    let version = 0;
+    let focusBeforeOpen;
+
+    // Reuse completed/in-flight rating reads when filters re-render cards.
+    const ratingRequests = new Map();
+
+    const el = id => document.getElementById(id);
+
+    function node(tag, text, className) {
+        const element = document.createElement(tag);
+        if (text !== undefined) element.textContent = text;
+        if (className) element.className = className;
+        return element;
+    }
+
+    function summary(rows) {
+        if (!rows.length) return "Traveler reviews: No reviews yet";
+
+        const total = rows.reduce(
+            (sum, review) => sum + Number(review.rating),
+            0
+        );
+
+        return `Traveler reviews: ★ ${
+            (total / rows.length).toFixed(1)
+        } / 5 · ${rows.length} review${
+            rows.length === 1 ? "" : "s"
+        }`;
+    }
+
+    async function readReviews(hotelId, full = false) {
+        const rows = [];
+        const pageSize = 500;
+
+        for (let start = 0; ; start += pageSize) {
+            const { data, error } = await supabaseClient
+                .from("Reviews")
+                .select(
+                    full
+                        ? "id,user_id,rating,comment,created_at"
+                        : "id,rating"
+                )
+                .eq("hotel_id", hotelId)
+                .order("id", { ascending: true })
+                .range(start, start + pageSize - 1);
+
+            if (error) throw error;
+
+            rows.push(...(data || []));
+
+            if (!data || data.length < pageSize) return rows;
+        }
+    }
+
+    function attach(container, hotels) {
+        const lookup = new Map(
+            hotels.map(hotel => [String(hotel.id), hotel])
+        );
+
+        container.querySelectorAll(".hotel-card").forEach(card => {
+            const hotel = lookup.get(card.dataset.id);
+            const info = card.querySelector(".hotel-info");
+
+            if (!hotel || !info || info.querySelector(".hotel-reviews-btn")) {
+                return;
+            }
+
+            const rating = node(
+                "p",
+                "Loading traveler reviews…",
+                "hotel-review-summary"
+            );
+
+            const button = node(
+                "button",
+                "Reviews",
+                "hotel-reviews-btn"
+            );
+
+            button.type = "button";
+
+            button.addEventListener("click", event => {
+                event.stopPropagation();
+                open(hotel, button);
+            });
+
+            info.append(rating, button);
+
+            const id = String(hotel.id);
+
+            if (!ratingRequests.has(id)) {
+                ratingRequests.set(id, readReviews(hotel.id));
+            }
+
+            const request = ratingRequests.get(id);
+
+            request.then(rows => {
+                if (rating.isConnected) {
+                    rating.textContent = summary(rows);
+                }
+            }).catch(error => {
+                if (ratingRequests.get(id) === request) {
+                    ratingRequests.delete(id);
+                }
+
+                rating.textContent = "Traveler rating unavailable";
+                console.error("Hotel rating:", error);
+            });
+        });
+    }
+
+    function updateCards(hotelId, rows) {
+        ratingRequests.set(String(hotelId), Promise.resolve(rows));
+
+        document.querySelectorAll(".hotel-card").forEach(card => {
+            if (card.dataset.id !== String(hotelId)) return;
+
+            const rating = card.querySelector(".hotel-review-summary");
+            if (rating) rating.textContent = summary(rows);
+        });
+    }
+
+    function buildDialog() {
+        if (dialog) return;
+
+        dialog = document.createElement("dialog");
+        dialog.className = "hr-dialog";
+        dialog.setAttribute("aria-labelledby", "hr-title");
+
+        // Only fixed markup goes into innerHTML.
+        // Review comments are inserted safely with textContent.
+        dialog.innerHTML = `
+            <div class="hr-header">
+                <h2 id="hr-title">Hotel reviews</h2>
+                <button id="hr-close"
+                        type="button"
+                        class="hr-close"
+                        aria-label="Close reviews">×</button>
+            </div>
+
+            <p id="hr-summary" class="hr-summary"></p>
+
+            <p id="hr-message"
+               class="hr-message"
+               role="status"
+               aria-live="polite"></p>
+
+            <form id="hr-form" class="hr-form" hidden>
+                <label for="hr-rating">Your rating</label>
+
+                <select id="hr-rating" required>
+                    <option value="">Choose a rating</option>
+                    <option value="5">★★★★★ — 5 Excellent</option>
+                    <option value="4">★★★★☆ — 4 Good</option>
+                    <option value="3">★★★☆☆ — 3 Average</option>
+                    <option value="2">★★☆☆☆ — 2 Poor</option>
+                    <option value="1">★☆☆☆☆ — 1 Very poor</option>
+                </select>
+
+                <label for="hr-comment">
+                    Your comment (optional, maximum 1,000 characters)
+                </label>
+
+                <textarea id="hr-comment"
+                          maxlength="1000"
+                          placeholder="Share your experience with this hotel."></textarea>
+
+                <button id="hr-save"
+                        type="submit"
+                        class="hr-action">
+                    Submit review
+                </button>
+            </form>
+
+            <button id="hr-delete"
+                    type="button"
+                    class="hr-action hr-delete"
+                    hidden>
+                Delete my review
+            </button>
+
+            <button id="hr-retry"
+                    type="button"
+                    class="hr-action"
+                    hidden>
+                Retry loading
+            </button>
+
+            <div id="hr-list"></div>
+        `;
+
+        document.body.appendChild(dialog);
+
+        el("hr-close").addEventListener("click", () => {
+            if (!busy) dialog.close();
+        });
+
+        dialog.addEventListener("cancel", event => {
+            if (busy) event.preventDefault();
+        });
+
+        dialog.addEventListener("close", () => {
+            version++;
+            focusBeforeOpen?.focus();
+        });
+
+        el("hr-form").addEventListener("submit", save);
+        el("hr-delete").addEventListener("click", remove);
+        el("hr-retry").addEventListener("click", () => load());
+    }
+
+    function setBusy(value) {
+        busy = value;
+
+        [
+            "hr-close", "hr-save", "hr-delete",
+            "hr-retry", "hr-rating", "hr-comment"
+        ].forEach(id => {
+            el(id).disabled = value;
+        });
+    }
+
+    function errorMessage(error) {
+        if (error.code === "23505") {
+            return "You already reviewed this hotel. Reopen Reviews to edit it.";
+        }
+
+        if (error.code === "42501") {
+            return "Review not allowed. Sign in and make sure this hotel is in your saved trip.";
+        }
+
+        if (error.code === "23514") {
+            return "The review did not pass database validation. Please check the review setup.";
+        }
+
+        return "Could not complete the request. Please try again.";
+    }
+
+    async function open(hotel, trigger) {
+        if (busy) return;
+
+        buildDialog();
+        activeHotel = hotel;
+        focusBeforeOpen = trigger;
+
+        el("hr-title").textContent =
+            `${hotel.service_name || "Hotel"} — Reviews`;
+
+        if (!dialog.open) dialog.showModal();
+
+        await load();
+    }
+
+    async function load(successMessage = "") {
+        const currentVersion = ++version;
+        const hotelId = activeHotel.id;
+
+        user = null;
+        ownReview = null;
+        eligible = false;
+
+        el("hr-form").hidden = true;
+        el("hr-delete").hidden = true;
+        el("hr-retry").hidden = true;
+        el("hr-list").replaceChildren();
+        el("hr-summary").textContent = "";
+        el("hr-message").textContent = "Loading reviews…";
+
+        try {
+            const rows = await readReviews(hotelId, true);
+
+            if (currentVersion !== version || !dialog.open) return;
+
+            updateCards(hotelId, rows);
+            el("hr-summary").textContent = summary(rows);
+
+            // Public visitors can still read reviews.
+            const { data: sessionData, error: sessionError } =
+                await supabaseClient.auth.getSession();
+
+            if (currentVersion !== version || !dialog.open) return;
+            if (sessionError) throw sessionError;
+
+            if (sessionData.session) {
+                const { data: authData, error: authError } =
+                    await supabaseClient.auth.getUser();
+
+                if (currentVersion !== version || !dialog.open) return;
+                if (authError) throw authError;
+
+                user = authData.user;
+            }
+
+            renderRows(rows);
+
+            if (user) {
+                ownReview = rows.find(
+                    row => row.user_id === user.id
+                ) || null;
+
+                const { data, error } = await supabaseClient.rpc(
+                    "can_review_hotel",
+                    { p_hotel_id: hotelId }
+                );
+
+                if (currentVersion !== version || !dialog.open) return;
+                if (error) throw error;
+
+                eligible = data === true;
+            }
+
+            el("hr-delete").hidden = !ownReview;
+
+            if (eligible) {
+                el("hr-form").hidden = false;
+
+                el("hr-rating").value =
+                    ownReview ? String(ownReview.rating) : "";
+
+                el("hr-comment").value = ownReview?.comment || "";
+
+                el("hr-save").textContent =
+                    ownReview ? "Update review" : "Submit review";
+
+                el("hr-message").textContent =
+                    successMessage ||
+                    "This hotel is in your saved trip. You can write a review.";
+            } else {
+                const explanation = user
+                    ? "Reviews require this hotel in a saved, non-cancelled trip. Owners cannot review their own hotel. Hotels with duplicate names cannot be matched."
+                    : "Sign in to write a review. You can still read existing reviews.";
+
+                el("hr-message").textContent =
+                    [successMessage, explanation].filter(Boolean).join(" ");
+            }
+        } catch (error) {
+            if (currentVersion !== version || !dialog.open) return;
+
+            console.error("Load hotel reviews:", error);
+
+            el("hr-form").hidden = true;
+            el("hr-delete").hidden = true;
+            el("hr-retry").hidden = false;
+
+            el("hr-message").textContent =
+                "Could not load reviews or check eligibility. Please retry.";
+        }
+    }
+
+    function renderRows(rows) {
+        const list = el("hr-list");
+        list.replaceChildren();
+
+        if (!rows.length) {
+            list.appendChild(
+                node("p", "No reviews yet.", "hr-message")
+            );
+            return;
+        }
+
+        const sorted = [...rows].sort(
+            (a, b) => new Date(b.created_at) - new Date(a.created_at)
+        );
+
+        sorted.forEach(review => {
+            const article = node("article", undefined, "hr-review");
+            const rating = Math.max(
+                1, Math.min(5, Number(review.rating) || 1)
+            );
+
+            article.appendChild(
+                node(
+                    "strong",
+                    `${"★".repeat(rating)}${"☆".repeat(5 - rating)}`
+                )
+            );
+
+            const author = review.user_id === user?.id
+                ? "Your review"
+                : "Traveler";
+
+            const date = new Date(review.created_at);
+            const dateText = Number.isNaN(date.getTime())
+                ? ""
+                : date.toLocaleDateString();
+
+            article.appendChild(
+                node(
+                    "small",
+                    [author, dateText].filter(Boolean).join(" · ")
+                )
+            );
+
+            if (review.comment) {
+                article.appendChild(node("p", review.comment));
+            }
+
+            list.appendChild(article);
+        });
+    }
+
+    async function checkAccount() {
+        const { data, error } = await supabaseClient.auth.getUser();
+
+        if (error) throw error;
+
+        if (!data.user || data.user.id !== user?.id) {
+            throw new Error("Sign-in changed. Reopen Reviews.");
+        }
+    }
+
+    async function save(event) {
+        event.preventDefault();
+
+        if (busy || !eligible || !user) return;
+
+        const rating = Number(el("hr-rating").value);
+        const comment = el("hr-comment").value.trim();
+
+        if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+            el("hr-message").textContent = "Choose a rating from 1 to 5.";
+            return;
+        }
+
+        if ([...comment].length > 1000) {
+            el("hr-message").textContent =
+                "Keep your comment within 1,000 characters.";
+            return;
+        }
+
+        setBusy(true);
+        el("hr-message").textContent = "Saving review…";
+
+        try {
+            await checkAccount();
+
+            let query;
+
+            if (ownReview) {
+                query = supabaseClient
+                    .from("Reviews")
+                    .update({
+                        rating,
+                        comment: comment || null
+                    })
+                    .eq("id", ownReview.id)
+                    .eq("user_id", user.id)
+                    .eq("hotel_id", activeHotel.id);
+            } else {
+                query = supabaseClient
+                    .from("Reviews")
+                    .insert({
+                        user_id: user.id,
+                        hotel_id: activeHotel.id,
+
+                        // Explicit nulls avoid unrelated service defaults.
+                        guide_id: null,
+                        restaurant_id: null,
+                        transport_id: null,
+
+                        rating,
+                        comment: comment || null
+                    });
+            }
+
+            const { data, error } = await query.select("id");
+
+            if (error) throw error;
+            if (!data?.length) {
+                throw new Error("Review was not saved.");
+            }
+
+            await load("Your review was saved.");
+        } catch (error) {
+            console.error("Save hotel review:", error);
+            el("hr-message").textContent = errorMessage(error);
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    async function remove() {
+        if (busy || !ownReview || !user) return;
+        if (!window.confirm("Delete your review for this hotel?")) return;
+
+        setBusy(true);
+        el("hr-message").textContent = "Deleting review…";
+
+        try {
+            await checkAccount();
+
+            const { data, error } = await supabaseClient
+                .from("Reviews")
+                .delete()
+                .eq("id", ownReview.id)
+                .eq("user_id", user.id)
+                .eq("hotel_id", activeHotel.id)
+                .select("id");
+
+            if (error) throw error;
+            if (!data?.length) {
+                throw new Error("Review was not deleted.");
+            }
+
+            await load("Your review was deleted.");
+        } catch (error) {
+            console.error("Delete hotel review:", error);
+            el("hr-message").textContent = errorMessage(error);
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    return { attach };
+})();
