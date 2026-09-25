@@ -28,10 +28,10 @@ async function fetchGuides() {
     const loader = document.getElementById('loader');
 
     try {
-        const { data: guides, error } = await supabaseClient
+       const { data: guides, error } = await supabaseClient
             .from('guide_service')
-            .select('*'); 
-
+            .select('*')
+            .eq('approval_status', 'approved');
         loader.style.display = 'none';
         if (error) throw error;
 
