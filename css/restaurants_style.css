@@ -776,3 +776,134 @@ body {
     max-width: 320px;
   }
 }
+.rr-summary {
+    color: #fbbf24;
+    margin: 12px 0;
+}
+
+.rr-button {
+    width: 100%;
+    padding: 11px 16px;
+    margin-top: 10px;
+    border: 1px solid #00f3ff;
+    border-radius: 10px;
+    background: transparent;
+    color: white;
+    font: inherit;
+    cursor: pointer;
+}
+
+.rr-button:hover {
+    background: rgba(0, 243, 255, 0.12);
+}
+
+.rr-dialog {
+    box-sizing: border-box;
+    width: min(560px, calc(100% - 28px));
+    max-height: 85vh;
+    margin: auto;
+    padding: 24px;
+    overflow-y: auto;
+    background: #111827;
+    color: #f8fafc;
+    border: 1px solid #334155;
+    border-radius: 20px;
+}
+
+.rr-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.75);
+}
+
+.rr-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.rr-close {
+    border: 0;
+    background: transparent;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+.rr-message {
+    margin: 14px 0;
+    color: #cbd5e1;
+    line-height: 1.5;
+}
+
+.rr-form {
+    padding-top: 16px;
+    border-top: 1px solid #334155;
+}
+
+.rr-form label {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.rr-form select,
+.rr-form textarea {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 16px;
+    border: 1px solid #475569;
+    border-radius: 8px;
+    background: #1e293b;
+    color: white;
+    font: inherit;
+}
+
+.rr-form textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.rr-action {
+    padding: 11px 16px;
+    margin: 8px 0;
+    border: 0;
+    border-radius: 8px;
+    background: #0284c7;
+    color: white;
+    font: inherit;
+    cursor: pointer;
+}
+
+.rr-delete {
+    background: #b91c1c;
+}
+
+.rr-review {
+    padding: 16px 0;
+    border-top: 1px solid #334155;
+}
+
+.rr-review strong {
+    color: #fbbf24;
+}
+
+.rr-review small {
+    display: block;
+    margin: 8px 0;
+    color: #94a3b8;
+}
+
+.rr-review p {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    line-height: 1.6;
+}
+
+.rr-dialog [hidden] {
+    display: none !important;
+}
+
+.rr-dialog button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
