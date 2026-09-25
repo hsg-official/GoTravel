@@ -476,11 +476,7 @@ const GuideReviews = (() => {
             return "Review not allowed. Make sure this guide is saved in your trip and you are signed in.";
         }
 
-        return [
-    error.code ? `Error ${error.code}` : "Error",
-    error.message || "Could not save your review.",
-    error.details || ""
-].filter(Boolean).join(" — ");
+        return "Could not complete the request. Please try again.";
     }
 
     async function open(guide, trigger) {
