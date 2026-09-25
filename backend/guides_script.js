@@ -105,7 +105,7 @@ async function fetchGuides() {
                     </button>
                 </div>
             `;
-            
+            GuideReviews.attach(card, guide); 
             container.appendChild(card);
         });
 
