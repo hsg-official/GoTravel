@@ -767,11 +767,11 @@ function renderHotelSelections() {
                 '<div class="hotel-detail-item"><span>Nights: </span><span>' + (daysBetween(dest.arrival, dest.departure) - 1 || '—') + '</span></div>' +
             '</div>' +
             '<div class="service-card-actions">' +
-                '<button type="button" class="btn-sm btn-outline" onclick="goToHotels()"><i class="fas fa-exchange-alt"></i> Change Hotel</button>' +
+                '<button type="button" class="btn-sm btn-outline" onclick="goToHotels(' + i + ')"><i class="fas fa-exchange-alt"></i> Change Hotel</button>' +
                 '<button type="button" class="btn-sm btn-danger-outline" onclick="removeHotelAt(' + i + ')"><i class="fas fa-times"></i> Remove</button>' +
             '</div>';
         } else {
-            html += '<button type="button" class="service-search-btn" onclick="goToHotels()" style="margin-top:10px;"><i class="fas fa-search"></i> Find a Hotel for ' + escapeHtml(dest.name) + '</button>';
+            html += '<button type="button" class="service-search-btn" onclick="goToHotels(' + i + ')" style="margin-top:10px;"><i class="fas fa-search"></i> Find a Hotel for ' + escapeHtml(dest.name) + '</button>';
         }
         html += '</div>';
     });
@@ -781,12 +781,30 @@ function renderHotelSelections() {
     updateGuideCard(saved);
 }
 
-function goToHotels() {
+function goToHotels(destinationIndex) {
+    clearTimeout(autosaveTimer);
     savePlannerDraft();
-    localStorage.setItem('isSelectingHotel', 'true');
-    window.location.href = 'hotels.html';
-}
 
+    // Remember which destination's hotel is being selected.
+    if (
+        Number.isInteger(destinationIndex) &&
+        destinationIndex >= 0
+    ) {
+        localStorage.setItem(
+            "hotelDestinationIndex",
+            String(destinationIndex)
+        );
+    } else {
+        localStorage.removeItem("hotelDestinationIndex");
+    }
+
+    // Clear any previous selection.
+    localStorage.removeItem("selectedHotelId");
+    localStorage.removeItem("selectedHotelName");
+
+    localStorage.setItem("isSelectingHotel", "true");
+    window.location.href = "hotels.html";
+}
 function goToGuides() {
     savePlannerDraft();
     localStorage.setItem('isSelectingGuide', 'true');
@@ -2449,35 +2467,96 @@ if (
 }
 
     // Handle returning from Hotels page
-    const pickedHotel = localStorage.getItem('selectedHotelName');
-    if (pickedHotel) {
+const pickedHotel = localStorage.getItem("selectedHotelName");
+const pickedHotelId = localStorage.getItem("selectedHotelId");
+
+if (
+    localStorage.getItem("isSelectingHotel") === "true" &&
+    (pickedHotel || pickedHotelId)
+) {
+    const hotelIdIsValid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+            .test(pickedHotelId || "");
+
+    if (!pickedHotel || !hotelIdIsValid) {
+        showToast(
+            "Please select the hotel again so its ID can be saved.",
+            "error"
+        );
+    } else {
         const state = JSON.parse(
-        localStorage.getItem('tripDraft') || '{}'
-    );
-        if (!state.hotels) state.hotels = [];
-        // Add to first destination without a hotel
+            localStorage.getItem("tripDraft") || "{}"
+        );
+
+        if (!Array.isArray(state.hotels)) {
+            state.hotels = [];
+        }
+
         const dests = getDestinations().filter(d => d.name);
-        let placed = false;
-        for (let i = 0; i < dests.length; i++) {
-            if (!state.hotels[i] || !state.hotels[i].name) {
-                state.hotels[i] = { name: pickedHotel };
-                placed = true;
-                break;
+
+        const storedIndex = localStorage.getItem(
+            "hotelDestinationIndex"
+        );
+
+        let targetIndex = storedIndex === null
+            ? -1
+            : Number(storedIndex);
+
+        const hasTarget =
+            Number.isInteger(targetIndex) &&
+            targetIndex >= 0 &&
+            targetIndex < dests.length;
+
+        // Supports older buttons that did not supply an index.
+        if (storedIndex === null) {
+            targetIndex = dests.findIndex(
+                (_, index) => !state.hotels[index]?.name
+            );
+
+            if (targetIndex === -1 && dests.length > 0) {
+                targetIndex = 0;
             }
         }
-        if (!placed && dests.length > 0) {
-            state.hotels[0] = { name: pickedHotel };
+
+        if (
+            (storedIndex !== null && !hasTarget) ||
+            targetIndex < 0 ||
+            targetIndex >= dests.length
+        ) {
+            showToast(
+                "Please choose a destination and select the hotel again.",
+                "error"
+            );
+        } else {
+            state.hotels[targetIndex] = {
+                id: pickedHotelId.toLowerCase(),
+                name: pickedHotel
+            };
+
+            localStorage.setItem(
+                "tripDraft",
+                JSON.stringify(state)
+            );
+
+            showSection("planner-section");
+            currentStep = 4;
+            renderWizardState();
+            renderHotelSelections();
+            updateTripSummary();
+
+            showToast(
+                "Hotel selected: " + pickedHotel +
+                ". Save your trip to confirm.",
+                "success"
+            );
         }
-        localStorage.setItem('tripDraft', JSON.stringify(state));
-        showSection('planner-section');
-        currentStep = 4;
-        renderWizardState();
-        renderHotelSelections();
-        localStorage.removeItem('selectedHotelName');
-        localStorage.removeItem('isSelectingHotel');
-        updateTripSummary();
-        showToast('Hotel selected: ' + pickedHotel, 'success');
     }
+
+    localStorage.removeItem("selectedHotelId");
+    localStorage.removeItem("selectedHotelName");
+    localStorage.removeItem("hotelDestinationIndex");
+    localStorage.removeItem("isSelectingHotel");
+}
 
     // Handle returning from Restaurants page
 const pickedRestaurant =
