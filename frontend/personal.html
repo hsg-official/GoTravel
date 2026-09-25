@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="../css/personal_style.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript"> (function() { emailjs.init("0snPOI_S_7ftRX9BK"); })(); </script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -45,12 +46,40 @@
         <i class="fas fa-times close-modal" onclick="closeTripDetails()"></i>
         <h2 id="modalTitle" class="modal-title">Trip Details</h2>
         <div id="modalContent" class="modal-details-body"></div>
-        <div class="modal-btn-row">
-            <button id="modalEditBtn" class="plan-btn btn-secondary">Edit Journey</button>
-            <button class="plan-btn" onclick="closeTripDetails()">Close Preview</button>
-        </div>
+        
+<div class="modal-btn-row">
+
+    <button id="modalPdfBtn"
+            class="plan-btn btn-export"
+            type="button">
+        <i class="fas fa-file-pdf"></i>
+        Download PDF
+    </button>
+
+    <button id="modalCalendarBtn"
+            class="plan-btn btn-export"
+            type="button">
+        <i class="fas fa-calendar-plus"></i>
+        Add to Calendar
+    </button>
+
+
+    <button id="modalEditBtn"
+            class="plan-btn btn-secondary"
+            type="button">
+        Edit Journey
+    </button>
+
+    <button class="plan-btn"
+            type="button"
+            onclick="closeTripDetails()">
+        Close Preview
+    </button>
+
+</div>
     </div>
 </div>
+
 
 <div id="successModal" class="modal-overlay">
     <div class="modal-card" style="text-align: center; max-width: 350px;">
