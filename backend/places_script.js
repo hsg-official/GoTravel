@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 const GOOGLE_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbyjAnkCVBLBzlvhFaqSwMu_8--RPK7K1c4W_bqRybEL98SF76x0Fs0sHiGizwBWkVn6cg/exec";
+  "https://script.google.com/macros/s/AKfycbyBZ3BqDmmtqZuinh5HNZIytDWO9A4aP6y7O9f-gpw7spU-yQpTPGXags3gxp6x1XbJSg/exec";
 
 // Store selected destinations
 let selectedDestinations = JSON.parse(localStorage.getItem('selectedDestinations') || '[]');
