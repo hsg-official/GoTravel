@@ -470,6 +470,7 @@ function renderCabs(services) {
         );
 
         $("cabsGrid").append(card);
+        TransportReviews.attach(card, service);
     });
 }
 
