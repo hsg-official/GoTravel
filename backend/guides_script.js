@@ -687,11 +687,14 @@ const GuideReviews = (() => {
                 query = supabaseClient
                     .from("Reviews")
                     .insert({
-                        user_id: activeUser.id,
-                        guide_id: activeGuide.id,
-                        rating,
-                        comment: comment || null
-                    });
+                            user_id: activeUser.id,
+                            guide_id: activeGuide.id,
+                            hotel_id: null,
+                            restaurant_id: null,
+                            transport_id: null,
+                            rating,
+                            comment: comment || null
+                });
             }
 
             const { data, error } = await query.select("id");
