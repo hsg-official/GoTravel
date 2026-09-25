@@ -35,6 +35,8 @@ const SERVICE_TABLES = [
 
 let allUsers = [];
 let allServices = [];
+let allBookingCases = [];
+let allCommissionInvoices = [];
 let approvalFilter = "all";
 
 window.addEventListener("DOMContentLoaded", async () => {
@@ -118,7 +120,9 @@ async function refreshDashboard() {
 
   const [usersLoaded] = await Promise.all([
     loadUsers(),
-    loadServices()
+    loadServices(),
+    loadBookingCases(),
+    loadCommissionInvoices()
   ]);
 
   updateStatistics();
@@ -127,6 +131,8 @@ async function refreshDashboard() {
   renderUsers();
   renderApprovals();
   renderAllServices();
+  renderBookingCases();
+  renderCommissionInvoices();
 
   refreshIcon?.classList.remove("fa-spin");
 
@@ -889,7 +895,904 @@ function closeDetailsModal(event) {
 
   modal.classList.add("hidden");
 }
+async function loadBookingCases() {
+  const { data, error } = await supabaseClient.rpc(
+    "get_admin_booking_cases"
+  );
 
+  if (error) {
+    console.error("Could not load booking cases:", error);
+    allBookingCases = [];
+    setText("caseNavCount", "0");
+    return false;
+  }
+
+  allBookingCases = data || [];
+
+  const pendingCount = allBookingCases.filter(
+    item => item.case_status === "pending"
+  ).length;
+
+  setText("caseNavCount", pendingCount);
+
+  return true;
+}
+
+function renderBookingCases() {
+  const container =
+    document.getElementById("bookingCasesGrid");
+
+  const empty =
+    document.getElementById("bookingCasesEmpty");
+
+  const filter =
+    document.getElementById("bookingCaseStatusFilter")
+      ?.value || "pending";
+
+  if (!container || !empty) {
+    return;
+  }
+
+  const cases = allBookingCases.filter(item => {
+    return (
+      filter === "all" ||
+      item.case_status === filter
+    );
+  });
+
+  container.innerHTML = "";
+  empty.classList.toggle("hidden", cases.length > 0);
+
+  if (!cases.length) {
+    return;
+  }
+
+  container.innerHTML = cases
+    .map(bookingCaseHTML)
+    .join("");
+}
+
+function bookingCaseHTML(item) {
+  const caseType =
+    item.case_type === "no_show"
+      ? "No-show"
+      : "Service problem";
+
+  const reportedBy =
+    item.opened_by_role === "business"
+      ? "Business"
+      : "Customer";
+
+  const confirmedAmount =
+    item.final_amount ??
+    item.quoted_amount ??
+    0;
+
+  const feeSection =
+    item.case_type === "no_show"
+      ? `
+        <div>
+          <span>Fee reported</span>
+          <strong>
+            ${escapeHTML(item.currency || "LKR")}
+            ${formatCaseMoney(item.claimed_fee_amount)}
+          </strong>
+        </div>
+      `
+      : "";
+
+  const responses = `
+    ${
+      item.traveler_response
+        ? `
+          <div class="case-response">
+            <span>Customer response</span>
+            <p>${escapeHTML(item.traveler_response)}</p>
+          </div>
+        `
+        : ""
+    }
+
+    ${
+      item.business_response
+        ? `
+          <div class="case-response">
+            <span>Business response</span>
+            <p>${escapeHTML(item.business_response)}</p>
+          </div>
+        `
+        : ""
+    }
+  `;
+
+  const controls =
+    item.case_status === "pending"
+      ? `
+        <div class="case-resolution">
+          <select
+            class="case-decision"
+            onchange="updateCaseAmountField(
+              '${item.case_id}',
+              this
+            )"
+          >
+            <option value="">Choose decision</option>
+            <option value="no_commission">
+              No commission
+            </option>
+            <option value="adjusted_commission">
+              Commission on another amount
+            </option>
+            <option value="full_commission">
+              Commission on full price
+            </option>
+          </select>
+
+          <input
+            type="number"
+            class="case-adjusted-amount"
+            min="0"
+            step="0.01"
+            placeholder="Commissionable amount"
+            disabled
+          >
+
+          <textarea
+            class="case-admin-notes"
+            maxlength="2000"
+            placeholder="Admin notes"
+          ></textarea>
+
+          <button
+            type="button"
+            class="case-resolve-button"
+            onclick="resolveBookingCase(
+              '${item.case_id}',
+              this
+            )"
+          >
+            Resolve
+          </button>
+        </div>
+      `
+      : `
+        <div class="case-result">
+          ${formatCaseResolution(item.resolution)}
+        </div>
+      `;
+
+  return `
+    <article
+      class="booking-case-card"
+      data-case-id="${escapeAttribute(item.case_id)}"
+    >
+      <div class="booking-case-header">
+        <div>
+          <p class="eyebrow">
+            ${escapeHTML(item.service_type)}
+          </p>
+
+          <h3>${escapeHTML(item.service_name)}</h3>
+        </div>
+
+        <span class="case-status ${escapeHTML(item.case_status)}">
+          ${escapeHTML(item.case_status)}
+        </span>
+      </div>
+
+      <div class="booking-case-info">
+        <div>
+          <span>Case</span>
+          <strong>${escapeHTML(caseType)}</strong>
+        </div>
+
+        <div>
+          <span>Reported by</span>
+          <strong>${escapeHTML(reportedBy)}</strong>
+        </div>
+
+        <div>
+          <span>Customer</span>
+          <strong>${escapeHTML(item.traveler_email)}</strong>
+        </div>
+
+        <div>
+          <span>Business</span>
+          <strong>${escapeHTML(item.business_email)}</strong>
+        </div>
+
+        <div>
+          <span>Service date</span>
+          <strong>${escapeHTML(formatDate(item.start_at))}</strong>
+        </div>
+
+        <div>
+          <span>Confirmed price</span>
+          <strong>
+            ${escapeHTML(item.currency || "LKR")}
+            ${formatCaseMoney(confirmedAmount)}
+          </strong>
+        </div>
+
+        ${feeSection}
+      </div>
+
+      <div class="case-reason">
+        <span>Report</span>
+        <p>${escapeHTML(item.reason)}</p>
+      </div>
+
+      ${responses}
+      ${controls}
+    </article>
+  `;
+}
+
+function updateCaseAmountField(caseId, select) {
+  const card = document.querySelector(
+    `[data-case-id="${caseId}"]`
+  );
+
+  const amountInput = card?.querySelector(
+    ".case-adjusted-amount"
+  );
+
+  if (!amountInput) return;
+
+  const enabled =
+    select.value === "adjusted_commission";
+
+  amountInput.disabled = !enabled;
+
+  if (!enabled) {
+    amountInput.value = "";
+  }
+}
+
+async function resolveBookingCase(caseId, button) {
+  const card = button.closest(".booking-case-card");
+
+  const decision =
+    card.querySelector(".case-decision").value;
+
+  const amountInput =
+    card.querySelector(".case-adjusted-amount");
+
+  const notes =
+    card.querySelector(".case-admin-notes")
+      .value.trim() || null;
+
+  if (!decision) {
+    showToast("Choose a decision.", "error");
+    return;
+  }
+
+  let amount = null;
+
+  if (decision === "adjusted_commission") {
+    amount = Number(amountInput.value);
+
+    if (!Number.isFinite(amount) || amount < 0) {
+      showToast("Enter a valid amount.", "error");
+      amountInput.focus();
+      return;
+    }
+  }
+
+  if (!confirm("Resolve this booking case?")) {
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "Saving...";
+
+  try {
+    const { error } = await supabaseClient.rpc(
+      "admin_resolve_booking_case",
+      {
+        p_case_id: caseId,
+        p_decision: decision,
+        p_commissionable_amount: amount,
+        p_admin_notes: notes
+      }
+    );
+
+    if (error) throw error;
+
+    showToast("Case resolved.", "success");
+
+    await loadBookingCases();
+    renderBookingCases();
+  } catch (error) {
+    console.error("Could not resolve case:", error);
+
+    showToast(
+      error.message || "Could not resolve the case.",
+      "error"
+    );
+
+    button.disabled = false;
+    button.textContent = "Resolve";
+  }
+}
+
+function formatCaseMoney(value) {
+  const amount = Number(value || 0);
+
+  return amount.toLocaleString("en-LK", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+function formatCaseResolution(value) {
+  const labels = {
+    no_commission: "No commission",
+    adjusted_commission: "Adjusted commission",
+    full_commission: "Full commission"
+  };
+
+  return labels[value] || "Resolved";
+}
+async function loadCommissionInvoices() {
+  const statusElement =
+    document.getElementById("adminInvoicesStatus");
+
+  if (statusElement) {
+    statusElement.textContent = "Loading invoices...";
+    statusElement.style.display = "block";
+  }
+
+  setDefaultInvoiceMonth();
+
+  const { data, error } = await supabaseClient.rpc(
+    "get_admin_commission_invoices"
+  );
+
+  if (error) {
+    console.error("Could not load invoices:", error);
+    allCommissionInvoices = [];
+    setText("commissionNavCount", "0");
+
+    if (statusElement) {
+      statusElement.textContent =
+        error.message || "Could not load invoices.";
+    }
+
+    return false;
+  }
+
+  allCommissionInvoices =
+    Array.isArray(data) ? data : [];
+
+  const awaitingReview =
+    allCommissionInvoices.filter(
+      invoice =>
+        invoice.status === "payment_submitted"
+    ).length;
+
+  setText("commissionNavCount", awaitingReview);
+
+  renderCommissionInvoices();
+
+  return true;
+}
+
+function setDefaultInvoiceMonth() {
+  const input =
+    document.getElementById("invoiceBillingMonth");
+
+  if (!input || input.value) return;
+
+  const date = new Date();
+
+  date.setMonth(date.getMonth() - 1);
+
+  const year = date.getFullYear();
+
+  const month = String(
+    date.getMonth() + 1
+  ).padStart(2, "0");
+
+  input.value = `${year}-${month}`;
+}
+
+function renderCommissionInvoices() {
+  const grid =
+    document.getElementById("adminInvoicesGrid");
+
+  const empty =
+    document.getElementById("adminInvoicesEmpty");
+
+  const statusElement =
+    document.getElementById("adminInvoicesStatus");
+
+  if (!grid || !empty || !statusElement) return;
+
+  const filter =
+    document.getElementById("invoiceStatusFilter")
+      ?.value || "all";
+
+  const dueTotal = allCommissionInvoices
+    .filter(
+      invoice =>
+        invoice.status === "issued" ||
+        invoice.status === "overdue"
+    )
+    .reduce(
+      (total, invoice) =>
+        total + Number(invoice.commission_total || 0),
+      0
+    );
+
+  const reviewTotal = allCommissionInvoices
+    .filter(
+      invoice =>
+        invoice.status === "payment_submitted"
+    )
+    .reduce(
+      (total, invoice) =>
+        total + Number(invoice.commission_total || 0),
+      0
+    );
+
+  const paidTotal = allCommissionInvoices
+    .filter(invoice => invoice.status === "paid")
+    .reduce(
+      (total, invoice) =>
+        total + Number(invoice.commission_total || 0),
+      0
+    );
+
+  setText(
+    "invoiceDueTotal",
+    `LKR ${formatCaseMoney(dueTotal)}`
+  );
+
+  setText(
+    "invoiceReviewTotal",
+    `LKR ${formatCaseMoney(reviewTotal)}`
+  );
+
+  setText(
+    "invoicePaidTotal",
+    `LKR ${formatCaseMoney(paidTotal)}`
+  );
+
+  const invoices = allCommissionInvoices.filter(
+    invoice =>
+      filter === "all" ||
+      invoice.status === filter
+  );
+
+  grid.innerHTML = "";
+
+  empty.classList.toggle(
+    "hidden",
+    invoices.length > 0
+  );
+
+  if (!invoices.length) {
+    statusElement.style.display = "none";
+    return;
+  }
+
+  statusElement.style.display = "none";
+
+  grid.innerHTML = invoices
+    .map(adminInvoiceHTML)
+    .join("");
+}
+
+function adminInvoiceHTML(invoice) {
+  const currency = invoice.currency || "LKR";
+
+  const items = Array.isArray(invoice.items)
+    ? invoice.items
+    : [];
+
+  const itemRows = items
+    .map(
+      item => `
+        <tr>
+          <td>${escapeHTML(item.service_name)}</td>
+          <td>${escapeHTML(item.service_type)}</td>
+          <td>
+            ${escapeHTML(currency)}
+            ${formatCaseMoney(item.booking_amount)}
+          </td>
+          <td>
+            ${formatCaseMoney(item.commission_rate)}%
+          </td>
+          <td>
+            ${escapeHTML(currency)}
+            ${formatCaseMoney(item.commission_amount)}
+          </td>
+        </tr>
+      `
+    )
+    .join("");
+
+  let paymentSection = "";
+
+  if (invoice.status === "payment_submitted") {
+    paymentSection = `
+      <div class="admin-payment-review">
+        <div class="submitted-payment-reference">
+          <span>Payment reference</span>
+          <strong>
+            ${escapeHTML(
+              invoice.payment_reference ||
+              "Not provided"
+            )}
+          </strong>
+        </div>
+
+        <textarea
+          class="invoice-review-notes"
+          maxlength="2000"
+          placeholder="Message to the business"
+        ></textarea>
+
+        <div class="invoice-review-actions">
+          <button
+            type="button"
+            class="approve-invoice-payment"
+            onclick="reviewCommissionInvoice(
+              '${escapeHTML(invoice.invoice_id)}',
+              'approve',
+              this
+            )"
+          >
+            Approve payment
+          </button>
+
+          <button
+            type="button"
+            class="reject-invoice-payment"
+            onclick="reviewCommissionInvoice(
+              '${escapeHTML(invoice.invoice_id)}',
+              'reject',
+              this
+            )"
+          >
+            Reject payment
+          </button>
+        </div>
+      </div>
+    `;
+  } else if (invoice.status === "paid") {
+    paymentSection = `
+      <div class="admin-payment-result paid">
+        Payment verified
+        <span>
+          ${formatAdminInvoiceDate(invoice.paid_at)}
+        </span>
+      </div>
+    `;
+  } else {
+    paymentSection = `
+      <div class="admin-payment-result waiting">
+        Waiting for business payment
+      </div>
+    `;
+  }
+
+  const adminNotes = invoice.admin_notes
+    ? `
+      <div class="admin-invoice-notes">
+        <span>Admin message</span>
+        <p>${escapeHTML(invoice.admin_notes)}</p>
+      </div>
+    `
+    : "";
+
+  return `
+    <article class="admin-invoice-card">
+      <div class="admin-invoice-header">
+        <div>
+          <p class="eyebrow">
+            ${escapeHTML(invoice.invoice_number)}
+          </p>
+
+          <h3>
+            ${escapeHTML(
+              invoice.business_email ||
+              "Business account"
+            )}
+          </h3>
+        </div>
+
+        <span class="admin-invoice-status ${escapeHTML(
+          invoice.status
+        )}">
+          ${escapeHTML(
+            formatAdminInvoiceStatus(invoice.status)
+          )}
+        </span>
+      </div>
+
+      <div class="admin-invoice-summary">
+        <div>
+          <span>Billing period</span>
+          <strong>
+            ${formatAdminInvoiceDate(invoice.period_start)}
+            –
+            ${formatAdminInvoiceDate(invoice.period_end)}
+          </strong>
+        </div>
+
+        <div>
+          <span>Due date</span>
+          <strong>
+            ${formatAdminInvoiceDate(invoice.due_at)}
+          </strong>
+        </div>
+
+        <div>
+          <span>Booking total</span>
+          <strong>
+            ${escapeHTML(currency)}
+            ${formatCaseMoney(invoice.booking_total)}
+          </strong>
+        </div>
+
+        <div>
+          <span>Commission</span>
+          <strong>
+            ${escapeHTML(currency)}
+            ${formatCaseMoney(invoice.commission_total)}
+          </strong>
+        </div>
+      </div>
+
+      <div class="admin-invoice-table-wrap">
+        <table class="admin-invoice-table">
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>Type</th>
+              <th>Booking</th>
+              <th>Rate</th>
+              <th>Commission</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${itemRows}
+          </tbody>
+        </table>
+      </div>
+
+      ${adminNotes}
+      ${paymentSection}
+    </article>
+  `;
+}
+
+async function generateMonthlyInvoices() {
+  const monthInput =
+    document.getElementById("invoiceBillingMonth");
+
+  const dueDaysInput =
+    document.getElementById("invoiceDueDays");
+
+  const button =
+    document.getElementById("generateInvoicesButton");
+
+  const statusElement =
+    document.getElementById(
+      "invoiceGenerationStatus"
+    );
+
+  const monthValue = monthInput.value;
+
+  if (!monthValue) {
+    showToast("Choose a billing month.", "error");
+    monthInput.focus();
+    return;
+  }
+
+  const dueDays = Number(dueDaysInput.value);
+
+  if (
+    !Number.isInteger(dueDays) ||
+    dueDays < 1 ||
+    dueDays > 90
+  ) {
+    showToast(
+      "Payment days must be between 1 and 90.",
+      "error"
+    );
+
+    dueDaysInput.focus();
+    return;
+  }
+
+  const [yearText, monthText] =
+    monthValue.split("-");
+
+  const year = Number(yearText);
+  const month = Number(monthText);
+
+  const lastDay = new Date(
+    year,
+    month,
+    0
+  ).getDate();
+
+  const periodStart =
+    `${yearText}-${monthText}-01`;
+
+  const periodEnd =
+    `${yearText}-${monthText}-${String(
+      lastDay
+    ).padStart(2, "0")}`;
+
+  if (
+    !confirm(
+      `Generate invoices for ${monthValue}?`
+    )
+  ) {
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "Generating...";
+
+  statusElement.textContent = "";
+
+  try {
+    const { data, error } = await supabaseClient.rpc(
+      "generate_commission_invoices",
+      {
+        p_period_start: periodStart,
+        p_period_end: periodEnd,
+        p_due_days: dueDays
+      }
+    );
+
+    if (error) throw error;
+
+    const count = Number(data || 0);
+
+    statusElement.textContent =
+      count === 1
+        ? "1 invoice generated."
+        : `${count} invoices generated.`;
+
+    showToast(
+      count > 0
+        ? "Invoices generated."
+        : "No uninvoiced commissions found.",
+      count > 0 ? "success" : "error"
+    );
+
+    await loadCommissionInvoices();
+  } catch (error) {
+    console.error(
+      "Could not generate invoices:",
+      error
+    );
+
+    showToast(
+      error.message ||
+      "Could not generate invoices.",
+      "error"
+    );
+  } finally {
+    button.disabled = false;
+    button.innerHTML = `
+      <i class="fa-solid fa-file-circle-plus"></i>
+      Generate invoices
+    `;
+  }
+}
+
+async function reviewCommissionInvoice(
+  invoiceId,
+  decision,
+  button
+) {
+  const card = button.closest(
+    ".admin-invoice-card"
+  );
+
+  const notes = card
+    .querySelector(".invoice-review-notes")
+    .value.trim();
+
+  if (decision === "reject" && !notes) {
+    showToast(
+      "Enter a reason for rejecting the payment.",
+      "error"
+    );
+
+    card
+      .querySelector(".invoice-review-notes")
+      .focus();
+
+    return;
+  }
+
+  const message =
+    decision === "approve"
+      ? "Approve this payment?"
+      : "Reject this payment?";
+
+  if (!confirm(message)) return;
+
+  const buttons = card.querySelectorAll("button");
+
+  buttons.forEach(item => {
+    item.disabled = true;
+  });
+
+  try {
+    const { error } = await supabaseClient.rpc(
+      "review_commission_invoice_payment",
+      {
+        p_invoice_id: invoiceId,
+        p_decision: decision,
+        p_admin_notes: notes || null
+      }
+    );
+
+    if (error) throw error;
+
+    showToast(
+      decision === "approve"
+        ? "Payment approved."
+        : "Payment rejected.",
+      "success"
+    );
+
+    await loadCommissionInvoices();
+  } catch (error) {
+    console.error(
+      "Could not review payment:",
+      error
+    );
+
+    showToast(
+      error.message ||
+      "Could not review the payment.",
+      "error"
+    );
+
+    buttons.forEach(item => {
+      item.disabled = false;
+    });
+  }
+}
+
+function formatAdminInvoiceStatus(status) {
+  const labels = {
+    issued: "Payment due",
+    overdue: "Overdue",
+    payment_submitted: "Awaiting verification",
+    paid: "Paid",
+    cancelled: "Cancelled"
+  };
+
+  return labels[status] || status;
+}
+
+function formatAdminInvoiceDate(value) {
+  if (!value) return "Not available";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Not available";
+  }
+
+  return date.toLocaleDateString("en-LK", {
+    year: "numeric",
+    month: "short",
+    day: "numeric"
+  });
+}
 function showSection(sectionName, link) {
   document
     .querySelectorAll(".dashboard-section")
@@ -913,7 +1816,9 @@ function showSection(sectionName, link) {
     overview: "Dashboard Overview",
     users: "User Management",
     approvals: "Service Approvals",
-    services: "All Services"
+    services: "All Services",
+    cases: "Booking Cases",
+    commissions: "Commission Invoices"
   };
 
   setText(

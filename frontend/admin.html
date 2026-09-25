@@ -54,6 +54,19 @@
       <a class="nav-link" data-section="services" onclick="showSection('services', this)">
         <span><i class="fa-solid fa-layer-group"></i> All Services</span>
       </a>
+      <a class="nav-link" data-section="cases" onclick="showSection('cases', this)">
+        <span><i class="fa-solid fa-scale-balanced"></i> Booking Cases</span>
+        <span class="nav-count warning" id="caseNavCount">0</span>
+      </a>
+
+      <a class="nav-link" data-section="commissions"
+        onclick="showSection('commissions', this)">
+        <span>
+          <i class="fa-solid fa-file-invoice-dollar"></i>
+          Commissions
+        </span>
+        <span class="nav-count warning" id="commissionNavCount">0</span>
+      </a>
 
       <div class="section-title">Account</div>
 
@@ -273,6 +286,129 @@
 
         <div id="allServicesGrid" class="service-grid"></div>
         <div id="servicesEmpty" class="glass-card empty-state hidden"><i class="fa-solid fa-folder-open"></i><p>No services found.</p></div>
+      </section>
+      <section class="dashboard-section" id="casesSection">
+        <div class="section-toolbar">
+          <div>
+            <p class="eyebrow">Booking management</p>
+            <h2>Booking Cases</h2>
+          </div>
+
+          <div class="toolbar-controls">
+            <select
+              id="bookingCaseStatusFilter"
+              onchange="renderBookingCases()"
+            >
+              <option value="pending">Pending</option>
+              <option value="resolved">Resolved</option>
+              <option value="all">All cases</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="bookingCasesGrid" class="booking-cases-grid"></div>
+
+        <div
+          id="bookingCasesEmpty"
+          class="glass-card empty-state hidden"
+        >
+          <i class="fa-solid fa-scale-balanced"></i>
+          <p>No booking cases.</p>
+        </div>
+      </section>
+      <section class="dashboard-section" id="commissionsSection">
+        <div class="section-toolbar">
+          <div>
+            <p class="eyebrow">Payments</p>
+            <h2>Commission Invoices</h2>
+          </div>
+
+          <div class="toolbar-controls">
+            <select id="invoiceStatusFilter"
+                    onchange="renderCommissionInvoices()">
+              <option value="all">All invoices</option>
+              <option value="issued">Payment due</option>
+              <option value="overdue">Overdue</option>
+              <option value="payment_submitted">
+                Awaiting verification
+              </option>
+              <option value="paid">Paid</option>
+            </select>
+
+            <button type="button"
+                    class="refresh-btn"
+                    onclick="loadCommissionInvoices()">
+              <i class="fa-solid fa-rotate"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="invoice-generation-panel glass-card">
+          <div>
+            <label for="invoiceBillingMonth">
+              Billing month
+            </label>
+
+            <input type="month"
+                  id="invoiceBillingMonth">
+          </div>
+
+          <div>
+            <label for="invoiceDueDays">
+              Payment due in
+            </label>
+
+            <div class="invoice-due-days">
+              <input type="number"
+                    id="invoiceDueDays"
+                    min="1"
+                    max="90"
+                    value="14">
+
+              <span>days</span>
+            </div>
+          </div>
+
+          <button type="button"
+                  id="generateInvoicesButton"
+                  onclick="generateMonthlyInvoices()">
+            <i class="fa-solid fa-file-circle-plus"></i>
+            Generate invoices
+          </button>
+
+          <p id="invoiceGenerationStatus"></p>
+        </div>
+
+        <div class="commission-summary invoice-summary">
+          <article class="glass-card">
+            <span>Amount due</span>
+            <strong id="invoiceDueTotal">LKR 0.00</strong>
+          </article>
+
+          <article class="glass-card">
+            <span>Awaiting verification</span>
+            <strong id="invoiceReviewTotal">LKR 0.00</strong>
+          </article>
+
+          <article class="glass-card">
+            <span>Amount paid</span>
+            <strong id="invoicePaidTotal">LKR 0.00</strong>
+          </article>
+        </div>
+
+        <p id="adminInvoicesStatus"
+          class="invoice-list-status">
+          Loading invoices...
+        </p>
+
+        <div id="adminInvoicesGrid"
+            class="admin-invoices-grid"></div>
+
+        <div id="adminInvoicesEmpty"
+            class="glass-card empty-state hidden">
+          <i class="fa-solid fa-file-invoice-dollar"></i>
+          <p>No commission invoices found.</p>
+        </div>
       </section>
     </div>
   </main>

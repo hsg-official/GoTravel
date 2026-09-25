@@ -3049,15 +3049,47 @@ document.addEventListener("DOMContentLoaded", () => {
 ========================================= */
 
 let businessBookingRequests = [];
+let businessBookingCases = [];
+let businessCommissionInvoices = [];
+let noShowBookingId = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const postedTab = document.getElementById("postedServicesTab");
-  const bookingTab = document.getElementById("bookingRequestsTab");
-  const refreshButton = document.getElementById("refreshBookingRequests");
-  const statusFilter = document.getElementById("bookingStatusFilter");
-  const bookingContainer = document.getElementById("bookingRequestsContainer");
+  const postedTab =
+    document.getElementById("postedServicesTab");
 
-  if (!postedTab || !bookingTab || !bookingContainer) return;
+  const bookingTab =
+    document.getElementById("bookingRequestsTab");
+
+  const billingTab =
+    document.getElementById("billingTab");
+
+  const refreshBookings =
+    document.getElementById("refreshBookingRequests");
+
+  const bookingFilter =
+    document.getElementById("bookingStatusFilter");
+
+  const bookingContainer =
+    document.getElementById("bookingRequestsContainer");
+
+  const refreshInvoices =
+    document.getElementById("refreshInvoices");
+
+  const invoiceFilter =
+    document.getElementById("invoiceStatusFilter");
+
+  const billingContainer =
+    document.getElementById("billingInvoicesContainer");
+
+  if (
+    !postedTab ||
+    !bookingTab ||
+    !billingTab ||
+    !bookingContainer ||
+    !billingContainer
+  ) {
+    return;
+  }
 
   postedTab.addEventListener("click", () => {
     switchBusinessDashboardTab("services");
@@ -3068,35 +3100,500 @@ document.addEventListener("DOMContentLoaded", async () => {
     loadBusinessBookingRequests();
   });
 
-  refreshButton.addEventListener("click", loadBusinessBookingRequests);
-  statusFilter.addEventListener("change", renderBusinessBookingRequests);
+  billingTab.addEventListener("click", () => {
+    switchBusinessDashboardTab("billing");
+    loadBusinessCommissionInvoices();
+  });
 
-  bookingContainer.addEventListener("click", handleBusinessBookingAction);
+  refreshBookings?.addEventListener(
+    "click",
+    loadBusinessBookingRequests
+  );
+
+  bookingFilter?.addEventListener(
+    "change",
+    renderBusinessBookingRequests
+  );
+
+  refreshInvoices?.addEventListener(
+    "click",
+    loadBusinessCommissionInvoices
+  );
+
+  invoiceFilter?.addEventListener(
+    "change",
+    renderBusinessCommissionInvoices
+  );
+
+  bookingContainer.addEventListener(
+    "click",
+    handleBusinessBookingAction
+  );
 
   const {
     data: { user }
   } = await supabaseClient.auth.getUser();
 
   if (user) {
-    await loadBusinessBookingRequests();
+    await Promise.all([
+      loadBusinessBookingRequests(),
+      loadBusinessCommissionInvoices()
+    ]);
   }
 });
 
 function switchBusinessDashboardTab(tabName) {
-  const postedTab = document.getElementById("postedServicesTab");
-  const bookingTab = document.getElementById("bookingRequestsTab");
-  const postedPanel = document.getElementById("postedServicesPanel");
-  const bookingPanel = document.getElementById("bookingRequestsPanel");
+  const postedTab =
+    document.getElementById("postedServicesTab");
+
+  const bookingTab =
+    document.getElementById("bookingRequestsTab");
+
+  const billingTab =
+    document.getElementById("billingTab");
+
+  const postedPanel =
+    document.getElementById("postedServicesPanel");
+
+  const bookingPanel =
+    document.getElementById("bookingRequestsPanel");
+
+  const billingPanel =
+    document.getElementById("billingPanel");
 
   const showingServices = tabName === "services";
+  const showingBookings = tabName === "bookings";
+  const showingBilling = tabName === "billing";
 
-  postedTab.classList.toggle("tab-active", showingServices);
-  bookingTab.classList.toggle("tab-active", !showingServices);
+  postedTab.classList.toggle(
+    "tab-active",
+    showingServices
+  );
 
-  postedPanel.classList.toggle("hidden", !showingServices);
-  bookingPanel.classList.toggle("hidden", showingServices);
+  bookingTab.classList.toggle(
+    "tab-active",
+    showingBookings
+  );
+
+  billingTab.classList.toggle(
+    "tab-active",
+    showingBilling
+  );
+
+  postedPanel.classList.toggle(
+    "hidden",
+    !showingServices
+  );
+
+  bookingPanel.classList.toggle(
+    "hidden",
+    !showingBookings
+  );
+
+  billingPanel.classList.toggle(
+    "hidden",
+    !showingBilling
+  );
+}
+async function loadBusinessCommissionInvoices() {
+  const statusElement =
+    document.getElementById("billingStatus");
+
+  const container =
+    document.getElementById("billingInvoicesContainer");
+
+  const refreshButton =
+    document.getElementById("refreshInvoices");
+
+  statusElement.classList.remove("booking-error");
+  statusElement.textContent = "Loading invoices...";
+  statusElement.style.display = "block";
+  container.innerHTML = "";
+
+  if (refreshButton) {
+    refreshButton.disabled = true;
+  }
+
+  try {
+    const { data, error } = await supabaseClient.rpc(
+      "get_my_commission_invoices"
+    );
+
+    if (error) throw error;
+
+    businessCommissionInvoices =
+      Array.isArray(data) ? data : [];
+
+    updateInvoicePaymentCount();
+    renderBusinessCommissionInvoices();
+  } catch (error) {
+    console.error("Could not load invoices:", error);
+
+    statusElement.textContent =
+      error.message || "Could not load invoices.";
+
+    statusElement.classList.add("booking-error");
+    statusElement.style.display = "block";
+  } finally {
+    if (refreshButton) {
+      refreshButton.disabled = false;
+    }
+  }
 }
 
+function updateInvoicePaymentCount() {
+  const countElement =
+    document.getElementById("invoicePaymentCount");
+
+  if (!countElement) return;
+
+  const count = businessCommissionInvoices.filter(
+    invoice =>
+      invoice.status === "issued" ||
+      invoice.status === "overdue"
+  ).length;
+
+  countElement.textContent = count;
+
+  countElement.classList.toggle(
+    "hidden",
+    count === 0
+  );
+}
+
+function renderBusinessCommissionInvoices() {
+  const container =
+    document.getElementById("billingInvoicesContainer");
+
+  const statusElement =
+    document.getElementById("billingStatus");
+
+  const filter =
+    document.getElementById("invoiceStatusFilter")
+      ?.value || "all";
+
+  if (!container || !statusElement) return;
+
+  const dueTotal = businessCommissionInvoices
+    .filter(
+      invoice =>
+        invoice.status === "issued" ||
+        invoice.status === "overdue" ||
+        invoice.status === "payment_submitted"
+    )
+    .reduce(
+      (total, invoice) =>
+        total + Number(invoice.commission_total || 0),
+      0
+    );
+
+  const paidTotal = businessCommissionInvoices
+    .filter(invoice => invoice.status === "paid")
+    .reduce(
+      (total, invoice) =>
+        total + Number(invoice.commission_total || 0),
+      0
+    );
+
+  document.getElementById(
+    "billingDueTotal"
+  ).textContent = `LKR ${formatBookingMoney(dueTotal)}`;
+
+  document.getElementById(
+    "billingPaidTotal"
+  ).textContent = `LKR ${formatBookingMoney(paidTotal)}`;
+
+  const visibleInvoices =
+    businessCommissionInvoices.filter(invoice => {
+      return (
+        filter === "all" ||
+        invoice.status === filter
+      );
+    });
+
+  container.innerHTML = "";
+
+  if (!visibleInvoices.length) {
+    statusElement.textContent =
+      filter === "all"
+        ? "No commission invoices yet."
+        : "No invoices with this status.";
+
+    statusElement.style.display = "block";
+    return;
+  }
+
+  statusElement.style.display = "none";
+
+  container.innerHTML = visibleInvoices
+    .map(businessInvoiceHTML)
+    .join("");
+}
+
+function businessInvoiceHTML(invoice) {
+  const currency = invoice.currency || "LKR";
+
+  const items = Array.isArray(invoice.items)
+    ? invoice.items
+    : [];
+
+  const itemRows = items
+    .map(
+      item => `
+        <tr>
+          <td>${escapeHTML(item.service_name)}</td>
+          <td>${escapeHTML(item.service_type)}</td>
+          <td>
+            ${escapeHTML(currency)}
+            ${formatBookingMoney(item.booking_amount)}
+          </td>
+          <td>
+            ${formatBookingMoney(item.commission_rate)}%
+          </td>
+          <td>
+            ${escapeHTML(currency)}
+            ${formatBookingMoney(item.commission_amount)}
+          </td>
+        </tr>
+      `
+    )
+    .join("");
+
+  let paymentSection = "";
+
+  if (
+    invoice.status === "issued" ||
+    invoice.status === "overdue"
+  ) {
+    paymentSection = `
+      <div class="invoice-payment-form">
+        <p>
+          Pay the invoice, then enter your payment reference.
+        </p>
+
+        <div>
+          <input
+            type="text"
+            class="invoice-payment-reference"
+            maxlength="200"
+            placeholder="Payment reference"
+          >
+
+          <button
+            type="button"
+            onclick="submitBusinessInvoicePayment(
+              '${escapeHTML(invoice.invoice_id)}',
+              this
+            )"
+          >
+            Submit payment
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  if (invoice.status === "payment_submitted") {
+    paymentSection = `
+      <div class="invoice-payment-message awaiting">
+        Payment submitted and awaiting verification.
+
+        ${
+          invoice.payment_reference
+            ? `
+              <span>
+                Reference:
+                ${escapeHTML(invoice.payment_reference)}
+              </span>
+            `
+            : ""
+        }
+      </div>
+    `;
+  }
+
+  if (invoice.status === "paid") {
+    paymentSection = `
+      <div class="invoice-payment-message paid">
+        Payment verified.
+
+        <span>
+          ${escapeHTML(
+            formatBillingDate(invoice.paid_at)
+          )}
+        </span>
+      </div>
+    `;
+  }
+
+  const adminMessage = invoice.admin_notes
+    ? `
+      <div class="invoice-admin-message">
+        <strong>GoTravel message</strong>
+        <p>${escapeHTML(invoice.admin_notes)}</p>
+      </div>
+    `
+    : "";
+
+  return `
+    <article class="business-invoice-card">
+      <div class="business-invoice-header">
+        <div>
+          <p class="invoice-number">
+            ${escapeHTML(invoice.invoice_number)}
+          </p>
+
+          <h3>
+            ${formatBillingDate(invoice.period_start)}
+            –
+            ${formatBillingDate(invoice.period_end)}
+          </h3>
+        </div>
+
+        <span class="invoice-status ${escapeHTML(
+          invoice.status
+        )}">
+          ${escapeHTML(
+            formatInvoiceStatus(invoice.status)
+          )}
+        </span>
+      </div>
+
+      <div class="invoice-summary-grid">
+        <div>
+          <span>Issued</span>
+          <strong>
+            ${formatBillingDate(invoice.issued_at)}
+          </strong>
+        </div>
+
+        <div>
+          <span>Due</span>
+          <strong>
+            ${formatBillingDate(invoice.due_at)}
+          </strong>
+        </div>
+
+        <div>
+          <span>Booking total</span>
+          <strong>
+            ${escapeHTML(currency)}
+            ${formatBookingMoney(invoice.booking_total)}
+          </strong>
+        </div>
+
+        <div>
+          <span>Commission due</span>
+          <strong>
+            ${escapeHTML(currency)}
+            ${formatBookingMoney(invoice.commission_total)}
+          </strong>
+        </div>
+      </div>
+
+      <div class="invoice-table-wrap">
+        <table class="invoice-items-table">
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>Type</th>
+              <th>Booking</th>
+              <th>Rate</th>
+              <th>Commission</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${itemRows}
+          </tbody>
+        </table>
+      </div>
+
+      ${adminMessage}
+      ${paymentSection}
+    </article>
+  `;
+}
+
+async function submitBusinessInvoicePayment(
+  invoiceId,
+  button
+) {
+  const card = button.closest(".business-invoice-card");
+
+  const input = card.querySelector(
+    ".invoice-payment-reference"
+  );
+
+  const reference = input.value.trim();
+
+  if (!reference) {
+    alert("Enter the payment reference.");
+    input.focus();
+    return;
+  }
+
+  if (!confirm("Submit this payment reference?")) {
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "Submitting...";
+
+  try {
+    const { error } = await supabaseClient.rpc(
+      "submit_commission_invoice_payment",
+      {
+        p_invoice_id: invoiceId,
+        p_payment_reference: reference
+      }
+    );
+
+    if (error) throw error;
+
+    alert("Payment submitted for verification.");
+
+    await loadBusinessCommissionInvoices();
+  } catch (error) {
+    console.error("Could not submit payment:", error);
+
+    alert(
+      error.message ||
+      "Could not submit the payment."
+    );
+
+    button.disabled = false;
+    button.textContent = "Submit payment";
+  }
+}
+
+function formatInvoiceStatus(status) {
+  const labels = {
+    issued: "Payment due",
+    overdue: "Overdue",
+    payment_submitted: "Awaiting verification",
+    paid: "Paid",
+    cancelled: "Cancelled"
+  };
+
+  return labels[status] || status;
+}
+
+function formatBillingDate(value) {
+  if (!value) return "Not available";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Not available";
+  }
+
+  return date.toLocaleDateString("en-LK", {
+    year: "numeric",
+    month: "short",
+    day: "numeric"
+  });
+}
 async function loadBusinessBookingRequests() {
   const statusElement = document.getElementById("bookingRequestsStatus");
   const container = document.getElementById("bookingRequestsContainer");
@@ -3115,7 +3612,23 @@ async function loadBusinessBookingRequests() {
 
     if (error) throw error;
 
+    const {
+      data: caseRows,
+      error: caseError
+    } = await supabaseClient
+      .from("booking_cases")
+      .select(
+        "id,booking_id,opened_by_role,case_type," +
+        "reason,claimed_fee_amount,traveler_response," +
+        "business_response,status,created_at"
+      )
+      .eq("status", "pending");
+
+    if (caseError) throw caseError;
+
     businessBookingRequests = data || [];
+    businessBookingCases = caseRows || [];
+    
 
     updateBookingRequestCount();
     renderBusinessBookingRequests();
@@ -3361,10 +3874,284 @@ function renderBusinessBookingRequests() {
       ${quotedPrice}
       ${contactSection}
       ${actionSection}
+      ${businessNoShowSection(booking)}
+      ${businessBookingCaseSection(booking)}
+      
     `;
 
     container.appendChild(card);
   });
+}
+function businessBookingCaseSection(booking) {
+  const bookingCase = businessBookingCases.find(
+    item => item.booking_id === booking.booking_id
+  );
+
+  if (!bookingCase) {
+    return "";
+  }
+
+  if (bookingCase.opened_by_role === "business") {
+    const customerReply = bookingCase.traveler_response
+      ? `
+        <div class="business-case-reply">
+          <span>Customer response</span>
+          <p>
+            ${escapeHTML(
+              bookingCase.traveler_response
+            )}
+          </p>
+        </div>
+      `
+      : `
+        <p class="business-case-waiting">
+          Waiting for customer response
+        </p>
+      `;
+
+    return `
+      <div class="business-case-box">
+        <strong>No-show reported</strong>
+
+        <p>${escapeHTML(bookingCase.reason)}</p>
+
+        ${customerReply}
+      </div>
+    `;
+  }
+
+  const responseArea = bookingCase.business_response
+    ? `
+      <div class="business-case-reply">
+        <span>Your response</span>
+        <p>
+          ${escapeHTML(
+            bookingCase.business_response
+          )}
+        </p>
+      </div>
+    `
+    : `
+      <textarea
+        class="business-case-response-input"
+        maxlength="2000"
+        placeholder="Your response"
+      ></textarea>
+
+      <button
+        type="button"
+        class="business-case-response-button"
+        onclick="submitBusinessCaseResponse(
+          '${bookingCase.id}',
+          this
+        )"
+      >
+        Send response
+      </button>
+    `;
+
+  return `
+    <div class="business-case-box">
+      <strong>Customer report</strong>
+
+      <div class="business-case-detail">
+        <span>Report</span>
+        <p>${escapeHTML(bookingCase.reason)}</p>
+      </div>
+
+      ${responseArea}
+    </div>
+  `;
+}
+
+async function submitBusinessCaseResponse(
+  caseId,
+  button
+) {
+  const caseBox = button.closest(
+    ".business-case-box"
+  );
+
+  const responseInput = caseBox.querySelector(
+    ".business-case-response-input"
+  );
+
+  const response = responseInput.value.trim();
+
+  if (response.length < 10) {
+    alert("Enter at least 10 characters.");
+    responseInput.focus();
+    return;
+  }
+
+  if (!confirm("Send this response?")) {
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "Sending...";
+
+  try {
+    const { error } = await supabaseClient.rpc(
+      "respond_to_booking_case",
+      {
+        p_case_id: caseId,
+        p_response: response
+      }
+    );
+
+    if (error) throw error;
+
+    alert("Response sent.");
+
+    await loadBusinessBookingRequests();
+  } catch (error) {
+    console.error(
+      "Could not send case response:",
+      error
+    );
+
+    alert(
+      error.message ||
+      "Could not send the response."
+    );
+
+    button.disabled = false;
+    button.textContent = "Send response";
+  }
+}
+function businessNoShowSection(booking) {
+  if (booking.status === "disputed") {
+    return `
+      <div class="booking-disputed-message">
+        <i class="fa-solid fa-scale-balanced"></i>
+        Under admin review
+      </div>
+    `;
+  }
+
+  if (booking.status !== "confirmed" || !booking.start_at) {
+    return "";
+  }
+
+  const startTime = new Date(booking.start_at);
+
+  if (
+    Number.isNaN(startTime.getTime()) ||
+    new Date() < startTime
+  ) {
+    return "";
+  }
+
+  return `
+    <button
+      type="button"
+      class="report-no-show-button"
+      onclick="openNoShowModal(
+        '${escapeHTML(booking.booking_id)}'
+      )"
+    >
+      Report no-show
+    </button>
+  `;
+}
+
+function openNoShowModal(bookingId) {
+  const booking = businessBookingRequests.find(
+    item => item.booking_id === bookingId
+  );
+
+  if (!booking) {
+    alert("Booking not found.");
+    return;
+  }
+
+  noShowBookingId = bookingId;
+
+  document.getElementById(
+    "noShowServiceName"
+  ).textContent = booking.service_name;
+
+  document.getElementById("noShowReason").value = "";
+  document.getElementById("noShowFee").value = "0";
+
+  document.getElementById(
+    "noShowModal"
+  ).classList.remove("hidden");
+}
+
+function closeNoShowModal() {
+  document.getElementById(
+    "noShowModal"
+  ).classList.add("hidden");
+
+  noShowBookingId = null;
+}
+
+async function submitNoShowReport() {
+  const reasonInput =
+    document.getElementById("noShowReason");
+
+  const feeInput =
+    document.getElementById("noShowFee");
+
+  const submitButton =
+    document.getElementById("submitNoShowButton");
+
+  const reason = reasonInput.value.trim();
+  const fee = Number(feeInput.value || 0);
+
+  if (!noShowBookingId) {
+    alert("No booking selected.");
+    return;
+  }
+
+  if (reason.length < 10) {
+    alert("Enter at least 10 characters.");
+    reasonInput.focus();
+    return;
+  }
+
+  if (!Number.isFinite(fee) || fee < 0) {
+    alert("Enter a valid fee.");
+    feeInput.focus();
+    return;
+  }
+
+  if (!confirm("Submit this no-show report?")) {
+    return;
+  }
+
+  submitButton.disabled = true;
+  submitButton.textContent = "Submitting...";
+
+  try {
+    const { error } = await supabaseClient.rpc(
+      "business_report_booking_no_show",
+      {
+        p_booking_id: noShowBookingId,
+        p_reason: reason,
+        p_claimed_fee_amount: fee
+      }
+    );
+
+    if (error) throw error;
+
+    closeNoShowModal();
+    alert("Report submitted.");
+
+    await loadBusinessBookingRequests();
+  } catch (error) {
+    console.error("No-show report failed:", error);
+
+    alert(
+      error.message ||
+      "Could not submit the report."
+    );
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = "Submit";
+  }
 }
 
 async function handleBusinessBookingAction(event) {

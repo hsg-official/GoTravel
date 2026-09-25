@@ -3392,6 +3392,8 @@ function exportTripCalendar(trip) {
 ========================================= */
 
 let travelerBookingOffers = [];
+let travelerBookingCases = [];
+let travelerProblemBookingId = null;
 
 async function loadTravelerBookingOffers() {
     const container = document.getElementById(
@@ -3427,7 +3429,22 @@ async function loadTravelerBookingOffers() {
 
         if (error) throw error;
 
+        const {
+            data: caseRows,
+            error: caseError
+        } = await _supabase
+            .from('booking_cases')
+            .select(
+                'id,booking_id,opened_by_role,case_type,' +
+                'reason,claimed_fee_amount,traveler_response,' +
+                'business_response,status,created_at'
+            )
+            .eq('status', 'pending');
+
+        if (caseError) throw caseError;
+
         travelerBookingOffers = data || [];
+        travelerBookingCases = caseRows || [];
 
         updateTravelerOfferCount();
         renderTravelerBookingOffers();
@@ -3605,6 +3622,26 @@ function renderTravelerBookingOffers() {
                     <i class="fas fa-circle-check"></i>
                     Booking confirmed. You can now contact the business.
                 </div>
+
+                <button
+                    type="button"
+                    class="traveler-report-problem-btn"
+                    onclick="openTravelerProblemModal(
+                        '${booking.booking_id}'
+                    )"
+                >
+                    <i class="fas fa-triangle-exclamation"></i>
+                    Report a Problem
+                </button>
+            `;
+        }
+
+        if (booking.status === 'disputed') {
+            actions = `
+                <div class="traveler-disputed-message">
+                    <i class="fas fa-scale-balanced"></i>
+                    This booking is under review by the GoTravel admin.
+                </div>
             `;
         }
 
@@ -3691,12 +3728,305 @@ function renderTravelerBookingOffers() {
             ${proposedPrice}
             ${contactDetails}
             ${actions}
+            ${travelerBookingCaseSection(booking)}
+            
         `;
 
         container.appendChild(card);
     });
 }
+function travelerBookingCaseSection(booking) {
+    const bookingCase = travelerBookingCases.find(
+        item => item.booking_id === booking.booking_id
+    );
 
+    if (!bookingCase) {
+        return '';
+    }
+
+    if (bookingCase.opened_by_role === 'traveler') {
+        const businessReply = bookingCase.business_response
+            ? `
+                <div class="traveler-case-reply">
+                    <span>Business response</span>
+                    <p>
+                        ${escapeHtml(
+                            bookingCase.business_response
+                        )}
+                    </p>
+                </div>
+            `
+            : `
+                <p class="traveler-case-waiting">
+                    Waiting for business response
+                </p>
+            `;
+
+        return `
+            <div class="traveler-case-box">
+                <strong>Problem reported</strong>
+
+                <p>
+                    ${escapeHtml(bookingCase.reason)}
+                </p>
+
+                ${businessReply}
+            </div>
+        `;
+    }
+
+    const fee = Number(
+        bookingCase.claimed_fee_amount || 0
+    );
+
+    const responseArea = bookingCase.traveler_response
+        ? `
+            <div class="traveler-case-reply">
+                <span>Your response</span>
+                <p>
+                    ${escapeHtml(
+                        bookingCase.traveler_response
+                    )}
+                </p>
+            </div>
+        `
+        : `
+            <textarea
+                class="traveler-case-response-input"
+                maxlength="2000"
+                placeholder="Your response"
+            ></textarea>
+
+            <button
+                type="button"
+                class="traveler-case-response-button"
+                onclick="submitTravelerCaseResponse(
+                    '${bookingCase.id}',
+                    this
+                )"
+            >
+                Send response
+            </button>
+        `;
+
+    return `
+        <div class="traveler-case-box no-show-case">
+            <strong>No-show reported</strong>
+
+            <div class="traveler-case-detail">
+                <span>Business report</span>
+                <p>${escapeHtml(bookingCase.reason)}</p>
+            </div>
+
+            <div class="traveler-case-detail">
+                <span>Fee reported</span>
+                <p>
+                    ${escapeHtml(booking.currency || 'LKR')}
+                    ${travelerBookingMoney(fee)}
+                </p>
+            </div>
+
+            ${responseArea}
+        </div>
+    `;
+}
+
+async function submitTravelerCaseResponse(
+    caseId,
+    button
+) {
+    const caseBox = button.closest(
+        '.traveler-case-box'
+    );
+
+    const responseInput = caseBox.querySelector(
+        '.traveler-case-response-input'
+    );
+
+    const response = responseInput.value.trim();
+
+    if (response.length < 10) {
+        showToast(
+            'Enter at least 10 characters.',
+            'error'
+        );
+
+        responseInput.focus();
+        return;
+    }
+
+    if (!confirm('Send this response?')) {
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = 'Sending...';
+
+    try {
+        const { error } = await _supabase.rpc(
+            'respond_to_booking_case',
+            {
+                p_case_id: caseId,
+                p_response: response
+            }
+        );
+
+        if (error) throw error;
+
+        showToast('Response sent.', 'success');
+
+        await loadTravelerBookingOffers();
+    } catch (error) {
+        console.error(
+            'Could not send case response:',
+            error
+        );
+
+        showToast(
+            error.message ||
+            'Could not send the response.',
+            'error'
+        );
+
+        button.disabled = false;
+        button.textContent = 'Send response';
+    }
+}
+function openTravelerProblemModal(bookingId) {
+    const booking = travelerBookingOffers.find(
+        item => item.booking_id === bookingId
+    );
+
+    if (!booking) {
+        showToast(
+            'Could not find this booking.',
+            'error'
+        );
+        return;
+    }
+
+    travelerProblemBookingId = bookingId;
+
+    const modal = document.getElementById(
+        'travelerProblemModal'
+    );
+
+    const serviceElement = document.getElementById(
+        'travelerProblemService'
+    );
+
+    const reasonElement = document.getElementById(
+        'travelerProblemReason'
+    );
+
+    serviceElement.textContent =
+        `Booking: ${booking.service_name}`;
+
+    reasonElement.value = '';
+
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+
+    setTimeout(() => reasonElement.focus(), 50);
+}
+
+function closeTravelerProblemModal() {
+    const modal = document.getElementById(
+        'travelerProblemModal'
+    );
+
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+
+    travelerProblemBookingId = null;
+
+    document.getElementById(
+        'travelerProblemReason'
+    ).value = '';
+}
+
+async function submitTravelerBookingProblem() {
+    if (!travelerProblemBookingId) {
+        showToast(
+            'No booking was selected.',
+            'error'
+        );
+        return;
+    }
+
+    const reasonElement = document.getElementById(
+        'travelerProblemReason'
+    );
+
+    const submitButton = document.getElementById(
+        'submitTravelerProblem'
+    );
+
+    const reason = reasonElement.value.trim();
+
+    if (reason.length < 10) {
+        showToast(
+            'Please provide at least 10 characters.',
+            'error'
+        );
+
+        reasonElement.focus();
+        return;
+    }
+
+    if (reason.length > 2000) {
+        showToast(
+            'The report cannot exceed 2,000 characters.',
+            'error'
+        );
+
+        return;
+    }
+
+    const accepted = confirm(
+        'Submit this problem to the GoTravel admin for review?'
+    );
+
+    if (!accepted) return;
+
+    submitButton.disabled = true;
+    submitButton.textContent = 'Submitting...';
+
+    try {
+        const { error } = await _supabase.rpc(
+            'traveler_report_booking_problem',
+            {
+                p_booking_id: travelerProblemBookingId,
+                p_reason: reason
+            }
+        );
+
+        if (error) throw error;
+
+        closeTravelerProblemModal();
+
+        showToast(
+            'Your report was submitted for admin review.',
+            'success'
+        );
+
+        await loadTravelerBookingOffers();
+    } catch (error) {
+        console.error(
+            'Could not submit booking problem:',
+            error
+        );
+
+        showToast(
+            error.message ||
+            'Could not submit your report.',
+            'error'
+        );
+    } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Submit Report';
+    }
+}
 async function respondToTravelerBooking(
     bookingId,
     action

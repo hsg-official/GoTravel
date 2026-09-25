@@ -783,7 +783,62 @@
 
     </main>
 </div>
+<div
+    id="travelerProblemModal"
+    class="traveler-problem-modal"
+    aria-hidden="true"
+>
+    <div class="traveler-problem-dialog">
+        <button
+            type="button"
+            class="traveler-problem-close"
+            onclick="closeTravelerProblemModal()"
+            aria-label="Close"
+        >
+            &times;
+        </button>
 
+        <h2>Report a Booking Problem</h2>
+
+        <p id="travelerProblemService"></p>
+
+        
+
+        <label for="travelerProblemReason">
+            Explain what happened
+        </label>
+
+        <textarea
+            id="travelerProblemReason"
+            maxlength="2000"
+            placeholder="Describe the problem clearly. Include what happened and when it happened."
+        ></textarea>
+
+        <small>
+            Minimum 10 characters. Do not include passwords or
+            payment-card information.
+        </small>
+
+        <div class="traveler-problem-actions">
+            <button
+                type="button"
+                class="traveler-problem-cancel"
+                onclick="closeTravelerProblemModal()"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                id="submitTravelerProblem"
+                class="traveler-problem-submit"
+                onclick="submitTravelerBookingProblem()"
+            >
+                Submit Report
+            </button>
+        </div>
+    </div>
+</div>
 <script src="../backend/personal_script.js"></script>
 </body>
 </html>
