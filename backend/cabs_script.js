@@ -440,15 +440,8 @@ function renderCabs(services) {
                 </p>
 
                 <p class="meta">
-                    <i
-                        class="fas fa-phone"
-                        aria-hidden="true"
-                    ></i>
-
-                    ${escapeHtml(
-                        service.contact ||
-                        "Contact not provided"
-                    )}
+                    <i class="fas fa-lock" aria-hidden="true"></i>
+                    Contact available after confirmation
                 </p>
 
                 <div class="cab-price">
@@ -497,8 +490,8 @@ async function openDetails(service) {
         </p>
 
         <p class="meta">
-            Contact:
-            ${escapeHtml(service.contact || "Not provided")}
+            <i class="fas fa-lock" aria-hidden="true"></i>
+            Contact available after confirmation
         </p>
 
         <p class="detail-description">${escapeHtml(
