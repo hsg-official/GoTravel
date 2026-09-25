@@ -209,6 +209,7 @@ function displayRestaurants(list) {
     });
 
     container.appendChild(card);
+    RestaurantReviews.attach(card, restaurant);
   });
 }
 
@@ -823,3 +824,447 @@ document.addEventListener("DOMContentLoaded", () => {
   setupModalCloseEvents();
   fetchRestaurants();
 });
+// ===== RESTAURANT REVIEWS =====
+const RestaurantReviews = (() => {
+    const summaries = new Map();
+    let dialog;
+    let activeRestaurant;
+    let user;
+    let ownReview;
+    let eligible = false;
+    let busy = false;
+    let version = 0;
+    let previousFocus;
+
+    const el = id => document.getElementById(id);
+
+    function make(tag, text, className) {
+        const element = document.createElement(tag);
+        if (text !== undefined) element.textContent = text;
+        if (className) element.className = className;
+        return element;
+    }
+
+    function summary(rows) {
+        if (!rows.length) return "No reviews yet";
+
+        const total = rows.reduce(
+            (sum, row) => sum + Number(row.rating), 0
+        );
+
+        return `★ ${(total / rows.length).toFixed(1)} / 5 · ${
+            rows.length
+        } review${rows.length === 1 ? "" : "s"}`;
+    }
+
+    async function readReviews(id, full = false) {
+        const rows = [];
+
+        for (let start = 0; ; start += 500) {
+            const { data, error } = await supabaseClient
+                .from("Reviews")
+                .select(
+                    full
+                        ? "id,user_id,rating,comment,created_at"
+                        : "id,rating"
+                )
+                .eq("restaurant_id", id)
+                .order("id", { ascending: true })
+                .range(start, start + 499);
+
+            if (error) throw error;
+
+            rows.push(...(data || []));
+            if (!data || data.length < 500) return rows;
+        }
+    }
+
+    function attach(card, restaurant) {
+        const info = card.querySelector(".restaurant-info");
+        if (!info || info.querySelector(".rr-button")) return;
+
+        card.dataset.reviewRestaurantId = String(restaurant.id);
+
+        const label = make("p", "Loading reviews…", "rr-summary");
+        const button = make("button", "Reviews", "rr-button");
+        button.type = "button";
+
+        button.addEventListener("click", event => {
+            event.stopPropagation();
+            open(restaurant, button);
+        });
+
+        info.append(label, button);
+
+        const id = String(restaurant.id);
+
+        if (!summaries.has(id)) {
+            summaries.set(id, readReviews(id));
+        }
+
+        const request = summaries.get(id);
+
+        request.then(rows => {
+            if (label.isConnected) label.textContent = summary(rows);
+        }).catch(error => {
+            if (summaries.get(id) === request) summaries.delete(id);
+            label.textContent = "Rating unavailable";
+            console.error("Restaurant rating:", error);
+        });
+    }
+
+    function updateCards(id, rows) {
+        summaries.set(String(id), Promise.resolve(rows));
+
+        document.querySelectorAll(".restaurant-card").forEach(card => {
+            if (card.dataset.reviewRestaurantId !== String(id)) return;
+            const label = card.querySelector(".rr-summary");
+            if (label) label.textContent = summary(rows);
+        });
+    }
+
+    function buildDialog() {
+        if (dialog) return;
+
+        dialog = document.createElement("dialog");
+        dialog.className = "rr-dialog";
+        dialog.setAttribute("aria-labelledby", "rr-title");
+
+        dialog.innerHTML = `
+            <div class="rr-header">
+                <h2 id="rr-title">Restaurant reviews</h2>
+                <button id="rr-close" type="button"
+                        class="rr-close"
+                        aria-label="Close reviews">×</button>
+            </div>
+
+            <p id="rr-summary" class="rr-summary"></p>
+
+            <p id="rr-message" class="rr-message"
+               role="status" aria-live="polite"></p>
+
+            <form id="rr-form" class="rr-form" hidden>
+                <label for="rr-rating">Your rating</label>
+                <select id="rr-rating" required>
+                    <option value="">Choose a rating</option>
+                    <option value="5">★★★★★ — 5 Excellent</option>
+                    <option value="4">★★★★☆ — 4 Good</option>
+                    <option value="3">★★★☆☆ — 3 Average</option>
+                    <option value="2">★★☆☆☆ — 2 Poor</option>
+                    <option value="1">★☆☆☆☆ — 1 Very poor</option>
+                </select>
+
+                <label for="rr-comment">
+                    Comment (optional, maximum 1,000 characters)
+                </label>
+                <textarea id="rr-comment" maxlength="1000"
+                          placeholder="Share your experience."></textarea>
+
+                <button id="rr-save" type="submit" class="rr-action">
+                    Submit review
+                </button>
+            </form>
+
+            <button id="rr-delete" type="button"
+                    class="rr-action rr-delete" hidden>
+                Delete my review
+            </button>
+
+            <button id="rr-retry" type="button"
+                    class="rr-action" hidden>
+                Retry loading
+            </button>
+
+            <div id="rr-list"></div>
+        `;
+
+        document.body.appendChild(dialog);
+
+        el("rr-close").addEventListener("click", () => {
+            if (!busy) dialog.close();
+        });
+
+        dialog.addEventListener("cancel", event => {
+            if (busy) event.preventDefault();
+        });
+
+        dialog.addEventListener("close", () => {
+            version++;
+            previousFocus?.focus();
+        });
+
+        el("rr-form").addEventListener("submit", save);
+        el("rr-delete").addEventListener("click", remove);
+        el("rr-retry").addEventListener("click", () => load());
+    }
+
+    function setBusy(value) {
+        busy = value;
+        [
+            "rr-close", "rr-save", "rr-delete",
+            "rr-retry", "rr-rating", "rr-comment"
+        ].forEach(id => {
+            el(id).disabled = value;
+        });
+    }
+
+    function messageFor(error) {
+        if (error.code === "23505") {
+            return "You already reviewed this restaurant. Reopen Reviews to edit it.";
+        }
+        if (error.code === "42501") {
+            return "Review not allowed. Make sure this restaurant is in your saved trip and you are signed in.";
+        }
+        if (error.code === "23514") {
+            return "The review did not pass database validation. Please check the review setup.";
+        }
+        return "Could not complete the request. Please try again.";
+    }
+
+    async function open(restaurant, trigger) {
+        if (busy) return;
+
+        buildDialog();
+        activeRestaurant = restaurant;
+        previousFocus = trigger;
+
+        el("rr-title").textContent =
+            `${restaurant.service_name || "Restaurant"} — Reviews`;
+
+        if (!dialog.open) dialog.showModal();
+        await load();
+    }
+
+    function renderRows(rows) {
+        const list = el("rr-list");
+        list.replaceChildren();
+
+        if (!rows.length) {
+            list.append(make("p", "No reviews yet.", "rr-message"));
+            return;
+        }
+
+        [...rows]
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+            .forEach(row => {
+                const article = make("article", undefined, "rr-review");
+                const rating = Math.max(
+                    1, Math.min(5, Math.trunc(Number(row.rating) || 1))
+                );
+
+                article.append(make(
+                    "strong",
+                    "★".repeat(rating) + "☆".repeat(5 - rating)
+                ));
+
+                const author = row.user_id === user?.id
+                    ? "Your review"
+                    : "Traveler";
+
+                const date = new Date(row.created_at);
+                const dateText = Number.isNaN(date.getTime())
+                    ? ""
+                    : date.toLocaleDateString();
+
+                article.append(make(
+                    "small",
+                    [author, dateText].filter(Boolean).join(" · ")
+                ));
+
+                // textContent prevents comments from executing HTML.
+                if (row.comment) article.append(make("p", row.comment));
+
+                list.append(article);
+            });
+    }
+
+    async function load(successMessage = "") {
+        const currentVersion = ++version;
+        const id = activeRestaurant.id;
+
+        user = null;
+        ownReview = null;
+        eligible = false;
+
+        el("rr-form").hidden = true;
+        el("rr-delete").hidden = true;
+        el("rr-retry").hidden = true;
+        el("rr-list").replaceChildren();
+        el("rr-summary").textContent = "";
+        el("rr-message").textContent = "Loading reviews…";
+
+        const stale = () =>
+            currentVersion !== version || !dialog.open;
+
+        try {
+            const rows = await readReviews(id, true);
+            if (stale()) return;
+
+            updateCards(id, rows);
+            el("rr-summary").textContent = summary(rows);
+            renderRows(rows);
+
+            const { data: sessionData, error: sessionError } =
+                await supabaseClient.auth.getSession();
+
+            if (stale()) return;
+            if (sessionError) throw sessionError;
+
+            if (sessionData.session) {
+                const { data, error } =
+                    await supabaseClient.auth.getUser();
+
+                if (stale()) return;
+                if (error) throw error;
+                user = data.user;
+            }
+
+            if (user) {
+                ownReview = rows.find(
+                    row => row.user_id === user.id
+                ) || null;
+
+                const { data, error } = await supabaseClient.rpc(
+                    "can_review_restaurant",
+                    { p_restaurant_id: id }
+                );
+
+                if (stale()) return;
+                if (error) throw error;
+                eligible = data === true;
+            }
+
+            renderRows(rows);
+            el("rr-delete").hidden = !ownReview;
+
+            if (eligible) {
+                el("rr-form").hidden = false;
+                el("rr-rating").value =
+                    ownReview ? String(ownReview.rating) : "";
+                el("rr-comment").value = ownReview?.comment || "";
+                el("rr-save").textContent =
+                    ownReview ? "Update review" : "Submit review";
+
+                el("rr-message").textContent =
+                    successMessage ||
+                    "This restaurant is in your saved trip. You can write a review.";
+            } else {
+                const explanation = user
+                    ? "Select this restaurant through your planner and save the trip to review it. For older trips, remove the old restaurant entry and select it again. Cancelled trips do not qualify. Owners cannot review their own restaurant."
+                    : "Sign in to write a review. You can still read existing reviews.";
+
+                el("rr-message").textContent =
+                    [successMessage, explanation].filter(Boolean).join(" ");
+            }
+        } catch (error) {
+            if (stale()) return;
+
+            console.error("Load restaurant reviews:", error);
+            el("rr-form").hidden = true;
+            el("rr-delete").hidden = true;
+            el("rr-retry").hidden = false;
+            el("rr-message").textContent =
+                "Could not load reviews or check eligibility. Please retry.";
+        }
+    }
+
+    async function checkAccount() {
+        const { data, error } = await supabaseClient.auth.getUser();
+        if (error) throw error;
+
+        if (!data.user || data.user.id !== user?.id) {
+            throw new Error("Sign-in changed. Reopen Reviews.");
+        }
+    }
+
+    async function save(event) {
+        event.preventDefault();
+        if (busy || !eligible || !user) return;
+
+        const rating = Number(el("rr-rating").value);
+        const comment = el("rr-comment").value.trim();
+
+        if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+            el("rr-message").textContent = "Choose a rating from 1 to 5.";
+            return;
+        }
+
+        if ([...comment].length > 1000) {
+            el("rr-message").textContent =
+                "Keep your comment within 1,000 characters.";
+            return;
+        }
+
+        setBusy(true);
+        el("rr-message").textContent = "Saving review…";
+
+        try {
+            await checkAccount();
+            let query;
+
+            if (ownReview) {
+                query = supabaseClient
+                    .from("Reviews")
+                    .update({ rating, comment: comment || null })
+                    .eq("id", ownReview.id)
+                    .eq("user_id", user.id)
+                    .eq("restaurant_id", activeRestaurant.id);
+            } else {
+                query = supabaseClient
+                    .from("Reviews")
+                    .insert({
+                        user_id: user.id,
+                        restaurant_id: activeRestaurant.id,
+                        hotel_id: null,
+                        guide_id: null,
+                        transport_id: null,
+                        rating,
+                        comment: comment || null
+                    });
+            }
+
+            const { data, error } = await query.select("id");
+            if (error) throw error;
+            if (!data?.length) throw new Error("Review was not saved.");
+
+            await load("Your review was saved.");
+        } catch (error) {
+            console.error("Save restaurant review:", error);
+            el("rr-message").textContent = messageFor(error);
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    async function remove() {
+        if (busy || !ownReview || !user) return;
+        if (!window.confirm("Delete your review for this restaurant?")) return;
+
+        setBusy(true);
+        el("rr-message").textContent = "Deleting review…";
+
+        try {
+            await checkAccount();
+
+            const { data, error } = await supabaseClient
+                .from("Reviews")
+                .delete()
+                .eq("id", ownReview.id)
+                .eq("user_id", user.id)
+                .eq("restaurant_id", activeRestaurant.id)
+                .select("id");
+
+            if (error) throw error;
+            if (!data?.length) throw new Error("Review was not deleted.");
+
+            await load("Your review was deleted.");
+        } catch (error) {
+            console.error("Delete restaurant review:", error);
+            el("rr-message").textContent = messageFor(error);
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    return { attach };
+})();
