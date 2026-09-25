@@ -191,7 +191,8 @@ function displayRestaurants(list) {
         </div>
 
         <p style="opacity:.72;font-size:.88rem;">
-          <b>Contact:</b> ${escapeHTML(restaurant.contact || "Not provided")}
+          <ion-icon name="lock-closed-outline"></ion-icon>
+          Contact available after confirmation
         </p>
         ${
             restaurant.distance_km !== undefined
@@ -366,7 +367,7 @@ function renderRestaurantInfo(restaurant, container) {
 
         <div class="info-card">
           <b>Contact</b>
-          <p>${escapeHTML(restaurant.contact || "Not provided")}</p>
+          <p>Available after confirmation</p>
         </div>
       </div>
 
