@@ -614,10 +614,10 @@ async function loadDrivers(serviceId, version) {
         // Only request public-facing driver fields.
         // NIC, licence numbers and private contact details
         // are intentionally not requested.
-        const result = await _supabase
-            .from("transport_drivers")
-            .select("id,service_id,name,photo_urls")
-            .eq("service_id", serviceId);
+        const result = await _supabase.rpc(
+            "get_public_transport_drivers",
+            { p_service_id: serviceId }
+        );
 
         if (
             version !== detailsVersion ||
