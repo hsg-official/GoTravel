@@ -61,8 +61,9 @@ async function loadHotels() {
 
   try {
     const { data: hotels, error: hotelsError } = await supabaseClient
-      .from("hotel_service")
-      .select("*");
+    .from("hotel_service")
+    .select("*")
+    .eq("approval_status", "approved");
 
     if (hotelsError) throw hotelsError;
 
