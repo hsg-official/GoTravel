@@ -109,9 +109,10 @@ async function fetchRestaurants() {
 
   try {
     const { data, error } = await supabaseClient
-      .from("rest_service")
-      .select("*")
-      .order("id", { ascending: false });
+  .from("rest_service")
+  .select("*")
+  .eq("approval_status", "approved")
+  .order("id", { ascending: false });
 
     if (error) throw error;
 
