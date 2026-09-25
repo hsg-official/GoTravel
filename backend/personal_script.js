@@ -864,6 +864,7 @@ function addRestaurantEntry(restaurantData = {}) {
     const container = document.getElementById('restaurantSelections');
     const entry = document.createElement('div');
     entry.className = 'restaurant-entry';
+    entry.dataset.restaurantId = restaurantData.id || '';
 
     const dests = getDestinations().filter(d => d.name);
     let destOptions = '<option value="">Select destination</option>';
@@ -882,6 +883,11 @@ function addRestaurantEntry(restaurantData = {}) {
 
     entry.querySelector('.rest-name').value =
     restaurantData.name || '';
+    // Changing the name manually removes the link to the selected business.
+    entry.querySelector('.rest-name').addEventListener('input', () => {
+        entry.dataset.restaurantId = '';
+        scheduleDraftSave();
+    });
 
 entry.querySelector('.rest-dest').value =
     restaurantData.destination || '';
@@ -905,7 +911,10 @@ entry.querySelector('.rest-guests').value =
 }
 
 function getRestaurants() {
-    return Array.from(document.querySelectorAll('.restaurant-entry')).map(entry => ({
+    return Array.from(
+        document.querySelectorAll('.restaurant-entry')
+    ).map(entry => ({
+        id: entry.dataset.restaurantId || null,
         name: entry.querySelector('.rest-name')?.value || '',
         destination: entry.querySelector('.rest-dest')?.value || '',
         date: entry.querySelector('.rest-date')?.value || '',
